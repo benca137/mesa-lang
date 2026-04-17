@@ -1,0 +1,5 @@
+fun f(b: bool) i64 {
+    return match b {
+        true => { 1 },
+    };  //~ error: non-exhaustive
+}

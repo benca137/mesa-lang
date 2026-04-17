@@ -1,0 +1,40 @@
+pkg gfx
+
+pub fun presentAscii(canvas: Canvas) void {
+    for y = 0..canvasHeight(canvas) {
+        for x = 0..canvasWidth(canvas) {
+            print(glyphFor(canvasSample(canvas, point(x, y))))
+        }
+        println("")
+    }
+}
+
+fun glyphFor(color: Color) str {
+    if color.a <= 0 {
+        return " "
+    }
+
+    let brightness = luma(color)
+    if brightness < 24 {
+        return " "
+    }
+    if brightness < 48 {
+        return "."
+    }
+    if brightness < 80 {
+        return ":"
+    }
+    if brightness < 112 {
+        return "*"
+    }
+    if brightness < 160 {
+        return "o"
+    }
+    if brightness < 208 {
+        return "O"
+    }
+    if brightness < 240 {
+        return "#"
+    }
+    return "@"
+}

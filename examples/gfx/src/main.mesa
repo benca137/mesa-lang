@@ -1,0 +1,238 @@
+from gfx import Canvas, ViewerInput, rgb, rgba, white, blue, green, point, rect, canvas32x18, clearCanvas, fillRect, drawLine, fillCircle, presentAscii, writePpm, writeViewerFrame, readViewerInput, sleepMillis, canvasDrawCalls, canvasTouchedPixels, canvasClippedWrites
+
+struct PongState {
+    left_y: i64,
+    right_y: i64,
+    ball_x: i64,
+    ball_y: i64,
+    ball_vx: i64,
+    ball_vy: i64,
+    left_score: i64,
+    right_score: i64,
+    tick: i64,
+}
+
+struct DemoResult {
+    canvas: Canvas,
+    state: PongState,
+}
+
+fun main() void {
+    let frames = 420;
+    let delay_ms = 70;
+    let result = runDemo(frames, delay_ms);
+    finish(result.canvas, frames, delay_ms, result.state);
+}
+
+fun runDemo(frames: i64, delay_ms: i64) DemoResult {
+    let var canvas = canvas32x18(rgb(8, 13, 24));
+    let var state = initPong();
+    let var frame = 0;
+
+    while frame < frames {
+        let input = readViewerInput();
+        state = stepPong(state, input);
+        renderFrame(&canvas, state, frame);
+        sleepMillis(delay_ms);
+        frame += 1;
+    }
+
+    return .{ canvas: canvas, state: state };
+}
+
+fun renderFrame(canvas: *Canvas, state: PongState, frame: i64) void {
+    renderPong(canvas, state);
+    writeViewerFrame(*canvas, frame);
+}
+
+fun finish(canvas: Canvas, frames: i64, delay_ms: i64, state: PongState) void {
+    writePpm(canvas, "targets/gfx-demo.ppm");
+    presentAscii(canvas);
+    println("");
+    println("wrote targets/gfx-demo.ppm");
+    println("streamed targets/gfx-front.rgba / targets/gfx-back.rgba");
+    println("state file targets/gfx-stream.txt");
+    println("frames={frames}");
+    println("delay_ms={delay_ms}");
+    println("final_score={state.left_score}:{state.right_score}");
+    println("draw_calls={canvasDrawCalls(canvas)}");
+    println("touched_pixels={canvasTouchedPixels(canvas)}");
+    println("clipped_writes={canvasClippedWrites(canvas)}");
+}
+
+fun initPong() PongState {
+    return .{
+        left_y: 7,
+        right_y: 7,
+        ball_x: 16,
+        ball_y: 9,
+        ball_vx: 1,
+        ball_vy: 1,
+        left_score: 0,
+        right_score: 0,
+        tick: 0,
+    }
+}
+
+fun stepPong(state: PongState, input: ViewerInput) PongState {
+    let var next = state
+    next.tick += 1
+    next.left_y = applyPlayerInput(next.left_y, input)
+    next.right_y = steerPaddle(next.right_y, next.ball_y)
+
+    let var next_x = next.ball_x + next.ball_vx
+    let var next_y = next.ball_y + next.ball_vy
+
+    if next_y <= 1 or next_y >= 16 {
+        next.ball_vy = -next.ball_vy
+        next_y = next.ball_y + next.ball_vy
+    }
+
+    if next.ball_vx < 0 and next_x == 3 and overlapsPaddle(next.left_y, next_y) {
+        next.ball_vx = 1
+        next.ball_vy = paddleBounce(next.left_y, next_y)
+        next_x = next.ball_x + next.ball_vx
+    }
+
+    if next.ball_vx > 0 and next_x == 28 and overlapsPaddle(next.right_y, next_y) {
+        next.ball_vx = -1
+        next.ball_vy = paddleBounce(next.right_y, next_y)
+        next_x = next.ball_x + next.ball_vx
+    }
+
+    next.ball_x = next_x
+    next.ball_y = next_y
+
+    if next.ball_x <= 0 {
+        return resetRound(next.left_y, next.right_y, next.left_score, next.right_score + 1, 1, next.tick)
+    }
+
+    if next.ball_x >= 31 {
+        return resetRound(next.left_y, next.right_y, next.left_score + 1, next.right_score, -1, next.tick)
+    }
+
+    return next
+}
+
+fun renderPong(canvas: *Canvas, state: PongState) void {
+    clearCanvas(canvas, rgb(8, 13, 24))
+
+    fillRect(canvas, rect(0, 0, 32, 18), rgba(10, 18, 33, 255))
+    fillRect(canvas, rect(0, 0, 32, 1), rgba(26, 44, 70, 255))
+    fillRect(canvas, rect(0, 17, 32, 1), rgba(26, 44, 70, 255))
+
+    drawDashedCenterLine(canvas)
+    drawScore(canvas, state.left_score, 3)
+    drawScore(canvas, state.right_score, 24)
+    drawControlHint(canvas, state.tick)
+
+    fillRect(canvas, rect(2, state.left_y, 1, 4), rgba(255, 196, 92, 255))
+    fillRect(canvas, rect(29, state.right_y, 1, 4), rgba(98, 190, 255, 255))
+    fillCircle(canvas, point(state.ball_x, state.ball_y), 0, white())
+
+    let pulse_x = 8 + (state.tick % 16)
+    drawLine(canvas, point(pulse_x, 16), point(pulse_x + 2, 16), green())
+    drawLine(canvas, point(31 - pulse_x, 1), point(31 - pulse_x, 1), blue())
+}
+
+fun drawDashedCenterLine(canvas: *Canvas) void {
+    let var y = 2
+    while y < 16 {
+        fillRect(canvas, rect(15, y, 2, 1), rgba(90, 120, 150, 180))
+        y += 2
+    }
+}
+
+fun drawControlHint(canvas: *Canvas, tick: i64) void {
+    let pulse = if tick % 14 < 7 { 255 } else { 180 }
+    fillRect(canvas, rect(1, 1, 2, 1), rgba(255, pulse, 120, 255))
+    fillRect(canvas, rect(1, 16, 2, 1), rgba(255, pulse, 120, 255))
+}
+
+fun drawScore(canvas: *Canvas, score: i64, start_x: i64) void {
+    let count = wrapScore(score)
+    let var i = 0
+    while i < count {
+        fillRect(canvas, rect(start_x + i * 2, 2, 1, 1), rgba(255, 255, 255, 220))
+        i += 1
+    }
+}
+
+fun wrapScore(score: i64) i64 {
+    if score < 6 {
+        return score
+    }
+    return 6
+}
+
+fun steerPaddle(y: i64, ball_y: i64) i64 {
+    let center = y + 1
+    if ball_y > center {
+        return clampLocal(y + 1, 1, 13)
+    }
+    if ball_y < center {
+        return clampLocal(y - 1, 1, 13)
+    }
+    return y
+}
+
+fun applyPlayerInput(y: i64, input: ViewerInput) i64 {
+    let var next = y
+    if input.up and !input.down {
+        next -= 1
+    }
+    if input.down and !input.up {
+        next += 1
+    }
+    return clampLocal(next, 1, 13)
+}
+
+fun overlapsPaddle(paddle_y: i64, ball_y: i64) bool {
+    ball_y >= paddle_y and ball_y < paddle_y + 4
+}
+
+fun paddleBounce(paddle_y: i64, ball_y: i64) i64 {
+    let offset = ball_y - paddle_y
+    if offset <= 0 {
+        return -1
+    }
+    if offset >= 3 {
+        return 1
+    }
+    return 0
+}
+
+fun resetRound(left_y: i64, right_y: i64, left_score: i64, right_score: i64, direction: i64, tick: i64) PongState {
+    let drift = if tick % 2 == 0 { 1 } else { -1 }
+    return .{
+        left_y: left_y,
+        right_y: right_y,
+        ball_x: 16,
+        ball_y: 9,
+        ball_vx: direction,
+        ball_vy: drift,
+        left_score: left_score,
+        right_score: right_score,
+        tick: tick,
+    }
+}
+
+fun clampLocal(value: i64, lo: i64, hi: i64) i64 {
+    if value < lo {
+        return lo
+    }
+    if value > hi {
+        return hi
+    }
+    return value
+}
+
+test "gfx/player_input_moves_left_paddle" {
+    let moved_up = applyPlayerInput(7, .{ up: true, down: false })
+    let moved_down = applyPlayerInput(7, .{ up: false, down: true })
+    let unchanged = applyPlayerInput(7, .{ up: true, down: true })
+
+    @assert(moved_up == 6)
+    @assert(moved_down == 8)
+    @assert(unchanged == 7)
+}

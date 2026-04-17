@@ -1,0 +1,8 @@
+struct Pair {
+    first: int,
+}
+
+fun main() void {
+    let p: Pair = .{first: 1}
+    println(p.second)
+}

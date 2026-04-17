@@ -1,0 +1,5 @@
+pkg myPkg
+
+pub fun whyNot() void {
+    println("Why would I high-five myself?")
+}

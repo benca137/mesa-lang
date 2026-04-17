@@ -1,0 +1,364 @@
+interface interfaces__basic_interface_ok__Area {
+    fun area(self: @this) f64;
+}
+struct interfaces__basic_interface_ok__Circle { r: f64 }
+def interfaces__basic_interface_ok__Area for interfaces__basic_interface_ok__Circle {
+    fun area(self: interfaces__basic_interface_ok__Circle) f64 { return self.r * self.r; }
+}
+fun interfaces__basic_interface_ok__f(c: interfaces__basic_interface_ok__Circle) f64 {
+    return c.area();
+}
+
+interface interfaces__def_multiple_structs_ok__Zeroable { fun zero(self: @this) Self; }
+struct interfaces__def_multiple_structs_ok__Vec2 { x: f64, y: f64 }
+struct interfaces__def_multiple_structs_ok__Vec3 { x: f64, y: f64, z: f64 }
+def interfaces__def_multiple_structs_ok__Zeroable for interfaces__def_multiple_structs_ok__Vec2 {
+    fun zero(self: interfaces__def_multiple_structs_ok__Vec2) interfaces__def_multiple_structs_ok__Vec2 {
+        return .{x: 0.0, y: 0.0};
+    }
+}
+def interfaces__def_multiple_structs_ok__Zeroable for interfaces__def_multiple_structs_ok__Vec3 {
+    fun zero(self: interfaces__def_multiple_structs_ok__Vec3) interfaces__def_multiple_structs_ok__Vec3 {
+        return .{x: 0.0, y: 0.0, z: 0.0};
+    }
+}
+
+interface interfaces__extra_method_ok__Greet { fun hi(self: @this) str; }
+struct interfaces__extra_method_ok__Person { name: str }
+def interfaces__extra_method_ok__Greet for interfaces__extra_method_ok__Person {
+    fun hi(self: interfaces__extra_method_ok__Person) str { return self.name; }
+    fun bye(self: interfaces__extra_method_ok__Person) str { return self.name; }
+}
+
+interface interfaces__iface_returns_bool_ok__I { fun val(self: @this) bool; }
+struct interfaces__iface_returns_bool_ok__S { v: bool }
+def interfaces__iface_returns_bool_ok__I for interfaces__iface_returns_bool_ok__S {
+    fun val(self: interfaces__iface_returns_bool_ok__S) bool { return self.v; }
+}
+
+interface interfaces__iface_returns_f64_ok__I { fun val(self: @this) f64; }
+struct interfaces__iface_returns_f64_ok__S { v: f64 }
+def interfaces__iface_returns_f64_ok__I for interfaces__iface_returns_f64_ok__S {
+    fun val(self: interfaces__iface_returns_f64_ok__S) f64 { return self.v; }
+}
+
+interface interfaces__iface_returns_i32_ok__I { fun val(self: @this) i32; }
+struct interfaces__iface_returns_i32_ok__S { v: i32 }
+def interfaces__iface_returns_i32_ok__I for interfaces__iface_returns_i32_ok__S {
+    fun val(self: interfaces__iface_returns_i32_ok__S) i32 { return self.v; }
+}
+
+interface interfaces__iface_returns_i64_ok__I { fun val(self: @this) i64; }
+struct interfaces__iface_returns_i64_ok__S { v: i64 }
+def interfaces__iface_returns_i64_ok__I for interfaces__iface_returns_i64_ok__S {
+    fun val(self: interfaces__iface_returns_i64_ok__S) i64 { return self.v; }
+}
+
+interface interfaces__iface_returns_str_ok__I { fun val(self: @this) str; }
+struct interfaces__iface_returns_str_ok__S { v: str }
+def interfaces__iface_returns_str_ok__I for interfaces__iface_returns_str_ok__S {
+    fun val(self: interfaces__iface_returns_str_ok__S) str { return self.v; }
+}
+
+interface interfaces__impl_for_multiple_structs_ok__Area { fun area(self: @this) f64; }
+struct interfaces__impl_for_multiple_structs_ok__Circle { r: f64 }
+struct interfaces__impl_for_multiple_structs_ok__Rect { w: f64, h: f64 }
+def interfaces__impl_for_multiple_structs_ok__Area for interfaces__impl_for_multiple_structs_ok__Circle {
+    fun area(self: interfaces__impl_for_multiple_structs_ok__Circle) f64 { return self.r * self.r; }
+}
+def interfaces__impl_for_multiple_structs_ok__Area for interfaces__impl_for_multiple_structs_ok__Rect {
+    fun area(self: interfaces__impl_for_multiple_structs_ok__Rect) f64 { return self.w * self.h; }
+}
+
+interface interfaces__interface_1_methods_ok__I1 {
+    fun m0(self: @this) i64;
+}
+struct interfaces__interface_1_methods_ok__T1 { x: i64 }
+def interfaces__interface_1_methods_ok__I1 for interfaces__interface_1_methods_ok__T1 {
+    fun m0(self: interfaces__interface_1_methods_ok__T1) i64 { return 0; }
+}
+
+interface interfaces__interface_2_methods_ok__I2 {
+    fun m0(self: @this) i64;
+    fun m1(self: @this) i64;
+}
+struct interfaces__interface_2_methods_ok__T2 { x: i64 }
+def interfaces__interface_2_methods_ok__I2 for interfaces__interface_2_methods_ok__T2 {
+    fun m0(self: interfaces__interface_2_methods_ok__T2) i64 { return 0; }
+    fun m1(self: interfaces__interface_2_methods_ok__T2) i64 { return 1; }
+}
+
+interface interfaces__interface_3_methods_ok__I3 {
+    fun m0(self: @this) i64;
+    fun m1(self: @this) i64;
+    fun m2(self: @this) i64;
+}
+struct interfaces__interface_3_methods_ok__T3 { x: i64 }
+def interfaces__interface_3_methods_ok__I3 for interfaces__interface_3_methods_ok__T3 {
+    fun m0(self: interfaces__interface_3_methods_ok__T3) i64 { return 0; }
+    fun m1(self: interfaces__interface_3_methods_ok__T3) i64 { return 1; }
+    fun m2(self: interfaces__interface_3_methods_ok__T3) i64 { return 2; }
+}
+
+interface interfaces__interface_4_methods_ok__I4 {
+    fun m0(self: @this) i64;
+    fun m1(self: @this) i64;
+    fun m2(self: @this) i64;
+    fun m3(self: @this) i64;
+}
+struct interfaces__interface_4_methods_ok__T4 { x: i64 }
+def interfaces__interface_4_methods_ok__I4 for interfaces__interface_4_methods_ok__T4 {
+    fun m0(self: interfaces__interface_4_methods_ok__T4) i64 { return 0; }
+    fun m1(self: interfaces__interface_4_methods_ok__T4) i64 { return 1; }
+    fun m2(self: interfaces__interface_4_methods_ok__T4) i64 { return 2; }
+    fun m3(self: interfaces__interface_4_methods_ok__T4) i64 { return 3; }
+}
+
+interface interfaces__interface_chain_ok__Named { fun name(self: @this) str; }
+interface interfaces__interface_chain_ok__Labeled : interfaces__interface_chain_ok__Named { fun label(self: @this) str; }
+struct interfaces__interface_chain_ok__Item { nm: str, lbl: str }
+def interfaces__interface_chain_ok__Named, interfaces__interface_chain_ok__Labeled for interfaces__interface_chain_ok__Item {
+    fun name(self: interfaces__interface_chain_ok__Item) str { return self.nm; }
+    fun label(self: interfaces__interface_chain_ok__Item) str { return self.lbl; }
+}
+
+interface interfaces__interface_default_method_ok__Describe {
+    fun label(self: @this) str;
+}
+struct interfaces__interface_default_method_ok__Dog { tag: str }
+def interfaces__interface_default_method_ok__Describe for interfaces__interface_default_method_ok__Dog {
+    fun label(self: interfaces__interface_default_method_ok__Dog) str { return self.tag; }
+}
+fun interfaces__interface_default_method_ok__f(d: interfaces__interface_default_method_ok__Dog) str {
+    return d.label();
+}
+
+interface interfaces__interface_inheritance_ok__Eq {
+    fun eq(self: , other: Self) bool;
+}
+interface interfaces__interface_inheritance_ok__Ord : interfaces__interface_inheritance_ok__Eq {
+    fun lt(self: , other: Self) bool;
+}
+struct interfaces__interface_inheritance_ok__MyInt { val: i64 }
+def interfaces__interface_inheritance_ok__Eq, interfaces__interface_inheritance_ok__Ord for interfaces__interface_inheritance_ok__MyInt {
+    fun eq(self: interfaces__interface_inheritance_ok__MyInt, other: interfaces__interface_inheritance_ok__MyInt) bool {
+        return self.val == other.val;
+    }
+    fun lt(self: interfaces__interface_inheritance_ok__MyInt, other: interfaces__interface_inheritance_ok__MyInt) bool {
+        return self.val < other.val;
+    }
+}
+fun interfaces__interface_inheritance_ok__f(
+    a: interfaces__interface_inheritance_ok__MyInt,
+    b: interfaces__interface_inheritance_ok__MyInt,
+) bool {
+    return a.lt(b);
+}
+
+interface interfaces__interface_no_methods_ok__Marker {}
+struct interfaces__interface_no_methods_ok__Tagged { val: i64 }
+def interfaces__interface_no_methods_ok__Marker for interfaces__interface_no_methods_ok__Tagged {}
+fun interfaces__interface_no_methods_ok__accept(_: any interfaces__interface_no_methods_ok__Marker) bool {
+    return true;
+}
+
+interface interfaces__interface_returns_self_ok__Builder {
+    fun reset(self: *@this) void;
+}
+struct interfaces__interface_returns_self_ok__Counter { n: i64 }
+def interfaces__interface_returns_self_ok__Builder for interfaces__interface_returns_self_ok__Counter {
+    fun reset(self: *interfaces__interface_returns_self_ok__Counter) void { self.n = 0; }
+}
+
+interface interfaces__interface_two_methods_ok__Shape {
+    fun area(self: @this) f64;
+    fun perimeter(self: @this) f64;
+}
+struct interfaces__interface_two_methods_ok__Square { side: f64 }
+def interfaces__interface_two_methods_ok__Shape for interfaces__interface_two_methods_ok__Square {
+    fun area(self: interfaces__interface_two_methods_ok__Square) f64 { return self.side * self.side; }
+    fun perimeter(self: interfaces__interface_two_methods_ok__Square) f64 { return 4.0 * self.side; }
+}
+
+interface interfaces__interface_with_bool_method_ok__Predicate { fun check(self: @this) bool; }
+struct interfaces__interface_with_bool_method_ok__Positive { val: f64 }
+def interfaces__interface_with_bool_method_ok__Predicate for interfaces__interface_with_bool_method_ok__Positive {
+    fun check(self: interfaces__interface_with_bool_method_ok__Positive) bool { return self.val > 0.0; }
+}
+
+interface interfaces__interface_with_default_ok__Printable {
+    fun to_str(self: @this) str;
+    fun print(self: @this) void {
+        let s = self.to_str();
+    }
+}
+struct interfaces__interface_with_default_ok__Num { val: i64 }
+def interfaces__interface_with_default_ok__Printable for interfaces__interface_with_default_ok__Num {
+    fun to_str(self: interfaces__interface_with_default_ok__Num) str { return "num"; }
+}
+
+interface interfaces__multiple_interfaces_ok__Add { fun add(self: , other: Self) Self; }
+interface interfaces__multiple_interfaces_ok__Neg { fun neg(self: @this) Self; }
+struct interfaces__multiple_interfaces_ok__Vec2 { x: f64, y: f64 }
+def interfaces__multiple_interfaces_ok__Add, interfaces__multiple_interfaces_ok__Neg for interfaces__multiple_interfaces_ok__Vec2 {
+    fun add(self: interfaces__multiple_interfaces_ok__Vec2, other: interfaces__multiple_interfaces_ok__Vec2) interfaces__multiple_interfaces_ok__Vec2 {
+        return .{x: self.x + other.x, y: self.y + other.y};
+    }
+    fun neg(self: interfaces__multiple_interfaces_ok__Vec2) interfaces__multiple_interfaces_ok__Vec2 {
+        return .{x: -self.x, y: -self.y};
+    }
+}
+fun interfaces__multiple_interfaces_ok__f(
+    a: interfaces__multiple_interfaces_ok__Vec2,
+    b: interfaces__multiple_interfaces_ok__Vec2,
+) interfaces__multiple_interfaces_ok__Vec2 {
+    return a.add(b);
+}
+
+test "interfaces/basic_interface_ok.mesa" {
+    let c: interfaces__basic_interface_ok__Circle = .{ r: 3.0 }
+    @assert(interfaces__basic_interface_ok__f(c) == 9.0)
+    @assert(c.area() == 9.0)
+}
+
+test "interfaces/def_multiple_structs_ok.mesa" {
+    let input2: interfaces__def_multiple_structs_ok__Vec2 = .{ x: 9.0, y: -4.0 }
+    let input3: interfaces__def_multiple_structs_ok__Vec3 = .{ x: 1.0, y: 2.0, z: 3.0 }
+    let v2 = input2.zero()
+    let v3 = input3.zero()
+    @assert(v2.x == 0.0)
+    @assert(v2.y == 0.0)
+    @assert(v3.x == 0.0)
+    @assert(v3.y == 0.0)
+    @assert(v3.z == 0.0)
+}
+
+test "interfaces/extra_method_ok.mesa" {
+    let p: interfaces__extra_method_ok__Person = .{ name: "Ada" }
+    @assert(p.hi() == "Ada")
+    @assert(p.bye() == "Ada")
+}
+
+test "interfaces/iface_returns_bool_ok.mesa" {
+    let yes: interfaces__iface_returns_bool_ok__S = .{ v: true }
+    let no: interfaces__iface_returns_bool_ok__S = .{ v: false }
+    @assert(yes.val())
+    @assert(!no.val())
+}
+
+test "interfaces/iface_returns_f64_ok.mesa" {
+    let s: interfaces__iface_returns_f64_ok__S = .{ v: 3.5 }
+    @assert(s.val() == 3.5)
+}
+
+test "interfaces/iface_returns_i32_ok.mesa" {
+    let s: interfaces__iface_returns_i32_ok__S = .{ v: 12 }
+    @assert(s.val() == 12)
+}
+
+test "interfaces/iface_returns_i64_ok.mesa" {
+    let s: interfaces__iface_returns_i64_ok__S = .{ v: 42 }
+    @assert(s.val() == 42)
+}
+
+test "interfaces/iface_returns_str_ok.mesa" {
+    let s: interfaces__iface_returns_str_ok__S = .{ v: "ok" }
+    @assert(s.val() == "ok")
+}
+
+test "interfaces/impl_for_multiple_structs_ok.mesa" {
+    let circle: interfaces__impl_for_multiple_structs_ok__Circle = .{ r: 4.0 }
+    let rect: interfaces__impl_for_multiple_structs_ok__Rect = .{ w: 3.0, h: 5.0 }
+    @assert(circle.area() == 16.0)
+    @assert(rect.area() == 15.0)
+}
+
+test "interfaces/interface_1_methods_ok.mesa" {
+    let v: interfaces__interface_1_methods_ok__T1 = .{ x: 7 }
+    @assert(v.m0() == 0)
+}
+
+test "interfaces/interface_2_methods_ok.mesa" {
+    let v: interfaces__interface_2_methods_ok__T2 = .{ x: 7 }
+    @assert(v.m0() == 0)
+    @assert(v.m1() == 1)
+}
+
+test "interfaces/interface_3_methods_ok.mesa" {
+    let v: interfaces__interface_3_methods_ok__T3 = .{ x: 7 }
+    @assert(v.m0() == 0)
+    @assert(v.m1() == 1)
+    @assert(v.m2() == 2)
+}
+
+test "interfaces/interface_4_methods_ok.mesa" {
+    let v: interfaces__interface_4_methods_ok__T4 = .{ x: 7 }
+    @assert(v.m0() == 0)
+    @assert(v.m1() == 1)
+    @assert(v.m2() == 2)
+    @assert(v.m3() == 3)
+}
+
+test "interfaces/interface_chain_ok.mesa" {
+    let item: interfaces__interface_chain_ok__Item = .{ nm: "sock", lbl: "inventory" }
+    @assert(item.name() == "sock")
+    @assert(item.label() == "inventory")
+}
+
+test "interfaces/interface_default_method_ok.mesa" {
+    @assert(interfaces__interface_default_method_ok__f(.{ tag: "dog-1" }) == "dog-1")
+}
+
+test "interfaces/interface_inheritance_ok.mesa" {
+    let a: interfaces__interface_inheritance_ok__MyInt = .{ val: 1 }
+    let b: interfaces__interface_inheritance_ok__MyInt = .{ val: 2 }
+    @assert(interfaces__interface_inheritance_ok__f(a, b))
+    @assert(!a.eq(b))
+    @assert(b.eq(.{ val: 2 }))
+}
+
+test "interfaces/interface_no_methods_ok.mesa" {
+    let tagged: interfaces__interface_no_methods_ok__Tagged = .{ val: 7 }
+    @assert(interfaces__interface_no_methods_ok__accept(tagged))
+    @assert(tagged.val == 7)
+}
+
+test "interfaces/interface_returns_self_ok.mesa" {
+    let var counter: interfaces__interface_returns_self_ok__Counter = .{ n: 9 }
+    counter.reset()
+    @assert(counter.n == 0)
+}
+
+test "interfaces/interface_two_methods_ok.mesa" {
+    let sq: interfaces__interface_two_methods_ok__Square = .{ side: 4.0 }
+    @assert(sq.area() == 16.0)
+    @assert(sq.perimeter() == 16.0)
+}
+
+test "interfaces/interface_with_bool_method_ok.mesa" {
+    let pos: interfaces__interface_with_bool_method_ok__Positive = .{ val: 3.0 }
+    let neg: interfaces__interface_with_bool_method_ok__Positive = .{ val: -1.0 }
+    @assert(pos.check())
+    @assert(!neg.check())
+}
+
+test "interfaces/interface_with_default_ok.mesa" {
+    let n: interfaces__interface_with_default_ok__Num = .{ val: 12 }
+    @assert(n.to_str() == "num")
+    @assert(n.val == 12)
+}
+
+test "interfaces/multiple_interfaces_ok.mesa" {
+    let a: interfaces__multiple_interfaces_ok__Vec2 = .{ x: 1.0, y: 2.0 }
+    let b: interfaces__multiple_interfaces_ok__Vec2 = .{ x: 3.0, y: -4.0 }
+    let sum = interfaces__multiple_interfaces_ok__f(a, b)
+    let neg = a.neg()
+    @assert(sum.x == 4.0)
+    @assert(sum.y == -2.0)
+    @assert(neg.x == -1.0)
+    @assert(neg.y == -2.0)
+}
+
+fun main() void {
+    println("corpus")
+}

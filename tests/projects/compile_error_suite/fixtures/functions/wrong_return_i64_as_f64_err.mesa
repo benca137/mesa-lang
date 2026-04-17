@@ -1,0 +1,4 @@
+// With widening, i64 → f64 is valid (integer literal used as float)
+fun f() f64 {  //~ compile-ok
+    return 0;
+}

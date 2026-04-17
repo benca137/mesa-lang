@@ -1,0 +1,563 @@
+// control_flow__break_in_loop_ok
+fun control_flow__break_in_loop_ok__f() i64 {  //~ compile-ok
+    let var seen: i64 = 0;
+    for i = 0...10 {
+        if i > 5 { break; }
+        seen += 1;
+    }
+    return seen;
+}
+
+// control_flow__continue_in_loop_ok
+fun control_flow__continue_in_loop_ok__f() i64 {  //~ compile-ok
+    let var sum: i64 = 0;
+    for i = 0...10 {
+        if i % 2 == 0 { continue; }
+        sum += i;
+    }
+    return sum;
+}
+
+// control_flow__defer_ok
+fun control_flow__defer_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 1;
+    {
+        defer { x = 2; }
+    }
+    return x;
+}
+
+// control_flow__early_return_in_loop_ok
+fun control_flow__early_return_in_loop_ok__find_gt(v: vec[i64], threshold: i64) ?i64 {  //~ compile-ok
+    for x in v {
+        if x > threshold { return x; }
+    }
+    return none;
+}
+
+fun control_flow__early_return_in_loop_ok__has_value(x: ?i64) bool {
+    if x |v| { return true; }
+    return false;
+}
+
+// control_flow__early_return_ok
+fun control_flow__early_return_ok__f(x: i64) i64 {  //~ compile-ok
+    if x < 0 { return 0; }
+    return x;
+}
+
+// control_flow__for_break_ok
+fun control_flow__for_break_ok__find(v: vec[i64], target: i64) i64 {  //~ compile-ok
+    let var i: i64 = 0;
+    for x in v {
+        if x == target { return i; }
+        i += 1;
+    }
+    return -1;
+}
+
+// control_flow__if_both_branches_ok
+fun control_flow__if_both_branches_ok__f(b: bool) i64 {  //~ compile-ok
+    return if b { 1 } else { 0 };
+}
+
+// control_flow__if_both_return_ok
+fun control_flow__if_both_return_ok__sign(x: i64) i64 {  //~ compile-ok
+    if x > 0 { return 1; } else if x < 0 { return -1; } else { return 0; }
+}
+
+// control_flow__if_cond_ok
+fun control_flow__if_cond_ok__f(n: i64) i64 {  //~ compile-ok
+    let var score: i64 = 0;
+    if n > 0 { score += 1; }
+    if n == 0 { score += 10; }
+    if n != 0 { score += 100; }
+    return score;
+}
+
+// control_flow__if_else_chain_ok
+fun control_flow__if_else_chain_ok__f(n: i64) i64 {  //~ compile-ok
+    if n < 0 {
+        return -1;
+    } else if n == 0 {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+// control_flow__if_missing_else_ok
+fun control_flow__if_missing_else_ok__f(b: bool) i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    if b { x = 1; }
+    return x;
+}
+
+// control_flow__if_returns_optional_ok
+fun control_flow__if_returns_optional_ok__f(x: i64) ?i64 {  //~ compile-ok
+    return if x > 0 { x } else { none };
+}
+
+fun control_flow__if_returns_optional_ok__has_value(x: ?i64) bool {
+    if x |v| { return true; }
+    return false;
+}
+
+// control_flow__if_returns_struct_ok
+struct control_flow__if_returns_struct_ok__Vec2 { x: f64, y: f64 }
+fun control_flow__if_returns_struct_ok__f(positive: bool) control_flow__if_returns_struct_ok__Vec2 {  //~ compile-ok
+    return if positive { .{x: 1.0, y: 1.0} } else { .{x: -1.0, y: -1.0} };
+}
+
+// control_flow__if_unwrap_mut_ok
+fun control_flow__if_unwrap_mut_ok__f(x: ?i64) i64 {  //~ compile-ok
+    let var y = x;
+    if y |*v| {
+        *v += 1;
+    }
+    if y |v|, return v; else, return 0
+}
+
+fun control_flow__if_unwrap_mut_ok__some(x: i64) ?i64 {
+    return x;
+}
+
+// control_flow__if_unwrap_ok
+fun control_flow__if_unwrap_ok__f(x: ?i64) i64 {  //~ compile-ok
+    if x |v|, return v; else, return 0
+}
+
+fun control_flow__if_unwrap_ok__some(x: i64) ?i64 {
+    return x;
+}
+
+// control_flow__if_value_float_ok
+fun control_flow__if_value_float_ok__f(x: f64) f64 {  //~ compile-ok
+    return if x >= 0.0 { x } else { -x };
+}
+
+// control_flow__if_value_ok
+fun control_flow__if_value_ok__f(x: i64) i64 {  //~ compile-ok
+    let y = if x > 0 { x } else { -x };
+    return y;
+}
+
+// control_flow__if_without_else_no_value_ok
+fun control_flow__if_without_else_no_value_ok__f(b: bool) i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    if b { x = 1; }
+    return x;
+}
+
+// control_flow__match_binding_arm_ok
+fun control_flow__match_binding_arm_ok__f(n: i64) i64 {  //~ compile-ok
+    return match n {
+        0 => { 0 },
+        x => { x * 2 },
+    };
+}
+
+// control_flow__match_bool_both_ok
+fun control_flow__match_bool_both_ok__f(b: bool) i64 {  //~ compile-ok
+    return match b {
+        true  => { 1 },
+        false => { 0 },
+    };
+}
+
+// control_flow__match_bool_ok
+fun control_flow__match_bool_ok__f(x: bool) i64 {  //~ compile-ok
+    return match x { true => {1}, false => {0} };
+}
+
+// control_flow__match_i64_ok
+fun control_flow__match_i64_ok__f(x: i64) i64 {  //~ compile-ok
+    return match x { 0 => {0}, _ => {1} };
+}
+
+// control_flow__match_int_wildcard_ok
+fun control_flow__match_int_wildcard_ok__f(n: i64) i64 {  //~ compile-ok
+    return match n {
+        0 => { 0 },
+        1 => { 1 },
+        _ => { 2 },
+    };
+}
+
+// control_flow__match_returns_ok
+union control_flow__match_returns_ok__D { N, S, E, W }
+fun control_flow__match_returns_ok__dx(d: control_flow__match_returns_ok__D) i64 {  //~ compile-ok
+    return match d { .E => {1}, .W => {-1}, _ => {0} };
+}
+fun control_flow__match_returns_ok__dy(d: control_flow__match_returns_ok__D) i64 {
+    return match d { .N => {1}, .S => {-1}, _ => {0} };
+}
+
+// control_flow__match_returns_optional_ok
+union control_flow__match_returns_optional_ok__Result { Ok(i64), Err }
+fun control_flow__match_returns_optional_ok__to_opt(r: control_flow__match_returns_optional_ok__Result) i64 {  //~ compile-ok
+    return match r { .Ok(v) => { v }, .Err => { -1 } };
+}
+
+// control_flow__match_returns_struct_ok
+struct control_flow__match_returns_struct_ok__Vec2 { x: f64, y: f64 }
+union control_flow__match_returns_struct_ok__Dir { N, S, E, W }
+fun control_flow__match_returns_struct_ok__unit(d: control_flow__match_returns_struct_ok__Dir) control_flow__match_returns_struct_ok__Vec2 {  //~ compile-ok
+    return match d {
+        .N => { .{x: 0.0,  y: 1.0}  },
+        .S => { .{x: 0.0,  y: -1.0} },
+        .E => { .{x: 1.0,  y: 0.0}  },
+        .W => { .{x: -1.0, y: 0.0}  },
+    };
+}
+
+fun control_flow__match_returns_struct_ok__north() control_flow__match_returns_struct_ok__Dir {
+    return control_flow__match_returns_struct_ok__Dir.N;
+}
+
+fun control_flow__match_returns_struct_ok__west() control_flow__match_returns_struct_ok__Dir {
+    return control_flow__match_returns_struct_ok__Dir.W;
+}
+
+// control_flow__multiple_return_types_ok
+fun control_flow__multiple_return_types_ok__classify(x: f64) str {  //~ compile-ok
+    if x < 0.0 { return "negative"; }
+    if x == 0.0 { return "zero"; }
+    return "positive";
+}
+
+// control_flow__named_break_ok
+fun control_flow__named_break_ok__f() i64 {  //~ compile-ok
+    let var outer_count: i64 = 0;
+    outer: for i = 0...10 {
+        outer_count += 1;
+        for j = 0...10 {
+            if i == j { break outer; }
+        }
+    }
+    return outer_count;
+}
+
+// control_flow__named_continue_ok
+fun control_flow__named_continue_ok__f() i64 {  //~ compile-ok
+    let var outer_count: i64 = 0;
+    outer: for i = 0...10 {
+        outer_count += 1;
+        for j = 0...10 {
+            if j == 0 { continue outer; }
+        }
+    }
+    return outer_count;
+}
+
+// control_flow__nested_if_ok
+fun control_flow__nested_if_ok__clamp(x: i64, lo: i64, hi: i64) i64 {  //~ compile-ok
+    return if x < lo { lo } else if x > hi { hi } else { x };
+}
+
+// control_flow__nested_loops_break_ok
+fun control_flow__nested_loops_break_ok__f() i64 {  //~ compile-ok
+    let var result: i64 = -1;
+    for i = 0...10 {
+        for j = 0...10 {
+            if i + j == 15 { result = i; break; }
+        }
+        if result >= 0 { break; }
+    }
+    return result;
+}
+
+// control_flow__nested_match_ok
+union control_flow__nested_match_ok__A { X, Y }
+union control_flow__nested_match_ok__B { P, Q }
+fun control_flow__nested_match_ok__f(a: control_flow__nested_match_ok__A, b: control_flow__nested_match_ok__B) i64 {  //~ compile-ok
+    return match a {
+        .X => { match b { .P => {1}, .Q => {2} } },
+        .Y => { match b { .P => {3}, .Q => {4} } },
+    };
+}
+
+// control_flow__no_return_void_ok
+fun control_flow__no_return_void_ok__f(x: i64) i64 {  //~ compile-ok
+    let var y: i64 = x * 2;
+    return y;
+}
+
+// control_flow__return_correct_type_ok
+fun control_flow__return_correct_type_ok__f() i64 {  //~ compile-ok
+    return 42;
+}
+
+// control_flow__return_early_ok
+fun control_flow__return_early_ok__f(v: vec[i64]) i64 {  //~ compile-ok
+    for x in v : x > 100 { return x; }
+    return 0;
+}
+
+// control_flow__return_in_all_branches_ok
+fun control_flow__return_in_all_branches_ok__f(b: bool) i64 {  //~ compile-ok
+    if b { return 1; } else { return 0; }
+}
+
+// control_flow__return_in_for_ok
+fun control_flow__return_in_for_ok__f() i64 {  //~ compile-ok
+    for i = 0...10 : i == 5 { return i; }
+    return -1;
+}
+
+// control_flow__return_in_match_arm_ok
+union control_flow__return_in_match_arm_ok__C { A, B, C2 }
+fun control_flow__return_in_match_arm_ok__f(c: control_flow__return_in_match_arm_ok__C) i64 {  //~ compile-ok
+    return match c { .A => { 1 }, .B => { 2 }, .C2 => { 3 } };
+}
+
+// control_flow__return_in_while_ok
+fun control_flow__return_in_while_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    while x < 10 { if x == 5 { return x; } x += 1; }
+    return -1;
+}
+
+// control_flow__return_void_ok
+fun control_flow__return_void_ok__f() void {  //~ compile-ok
+    return;
+}
+
+fun control_flow__return_void_ok__g() i64 {
+    control_flow__return_void_ok__f();
+    return 1;
+}
+
+// control_flow__void_if_no_else_ok
+fun control_flow__void_if_no_else_ok__f(b: bool) i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    if b { x = 1; }
+    return x;
+}
+
+// control_flow__while_bool_ok
+fun control_flow__while_bool_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    while x < 10 {
+        x += 1;
+    }
+    return x;
+}
+
+// control_flow__while_complex_cond_ok
+fun control_flow__while_complex_cond_ok__f(n: i64) i64 {  //~ compile-ok
+    let var i: i64 = 0;
+    let var s: i64 = 0;
+    while i < n and s < 100 {
+        s += i;
+        i += 1;
+    }
+    return s;
+}
+
+// control_flow__while_returns_ok
+fun control_flow__while_returns_ok__f(n: i64) i64 {  //~ compile-ok
+    let var x: i64 = n;
+    while x > 1 { x = x / 2; }
+    return x;
+}
+
+test "control_flow/break_in_loop_ok.mesa" {
+    @assert(control_flow__break_in_loop_ok__f() == 6)
+}
+test "control_flow/continue_in_loop_ok.mesa" {
+    @assert(control_flow__continue_in_loop_ok__f() == 25)
+}
+test "control_flow/defer_ok.mesa" {
+    @assert(control_flow__defer_ok__f() == 2)
+}
+test "control_flow/early_return_in_loop_ok.mesa" {
+    let result = control_flow__early_return_in_loop_ok__find_gt(vec[1, 4, 8, 2], 5)
+    if result |v| {
+        @assert(v == 8)
+    } else {
+        @assert(false)
+    }
+    @assert(!control_flow__early_return_in_loop_ok__has_value(control_flow__early_return_in_loop_ok__find_gt(vec[1, 4, 5], 10)))
+}
+test "control_flow/early_return_ok.mesa" {
+    @assert(control_flow__early_return_ok__f(-3) == 0)
+    @assert(control_flow__early_return_ok__f(7) == 7)
+}
+test "control_flow/for_break_ok.mesa" {
+    @assert(control_flow__for_break_ok__find(vec[4, 7, 9], 7) == 1)
+    @assert(control_flow__for_break_ok__find(vec[4, 7, 9], 2) == -1)
+}
+test "control_flow/if_both_branches_ok.mesa" {
+    @assert(control_flow__if_both_branches_ok__f(true) == 1)
+    @assert(control_flow__if_both_branches_ok__f(false) == 0)
+}
+test "control_flow/if_both_return_ok.mesa" {
+    @assert(control_flow__if_both_return_ok__sign(4) == 1)
+    @assert(control_flow__if_both_return_ok__sign(-9) == -1)
+    @assert(control_flow__if_both_return_ok__sign(0) == 0)
+}
+test "control_flow/if_cond_ok.mesa" {
+    @assert(control_flow__if_cond_ok__f(5) == 101)
+    @assert(control_flow__if_cond_ok__f(0) == 10)
+    @assert(control_flow__if_cond_ok__f(-2) == 100)
+}
+test "control_flow/if_else_chain_ok.mesa" {
+    @assert(control_flow__if_else_chain_ok__f(-1) == -1)
+    @assert(control_flow__if_else_chain_ok__f(0) == 0)
+    @assert(control_flow__if_else_chain_ok__f(9) == 1)
+}
+test "control_flow/if_missing_else_ok.mesa" {
+    @assert(control_flow__if_missing_else_ok__f(true) == 1)
+    @assert(control_flow__if_missing_else_ok__f(false) == 0)
+}
+test "control_flow/if_returns_optional_ok.mesa" {
+    let result = control_flow__if_returns_optional_ok__f(4)
+    if result |v| {
+        @assert(v == 4)
+    } else {
+        @assert(false)
+    }
+    @assert(!control_flow__if_returns_optional_ok__has_value(control_flow__if_returns_optional_ok__f(0)))
+}
+test "control_flow/if_returns_struct_ok.mesa" {
+    let pos = control_flow__if_returns_struct_ok__f(true)
+    let neg = control_flow__if_returns_struct_ok__f(false)
+    @assert(pos.x == 1.0)
+    @assert(pos.y == 1.0)
+    @assert(neg.x == -1.0)
+    @assert(neg.y == -1.0)
+}
+test "control_flow/if_unwrap_mut_ok.mesa" {
+    @assert(control_flow__if_unwrap_mut_ok__f(control_flow__if_unwrap_mut_ok__some(41)) == 42)
+    @assert(control_flow__if_unwrap_mut_ok__f(none) == 0)
+}
+test "control_flow/if_unwrap_ok.mesa" {
+    @assert(control_flow__if_unwrap_ok__f(control_flow__if_unwrap_ok__some(8)) == 8)
+    @assert(control_flow__if_unwrap_ok__f(none) == 0)
+}
+test "control_flow/if_value_float_ok.mesa" {
+    @assert(control_flow__if_value_float_ok__f(2.5) == 2.5)
+    @assert(control_flow__if_value_float_ok__f(-2.5) == 2.5)
+}
+test "control_flow/if_value_ok.mesa" {
+    @assert(control_flow__if_value_ok__f(4) == 4)
+    @assert(control_flow__if_value_ok__f(-4) == 4)
+}
+test "control_flow/if_without_else_no_value_ok.mesa" {
+    @assert(control_flow__if_without_else_no_value_ok__f(true) == 1)
+    @assert(control_flow__if_without_else_no_value_ok__f(false) == 0)
+}
+test "control_flow/match_binding_arm_ok.mesa" {
+    @assert(control_flow__match_binding_arm_ok__f(0) == 0)
+    @assert(control_flow__match_binding_arm_ok__f(7) == 14)
+}
+test "control_flow/match_bool_both_ok.mesa" {
+    @assert(control_flow__match_bool_both_ok__f(true) == 1)
+    @assert(control_flow__match_bool_both_ok__f(false) == 0)
+}
+test "control_flow/match_bool_ok.mesa" {
+    @assert(control_flow__match_bool_ok__f(true) == 1)
+    @assert(control_flow__match_bool_ok__f(false) == 0)
+}
+test "control_flow/match_i64_ok.mesa" {
+    @assert(control_flow__match_i64_ok__f(0) == 0)
+    @assert(control_flow__match_i64_ok__f(9) == 1)
+}
+test "control_flow/match_int_wildcard_ok.mesa" {
+    @assert(control_flow__match_int_wildcard_ok__f(0) == 0)
+    @assert(control_flow__match_int_wildcard_ok__f(1) == 1)
+    @assert(control_flow__match_int_wildcard_ok__f(2) == 2)
+}
+test "control_flow/match_returns_ok.mesa" {
+    @assert(control_flow__match_returns_ok__dx(.E) == 1)
+    @assert(control_flow__match_returns_ok__dx(.W) == -1)
+    @assert(control_flow__match_returns_ok__dx(.N) == 0)
+    @assert(control_flow__match_returns_ok__dy(.N) == 1)
+    @assert(control_flow__match_returns_ok__dy(.S) == -1)
+    @assert(control_flow__match_returns_ok__dy(.E) == 0)
+}
+test "control_flow/match_returns_optional_ok.mesa" {
+    @assert(control_flow__match_returns_optional_ok__to_opt(.Ok(7)) == 7)
+    @assert(control_flow__match_returns_optional_ok__to_opt(.Err) == -1)
+}
+test "control_flow/match_returns_struct_ok.mesa" {
+    let n = control_flow__match_returns_struct_ok__unit(control_flow__match_returns_struct_ok__north())
+    let w = control_flow__match_returns_struct_ok__unit(control_flow__match_returns_struct_ok__west())
+    @assert(n.x == 0.0)
+    @assert(n.y == 1.0)
+    @assert(w.x == -1.0)
+    @assert(w.y == 0.0)
+}
+test "control_flow/multiple_return_types_ok.mesa" {
+    @assert(control_flow__multiple_return_types_ok__classify(-1.0) == "negative")
+    @assert(control_flow__multiple_return_types_ok__classify(0.0) == "zero")
+    @assert(control_flow__multiple_return_types_ok__classify(5.0) == "positive")
+}
+test "control_flow/named_break_ok.mesa" {
+    @assert(control_flow__named_break_ok__f() == 1)
+}
+test "control_flow/named_continue_ok.mesa" {
+    @assert(control_flow__named_continue_ok__f() == 11)
+}
+test "control_flow/nested_if_ok.mesa" {
+    @assert(control_flow__nested_if_ok__clamp(5, 0, 10) == 5)
+    @assert(control_flow__nested_if_ok__clamp(-2, 0, 10) == 0)
+    @assert(control_flow__nested_if_ok__clamp(20, 0, 10) == 10)
+}
+test "control_flow/nested_loops_break_ok.mesa" {
+    @assert(control_flow__nested_loops_break_ok__f() == 5)
+}
+test "control_flow/nested_match_ok.mesa" {
+    @assert(control_flow__nested_match_ok__f(.X, .P) == 1)
+    @assert(control_flow__nested_match_ok__f(.X, .Q) == 2)
+    @assert(control_flow__nested_match_ok__f(.Y, .P) == 3)
+    @assert(control_flow__nested_match_ok__f(.Y, .Q) == 4)
+}
+test "control_flow/no_return_void_ok.mesa" {
+    @assert(control_flow__no_return_void_ok__f(9) == 18)
+}
+test "control_flow/return_correct_type_ok.mesa" {
+    @assert(control_flow__return_correct_type_ok__f() == 42)
+}
+test "control_flow/return_early_ok.mesa" {
+    @assert(control_flow__return_early_ok__f(vec[1, 50, 150, 200]) == 150)
+    @assert(control_flow__return_early_ok__f(vec[1, 50, 99]) == 0)
+}
+test "control_flow/return_in_all_branches_ok.mesa" {
+    @assert(control_flow__return_in_all_branches_ok__f(true) == 1)
+    @assert(control_flow__return_in_all_branches_ok__f(false) == 0)
+}
+test "control_flow/return_in_for_ok.mesa" {
+    @assert(control_flow__return_in_for_ok__f() == 5)
+}
+test "control_flow/return_in_match_arm_ok.mesa" {
+    @assert(control_flow__return_in_match_arm_ok__f(.A) == 1)
+    @assert(control_flow__return_in_match_arm_ok__f(.B) == 2)
+    @assert(control_flow__return_in_match_arm_ok__f(.C2) == 3)
+}
+test "control_flow/return_in_while_ok.mesa" {
+    @assert(control_flow__return_in_while_ok__f() == 5)
+}
+test "control_flow/return_void_ok.mesa" {
+    @assert(control_flow__return_void_ok__g() == 1)
+}
+test "control_flow/void_if_no_else_ok.mesa" {
+    @assert(control_flow__void_if_no_else_ok__f(true) == 1)
+    @assert(control_flow__void_if_no_else_ok__f(false) == 0)
+}
+test "control_flow/while_bool_ok.mesa" {
+    @assert(control_flow__while_bool_ok__f() == 10)
+}
+test "control_flow/while_complex_cond_ok.mesa" {
+    @assert(control_flow__while_complex_cond_ok__f(10) == 45)
+    @assert(control_flow__while_complex_cond_ok__f(20) == 105)
+}
+test "control_flow/while_returns_ok.mesa" {
+    @assert(control_flow__while_returns_ok__f(64) == 1)
+    @assert(control_flow__while_returns_ok__f(1) == 1)
+}
+
+fun main() void {
+    println("corpus")
+}

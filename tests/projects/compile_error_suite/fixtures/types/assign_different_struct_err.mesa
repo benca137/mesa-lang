@@ -1,0 +1,7 @@
+struct A { x: i64 }
+struct B { y: i64 }
+fun f() void {
+    let var a: A = .{x: 0};
+    let b: B = .{y: 1};
+    a = b;  //~ error: type mismatch
+}

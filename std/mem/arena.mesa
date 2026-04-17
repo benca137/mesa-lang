@@ -1,0 +1,62 @@
+pkg mem
+
+pub struct ArenaAllocator {
+    buffer: *any Buffer,
+    used: i64,
+
+    pub fun init(buffer: *any Buffer) @this {
+        .{
+            buffer: buffer,
+            used: 0
+        }
+    }
+
+    pub fun reset(self: *ArenaAllocator) void {
+        self.used = 0
+    }
+
+    pub fun free(self: *ArenaAllocator) void {
+        self.buffer.release()
+        self.used = 0
+    }
+
+    pub fun page(initial_capacity: i64) @this {
+        ArenaAllocator.init(PageBuffer.init(initial_capacity))
+    }
+
+    pub fun c(initial_capacity: i64) @this {
+        ArenaAllocator.init(CBuffer.init(initial_capacity))
+    }
+
+    pub fun fixed(base: *void, capacity: i64) @this {
+        ArenaAllocator.init(FixedBuffer.init(base, capacity))
+    }
+}
+
+def Allocator for ArenaAllocator {
+    fun alloc(self: *@this, size: i64, align: i64) *void {
+        let start = alignForward(self.used, align)
+        let end = start + size
+        self.buffer.reserve(end, align)
+        self.used = end
+        return @ptrAdd(self.buffer.base_ptr(), start)
+    }
+
+    fun realloc(self: *ArenaAllocator, ptr: *void, old_size: i64, new_size: i64, align: i64) *void {
+        if new_size <= old_size {
+            return ptr;
+        }
+
+        let start = alignForward(self.used, align)
+        let end = start + new_size
+        self.buffer.reserve(end, align)
+        self.used = end
+        let next = @ptrAdd(self.buffer.base_ptr(), start)
+        @memcpy(next, ptr, old_size)
+        return next;
+    }
+
+    fun free_bytes(self: *ArenaAllocator, ptr: *void, size: i64) void {
+        return;
+    }
+}

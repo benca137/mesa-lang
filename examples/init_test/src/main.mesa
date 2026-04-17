@@ -1,0 +1,6 @@
+from myPkg import whyNot
+
+fun main() void {
+    whyNot()
+    println(@sizeOf(i64))
+}

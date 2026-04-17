@@ -1,0 +1,585 @@
+fun optionals__helpers__some_i64(x: i64) ?i64 { return x; }
+fun optionals__helpers__some_i32(x: i32) ?i32 { return x; }
+fun optionals__helpers__some_i16(x: i16) ?i16 { return x; }
+fun optionals__helpers__some_i8(x: i8) ?i8 { return x; }
+fun optionals__helpers__some_u64(x: u64) ?u64 { return x; }
+fun optionals__helpers__some_u32(x: u32) ?u32 { return x; }
+fun optionals__helpers__some_u16(x: u16) ?u16 { return x; }
+fun optionals__helpers__some_u8(x: u8) ?u8 { return x; }
+fun optionals__helpers__some_f64(x: f64) ?f64 { return x; }
+fun optionals__helpers__some_f32(x: f32) ?f32 { return x; }
+fun optionals__helpers__some_bool(x: bool) ?bool { return x; }
+fun optionals__helpers__some_str(x: str) ?str { return x; }
+fun optionals__helpers__some_opt_i64(x: ?i64) ??i64 {
+    let y: ??i64 = x;
+    return y;
+}
+fun optionals__helpers__some_opt_f64(x: ?f64) ??f64 {
+    let y: ??f64 = x;
+    return y;
+}
+
+fun optionals__helpers__is_none_i64(x: ?i64) bool { if x |v| { return false; } return true; }
+fun optionals__helpers__is_none_i32(x: ?i32) bool { if x |v| { return false; } return true; }
+fun optionals__helpers__is_none_bool(x: ?bool) bool { if x |v| { return false; } return true; }
+fun optionals__helpers__is_none_f64(x: ?f64) bool { if x |v| { return false; } return true; }
+fun optionals__helpers__is_none_f32(x: ?f32) bool { if x |v| { return false; } return true; }
+fun optionals__helpers__is_none_str(x: ?str) bool { if x |v| { return false; } return true; }
+
+// optionals__chain_orelse_ok
+fun optionals__chain_orelse_ok__f(a: ?i64, b: ?i64, c: ?i64) i64 {  //~ compile-ok
+    return a orelse b orelse c orelse 0;
+}
+
+// optionals__chained_orelse_ok
+fun optionals__chained_orelse_ok__f(a: ?i64, b: ?i64) i64 {  //~ compile-ok
+    return a orelse b orelse 0;
+}
+
+// optionals__guard_clause_ok
+fun optionals__guard_clause_ok__safe_sqrt(x: f64) ?f64 {  //~ compile-ok
+    if x < 0.0 { return none; }
+    return x;
+}
+
+// optionals__if_unwrap_chain_ok
+fun optionals__if_unwrap_chain_ok__f(a: ?i64, b: ?i64) i64 {  //~ compile-ok
+    if a |x| {
+        if b |y| { return x + y; }
+        return x;
+    }
+    return 0;
+}
+
+// optionals__if_unwrap_no_else_ok
+fun optionals__if_unwrap_no_else_ok__f(x: ?i64) i64 {  //~ compile-ok
+    let var y: i64 = 0;
+    if x |v| { y = v; }
+    return y;
+}
+
+// optionals__if_unwrap_ok
+fun optionals__if_unwrap_ok__f(x: ?i64) i64 {  //~ compile-ok
+    if x |v| { return v; } else { return 0; }
+}
+
+// optionals__multi_unwrap_ok
+fun optionals__multi_unwrap_ok__f(a: ?i64, b: ?i64) ?i64 {  //~ compile-ok
+    if a |x| {
+        if b |y| {
+            return x + y;
+        }
+    }
+    return none;
+}
+
+// optionals__nested_opt_f64_ok
+fun optionals__nested_opt_f64_ok__f(x: ??f64) f64 {  //~ compile-ok
+    if x |inner| {
+        return inner orelse 0.0;
+    }
+    return 0.0;
+}
+
+// optionals__nested_opt_i64_ok
+fun optionals__nested_opt_i64_ok__f(x: ??i64) i64 {  //~ compile-ok
+    if x |inner| {
+        return inner orelse 0;
+    }
+    return 0;
+}
+
+// optionals__nested_optional_ok
+fun optionals__nested_optional_ok__f(x: ??i64) ?i64 {  //~ compile-ok
+    if x |inner| { return inner; }
+    return none;
+}
+
+// optionals__opt_and_then_ok
+fun optionals__opt_and_then_ok__f(a: ?i64, b: ?i64) ?i64 {  //~ compile-ok
+    if a |x| { if b |y| { return x + y; } }
+    return none;
+}
+
+// optionals__opt_default_expr_ok
+fun optionals__opt_default_expr_ok__f(x: ?f64, scale: f64) f64 {  //~ compile-ok
+    return (x orelse 1.0) * scale;
+}
+
+// optionals__opt_filter_ok
+fun optionals__opt_filter_ok__opt_pos(x: ?i64) ?i64 {  //~ compile-ok
+    if x |v| { if v > 0 { return v; } }
+    return none;
+}
+
+// optionals__opt_i16_ok
+fun optionals__opt_i16_ok__f(x: ?i16) i16 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_i32_ok
+fun optionals__opt_i32_ok__f(x: ?i32) i32 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_i8_ok
+fun optionals__opt_i8_ok__f(x: ?i8) i8 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_map_ok
+fun optionals__opt_map_ok__opt_double(x: ?i64) ?i64 {  //~ compile-ok
+    if x |v| { return v * 2; }
+    return none;
+}
+
+// optionals__opt_u16_ok
+fun optionals__opt_u16_ok__f(x: ?u16) u16 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_u32_ok
+fun optionals__opt_u32_ok__f(x: ?u32) u32 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_u64_ok
+fun optionals__opt_u64_ok__f(x: ?u64) u64 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__opt_u8_ok
+fun optionals__opt_u8_ok__f(x: ?u8) u8 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__optional_bool_ok
+fun optionals__optional_bool_ok__f(x: ?bool) bool {  //~ compile-ok
+    return x orelse false;
+}
+
+// optionals__optional_bool_orelse_ok
+fun optionals__optional_bool_orelse_ok__f(x: ?bool) bool {  //~ compile-ok
+    return x orelse false;
+}
+
+// optionals__optional_bool_unwrap_ok
+fun optionals__optional_bool_unwrap_ok__f(x: ?bool) bool {  //~ compile-ok
+    if x |v| { return v; }
+    return false;
+}
+
+// optionals__optional_chain_ok
+fun optionals__optional_chain_ok__f(a: ?i64, b: ?i64, c: ?i64) i64 {  //~ compile-ok
+    return a orelse b orelse c orelse 0;
+}
+
+// optionals__optional_f32_orelse_ok
+fun optionals__optional_f32_orelse_ok__f(x: ?f32) f32 {  //~ compile-ok
+    return x orelse 0.0;
+}
+
+// optionals__optional_f32_unwrap_ok
+fun optionals__optional_f32_unwrap_ok__f(x: ?f32) f32 {  //~ compile-ok
+    if x |v| { return v; }
+    return 0.0;
+}
+
+// optionals__optional_f64_ok
+fun optionals__optional_f64_ok__f(x: ?f64) f64 {  //~ compile-ok
+    return x orelse 0.0;
+}
+
+// optionals__optional_f64_orelse_ok
+fun optionals__optional_f64_orelse_ok__f(x: ?f64) f64 {  //~ compile-ok
+    return x orelse 0.0;
+}
+
+// optionals__optional_f64_unwrap_ok
+fun optionals__optional_f64_unwrap_ok__f(x: ?f64) f64 {  //~ compile-ok
+    if x |v| { return v; }
+    return 0.0;
+}
+
+// optionals__optional_i32_orelse_ok
+fun optionals__optional_i32_orelse_ok__f(x: ?i32) i32 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__optional_i32_unwrap_ok
+fun optionals__optional_i32_unwrap_ok__f(x: ?i32) i32 {  //~ compile-ok
+    if x |v| { return v; }
+    return 0;
+}
+
+// optionals__optional_i64_orelse_ok
+fun optionals__optional_i64_orelse_ok__f(x: ?i64) i64 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__optional_i64_unwrap_ok
+fun optionals__optional_i64_unwrap_ok__f(x: ?i64) i64 {  //~ compile-ok
+    if x |v| { return v; }
+    return 0;
+}
+
+// optionals__optional_in_loop_ok
+fun optionals__optional_in_loop_ok__first_pos(v: vec[i64]) ?i64 {  //~ compile-ok
+    for x in v {
+        if x > 0 { return x; }
+    }
+    return none;
+}
+
+// optionals__optional_in_struct_ok
+struct optionals__optional_in_struct_ok__User { name: str, age: ?i64 }
+fun optionals__optional_in_struct_ok__get_age(u: optionals__optional_in_struct_ok__User) i64 {  //~ compile-ok
+    return u.age orelse 0;
+}
+
+// optionals__optional_map_like_ok
+fun optionals__optional_map_like_ok__transform(x: ?i64, scale: i64) ?i64 {  //~ compile-ok
+    if x |v| { return v * scale; }
+    return none;
+}
+
+// optionals__optional_return_none_ok
+fun optionals__optional_return_none_ok__safe_head(v: vec[i64]) ?i64 {  //~ compile-ok
+    if v[0] > 0 { return v[0]; }
+    return none;
+}
+
+// optionals__optional_str_ok
+fun optionals__optional_str_ok__f(x: ?str) str {  //~ compile-ok
+    return x orelse "default";
+}
+
+// optionals__optional_str_orelse_ok
+fun optionals__optional_str_orelse_ok__f(x: ?str) str {  //~ compile-ok
+    return x orelse "ok";
+}
+
+// optionals__optional_str_unwrap_ok
+fun optionals__optional_str_unwrap_ok__f(x: ?str) str {  //~ compile-ok
+    if x |v| { return v; }
+    return "ok";
+}
+
+// optionals__optional_struct_ok
+struct optionals__optional_struct_ok__Point { x: f64, y: f64 }
+fun optionals__optional_struct_ok__f(p: ?optionals__optional_struct_ok__Point) f64 {  //~ compile-ok
+    if p |pt| { return pt.x; } else { return 0.0; }
+}
+
+// optionals__optional_struct_orelse_ok
+struct optionals__optional_struct_orelse_ok__Config { timeout: i64, retries: i64 }
+fun optionals__optional_struct_orelse_ok__get_timeout(c: ?optionals__optional_struct_orelse_ok__Config) i64 {  //~ compile-ok
+    if c |cfg| { return cfg.timeout; }
+    return 30;
+}
+
+// optionals__optional_struct_unwrap_ok
+struct optionals__optional_struct_unwrap_ok__Pos { x: f64, y: f64 }
+fun optionals__optional_struct_unwrap_ok__f(p: ?optionals__optional_struct_unwrap_ok__Pos) f64 {  //~ compile-ok
+    if p |pos| { return pos.x + pos.y; }
+    return 0.0;
+}
+
+// optionals__orelse_ok
+fun optionals__orelse_ok__f(x: ?i64) i64 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// optionals__return_bool_none_ok
+fun optionals__return_bool_none_ok__f() ?bool {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_f32_none_ok
+fun optionals__return_f32_none_ok__f() ?f32 {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_f64_none_ok
+fun optionals__return_f64_none_ok__f() ?f64 {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_i32_none_ok
+fun optionals__return_i32_none_ok__f() ?i32 {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_i64_none_ok
+fun optionals__return_i64_none_ok__f() ?i64 {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_none_ok
+fun optionals__return_none_ok__f() ?i64 {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_str_none_ok
+fun optionals__return_str_none_ok__f() ?str {  //~ compile-ok
+    return none;
+}
+
+// optionals__return_value_ok
+fun optionals__return_value_ok__f() ?i64 {  //~ compile-ok
+    return 42;
+}
+
+// optionals__safe_index_ok
+fun optionals__safe_index_ok__safe_get(v: vec[i64], i: i64) ?i64 {  //~ compile-ok
+    if i >= 0 { return v[i]; }
+    return none;
+}
+
+fun optionals__optional_struct_ok__some_point(x: f64, y: f64) ?optionals__optional_struct_ok__Point {
+    let p: optionals__optional_struct_ok__Point = .{x: x, y: y};
+    return p;
+}
+
+fun optionals__optional_struct_orelse_ok__some_config(timeout: i64, retries: i64) ?optionals__optional_struct_orelse_ok__Config {
+    let c: optionals__optional_struct_orelse_ok__Config = .{timeout: timeout, retries: retries};
+    return c;
+}
+
+fun optionals__optional_struct_unwrap_ok__some_pos(x: f64, y: f64) ?optionals__optional_struct_unwrap_ok__Pos {
+    let p: optionals__optional_struct_unwrap_ok__Pos = .{x: x, y: y};
+    return p;
+}
+
+test "optionals/chain_orelse_ok.mesa" {
+    @assert(optionals__chain_orelse_ok__f(optionals__helpers__some_i64(1), optionals__helpers__some_i64(2), optionals__helpers__some_i64(3)) == 1)
+    @assert(optionals__chain_orelse_ok__f(none, optionals__helpers__some_i64(2), optionals__helpers__some_i64(3)) == 2)
+    @assert(optionals__chain_orelse_ok__f(none, none, optionals__helpers__some_i64(3)) == 3)
+    @assert(optionals__chain_orelse_ok__f(none, none, none) == 0)
+}
+test "optionals/chained_orelse_ok.mesa" {
+    @assert(optionals__chained_orelse_ok__f(optionals__helpers__some_i64(4), optionals__helpers__some_i64(9)) == 4)
+    @assert(optionals__chained_orelse_ok__f(none, optionals__helpers__some_i64(9)) == 9)
+    @assert(optionals__chained_orelse_ok__f(none, none) == 0)
+}
+test "optionals/guard_clause_ok.mesa" {
+    let positive = optionals__guard_clause_ok__safe_sqrt(9.0)
+    if positive |v| { @assert(v == 9.0) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_f64(optionals__guard_clause_ok__safe_sqrt(-1.0)))
+}
+test "optionals/if_unwrap_chain_ok.mesa" {
+    @assert(optionals__if_unwrap_chain_ok__f(optionals__helpers__some_i64(2), optionals__helpers__some_i64(3)) == 5)
+    @assert(optionals__if_unwrap_chain_ok__f(optionals__helpers__some_i64(2), none) == 2)
+    @assert(optionals__if_unwrap_chain_ok__f(none, optionals__helpers__some_i64(3)) == 0)
+}
+test "optionals/if_unwrap_no_else_ok.mesa" {
+    @assert(optionals__if_unwrap_no_else_ok__f(optionals__helpers__some_i64(7)) == 7)
+    @assert(optionals__if_unwrap_no_else_ok__f(none) == 0)
+}
+test "optionals/if_unwrap_ok.mesa" {
+    @assert(optionals__if_unwrap_ok__f(optionals__helpers__some_i64(7)) == 7)
+    @assert(optionals__if_unwrap_ok__f(none) == 0)
+}
+test "optionals/multi_unwrap_ok.mesa" {
+    let both = optionals__multi_unwrap_ok__f(optionals__helpers__some_i64(2), optionals__helpers__some_i64(5))
+    if both |v| { @assert(v == 7) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__multi_unwrap_ok__f(optionals__helpers__some_i64(2), none)))
+}
+test "optionals/nested_opt_f64_ok.mesa" {
+    @assert(optionals__nested_opt_f64_ok__f(optionals__helpers__some_opt_f64(optionals__helpers__some_f64(3.5))) == 3.5)
+    @assert(optionals__nested_opt_f64_ok__f(optionals__helpers__some_opt_f64(none)) == 0.0)
+    @assert(optionals__nested_opt_f64_ok__f(none) == 0.0)
+}
+test "optionals/nested_opt_i64_ok.mesa" {
+    @assert(optionals__nested_opt_i64_ok__f(optionals__helpers__some_opt_i64(optionals__helpers__some_i64(3))) == 3)
+    @assert(optionals__nested_opt_i64_ok__f(optionals__helpers__some_opt_i64(none)) == 0)
+    @assert(optionals__nested_opt_i64_ok__f(none) == 0)
+}
+test "optionals/nested_optional_ok.mesa" {
+    let inner = optionals__nested_optional_ok__f(optionals__helpers__some_opt_i64(optionals__helpers__some_i64(9)))
+    if inner |v| { @assert(v == 9) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__nested_optional_ok__f(optionals__helpers__some_opt_i64(none))))
+    @assert(optionals__helpers__is_none_i64(optionals__nested_optional_ok__f(none)))
+}
+test "optionals/opt_and_then_ok.mesa" {
+    let both = optionals__opt_and_then_ok__f(optionals__helpers__some_i64(4), optionals__helpers__some_i64(6))
+    if both |v| { @assert(v == 10) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__opt_and_then_ok__f(optionals__helpers__some_i64(4), none)))
+}
+test "optionals/opt_default_expr_ok.mesa" {
+    @assert(optionals__opt_default_expr_ok__f(optionals__helpers__some_f64(2.0), 3.0) == 6.0)
+    @assert(optionals__opt_default_expr_ok__f(none, 3.0) == 3.0)
+}
+test "optionals/opt_filter_ok.mesa" {
+    let positive = optionals__opt_filter_ok__opt_pos(optionals__helpers__some_i64(5))
+    if positive |v| { @assert(v == 5) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__opt_filter_ok__opt_pos(optionals__helpers__some_i64(-5))))
+}
+test "optionals/opt_i16_ok.mesa" {
+    @assert(optionals__opt_i16_ok__f(optionals__helpers__some_i16(7)) == 7)
+    @assert(optionals__opt_i16_ok__f(none) == 0)
+}
+test "optionals/opt_i32_ok.mesa" {
+    @assert(optionals__opt_i32_ok__f(optionals__helpers__some_i32(7)) == 7)
+    @assert(optionals__opt_i32_ok__f(none) == 0)
+}
+test "optionals/opt_i8_ok.mesa" {
+    @assert(optionals__opt_i8_ok__f(optionals__helpers__some_i8(7)) == 7)
+    @assert(optionals__opt_i8_ok__f(none) == 0)
+}
+test "optionals/opt_map_ok.mesa" {
+    let doubled = optionals__opt_map_ok__opt_double(optionals__helpers__some_i64(7))
+    if doubled |v| { @assert(v == 14) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__opt_map_ok__opt_double(none)))
+}
+test "optionals/opt_u16_ok.mesa" {
+    @assert(optionals__opt_u16_ok__f(optionals__helpers__some_u16(7)) == 7)
+    @assert(optionals__opt_u16_ok__f(none) == 0)
+}
+test "optionals/opt_u32_ok.mesa" {
+    @assert(optionals__opt_u32_ok__f(optionals__helpers__some_u32(7)) == 7)
+    @assert(optionals__opt_u32_ok__f(none) == 0)
+}
+test "optionals/opt_u64_ok.mesa" {
+    @assert(optionals__opt_u64_ok__f(optionals__helpers__some_u64(7)) == 7)
+    @assert(optionals__opt_u64_ok__f(none) == 0)
+}
+test "optionals/opt_u8_ok.mesa" {
+    @assert(optionals__opt_u8_ok__f(optionals__helpers__some_u8(7)) == 7)
+    @assert(optionals__opt_u8_ok__f(none) == 0)
+}
+test "optionals/optional_bool_ok.mesa" {
+    @assert(optionals__optional_bool_ok__f(optionals__helpers__some_bool(true)))
+    @assert(!optionals__optional_bool_ok__f(none))
+}
+test "optionals/optional_bool_orelse_ok.mesa" {
+    @assert(optionals__optional_bool_orelse_ok__f(optionals__helpers__some_bool(true)))
+    @assert(!optionals__optional_bool_orelse_ok__f(none))
+}
+test "optionals/optional_bool_unwrap_ok.mesa" {
+    @assert(optionals__optional_bool_unwrap_ok__f(optionals__helpers__some_bool(true)))
+    @assert(!optionals__optional_bool_unwrap_ok__f(none))
+}
+test "optionals/optional_chain_ok.mesa" {
+    @assert(optionals__optional_chain_ok__f(optionals__helpers__some_i64(1), optionals__helpers__some_i64(2), optionals__helpers__some_i64(3)) == 1)
+    @assert(optionals__optional_chain_ok__f(none, optionals__helpers__some_i64(2), optionals__helpers__some_i64(3)) == 2)
+    @assert(optionals__optional_chain_ok__f(none, none, optionals__helpers__some_i64(3)) == 3)
+    @assert(optionals__optional_chain_ok__f(none, none, none) == 0)
+}
+test "optionals/optional_f32_orelse_ok.mesa" {
+    @assert(optionals__optional_f32_orelse_ok__f(optionals__helpers__some_f32(2.5)) == 2.5)
+    @assert(optionals__optional_f32_orelse_ok__f(none) == 0.0)
+}
+test "optionals/optional_f32_unwrap_ok.mesa" {
+    @assert(optionals__optional_f32_unwrap_ok__f(optionals__helpers__some_f32(2.5)) == 2.5)
+    @assert(optionals__optional_f32_unwrap_ok__f(none) == 0.0)
+}
+test "optionals/optional_f64_ok.mesa" {
+    @assert(optionals__optional_f64_ok__f(optionals__helpers__some_f64(2.5)) == 2.5)
+    @assert(optionals__optional_f64_ok__f(none) == 0.0)
+}
+test "optionals/optional_f64_orelse_ok.mesa" {
+    @assert(optionals__optional_f64_orelse_ok__f(optionals__helpers__some_f64(2.5)) == 2.5)
+    @assert(optionals__optional_f64_orelse_ok__f(none) == 0.0)
+}
+test "optionals/optional_f64_unwrap_ok.mesa" {
+    @assert(optionals__optional_f64_unwrap_ok__f(optionals__helpers__some_f64(2.5)) == 2.5)
+    @assert(optionals__optional_f64_unwrap_ok__f(none) == 0.0)
+}
+test "optionals/optional_i32_orelse_ok.mesa" {
+    @assert(optionals__optional_i32_orelse_ok__f(optionals__helpers__some_i32(2)) == 2)
+    @assert(optionals__optional_i32_orelse_ok__f(none) == 0)
+}
+test "optionals/optional_i32_unwrap_ok.mesa" {
+    @assert(optionals__optional_i32_unwrap_ok__f(optionals__helpers__some_i32(2)) == 2)
+    @assert(optionals__optional_i32_unwrap_ok__f(none) == 0)
+}
+test "optionals/optional_i64_orelse_ok.mesa" {
+    @assert(optionals__optional_i64_orelse_ok__f(optionals__helpers__some_i64(2)) == 2)
+    @assert(optionals__optional_i64_orelse_ok__f(none) == 0)
+}
+test "optionals/optional_i64_unwrap_ok.mesa" {
+    @assert(optionals__optional_i64_unwrap_ok__f(optionals__helpers__some_i64(2)) == 2)
+    @assert(optionals__optional_i64_unwrap_ok__f(none) == 0)
+}
+test "optionals/optional_in_loop_ok.mesa" {
+    let found = optionals__optional_in_loop_ok__first_pos(vec[-3, -1, 4, 7])
+    if found |v| { @assert(v == 4) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__optional_in_loop_ok__first_pos(vec[-3, -1, 0])))
+}
+test "optionals/optional_in_struct_ok.mesa" {
+    @assert(optionals__optional_in_struct_ok__get_age(.{name: "Ada", age: optionals__helpers__some_i64(33)}) == 33)
+    @assert(optionals__optional_in_struct_ok__get_age(.{name: "Ada", age: none}) == 0)
+}
+test "optionals/optional_map_like_ok.mesa" {
+    let scaled = optionals__optional_map_like_ok__transform(optionals__helpers__some_i64(4), 3)
+    if scaled |v| { @assert(v == 12) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__optional_map_like_ok__transform(none, 3)))
+}
+test "optionals/optional_return_none_ok.mesa" {
+    let head = optionals__optional_return_none_ok__safe_head(vec[5, 2, 1])
+    if head |v| { @assert(v == 5) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__optional_return_none_ok__safe_head(vec[-1, 2, 1])))
+}
+test "optionals/optional_str_ok.mesa" {
+    @assert(optionals__optional_str_ok__f(optionals__helpers__some_str("mesa")) == "mesa")
+    @assert(optionals__optional_str_ok__f(none) == "default")
+}
+test "optionals/optional_str_orelse_ok.mesa" {
+    @assert(optionals__optional_str_orelse_ok__f(optionals__helpers__some_str("mesa")) == "mesa")
+    @assert(optionals__optional_str_orelse_ok__f(none) == "ok")
+}
+test "optionals/optional_str_unwrap_ok.mesa" {
+    @assert(optionals__optional_str_unwrap_ok__f(optionals__helpers__some_str("mesa")) == "mesa")
+    @assert(optionals__optional_str_unwrap_ok__f(none) == "ok")
+}
+test "optionals/optional_struct_ok.mesa" {
+    @assert(optionals__optional_struct_ok__f(optionals__optional_struct_ok__some_point(3.0, 4.0)) == 3.0)
+    @assert(optionals__optional_struct_ok__f(none) == 0.0)
+}
+test "optionals/optional_struct_orelse_ok.mesa" {
+    @assert(optionals__optional_struct_orelse_ok__get_timeout(optionals__optional_struct_orelse_ok__some_config(45, 2)) == 45)
+    @assert(optionals__optional_struct_orelse_ok__get_timeout(none) == 30)
+}
+test "optionals/optional_struct_unwrap_ok.mesa" {
+    @assert(optionals__optional_struct_unwrap_ok__f(optionals__optional_struct_unwrap_ok__some_pos(3.0, 4.0)) == 7.0)
+    @assert(optionals__optional_struct_unwrap_ok__f(none) == 0.0)
+}
+test "optionals/orelse_ok.mesa" {
+    @assert(optionals__orelse_ok__f(optionals__helpers__some_i64(2)) == 2)
+    @assert(optionals__orelse_ok__f(none) == 0)
+}
+test "optionals/return_bool_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_bool(optionals__return_bool_none_ok__f()))
+}
+test "optionals/return_f32_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_f32(optionals__return_f32_none_ok__f()))
+}
+test "optionals/return_f64_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_f64(optionals__return_f64_none_ok__f()))
+}
+test "optionals/return_i32_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_i32(optionals__return_i32_none_ok__f()))
+}
+test "optionals/return_i64_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_i64(optionals__return_i64_none_ok__f()))
+}
+test "optionals/return_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_i64(optionals__return_none_ok__f()))
+}
+test "optionals/return_str_none_ok.mesa" {
+    @assert(optionals__helpers__is_none_str(optionals__return_str_none_ok__f()))
+}
+test "optionals/return_value_ok.mesa" {
+    let result = optionals__return_value_ok__f()
+    if result |v| { @assert(v == 42) } else { @assert(false) }
+}
+test "optionals/safe_index_ok.mesa" {
+    let result = optionals__safe_index_ok__safe_get(vec[4, 7, 9], 1)
+    if result |v| { @assert(v == 7) } else { @assert(false) }
+    @assert(optionals__helpers__is_none_i64(optionals__safe_index_ok__safe_get(vec[4, 7, 9], -1)))
+}
+
+fun main() void {
+    println("corpus")
+}

@@ -1,0 +1,32 @@
+union State { Active, Frozen, Dead }
+
+struct Particle {
+    pos:   float,
+    vel:   float,
+    state: State,
+
+    fun step(self: *Particle, dt: float) void {
+        if match self.state { .Active => true, _ => false } {
+            self.pos = self.pos + self.vel * dt
+        }
+    }
+
+    fun freeze(self: *Particle) void {
+        self.state = .Frozen
+    }
+}
+
+fun main() void {
+    let var p: Particle = .{pos: 0.0, vel: 2.0, state: .Active}
+
+    for i = 0..10 { p.step(0.1) }
+    p.freeze()
+
+    println("pos = {p.pos}")
+    let s: str = match p.state {
+        .Frozen => "frozen",
+        .Active => "active",
+        .Dead   => "dead",
+    }
+    println("state = {s}")
+}

@@ -1,0 +1,43 @@
+pkg mem
+
+pub struct PageBuffer {
+    base: *void,
+    capacity: i64,
+
+    pub fun init(initial_capacity: i64) @this {
+        let capacity = roundUpToPage(initial_capacity)
+        .{
+            base: @pageAlloc(capacity),
+            capacity: capacity,
+        }
+    }
+}
+
+def Buffer for PageBuffer {
+    fun base_ptr(self: *PageBuffer) *void {
+        self.base
+    }
+
+    fun capacity_bytes(self: *PageBuffer) i64 {
+        self.capacity
+    }
+
+    fun reserve(self: *PageBuffer, min_capacity: i64, align: i64) void {
+        let needed = alignForward(min_capacity, align)
+        if needed <= self.capacity {
+            return;
+        }
+
+        let next_capacity = roundUpToPage(growCapacity(self.capacity, needed))
+        let next_base = @pageAlloc(next_capacity)
+        @memcpy(next_base, self.base, self.capacity)
+        @pageFree(self.base, self.capacity)
+        self.base = next_base
+        self.capacity = next_capacity
+    }
+
+    fun release(self: *PageBuffer) void {
+        @pageFree(self.base, self.capacity)
+        self.capacity = 0
+    }
+}

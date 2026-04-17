@@ -1,0 +1,4 @@
+fun takes_two(a: i64, b: i64) void {}
+fun f() void {
+    takes_two(1);  //~ error: arguments
+}

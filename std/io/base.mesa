@@ -1,0 +1,50 @@
+pkg io
+
+extern fun stdout_write(text: str) void
+extern fun stderr_write(text: str) void
+
+pub interface Writer {
+    fun write(self: @this, text: str) void
+}
+
+pub struct Stdout {}
+
+pub struct Stderr {}
+
+pub fun stdout() Stdout {
+    .{}
+}
+
+pub fun stderr() Stderr {
+    .{}
+}
+
+pub fun write(out: any Writer, text: str) void {
+    out.write(text)
+}
+
+pub fun writeln(out: any Writer, text: str) void {
+    out.write(text)
+    out.write("
+")
+}
+
+pub fun print(text: str) void {
+    write(stdout(), text)
+}
+
+pub fun println(text: str) void {
+    writeln(stdout(), text)
+}
+
+def Writer for Stdout {
+    fun write(self: Stdout, text: str) void {
+        stdout_write(text)
+    }
+}
+
+def Writer for Stderr {
+    fun write(self: Stderr, text: str) void {
+        stderr_write(text)
+    }
+}

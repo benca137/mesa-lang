@@ -1,0 +1,5 @@
+from helpers import hidden
+
+fun shouldFail() i64 {
+    hidden()
+}

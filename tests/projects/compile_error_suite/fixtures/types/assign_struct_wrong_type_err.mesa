@@ -1,0 +1,5 @@
+struct A { x: i64 }
+struct B { y: i64 }
+fun f(b: B) A {
+    return b;  //~ error: type mismatch
+}

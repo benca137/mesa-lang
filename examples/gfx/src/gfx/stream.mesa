@@ -1,0 +1,111 @@
+pkg gfx
+
+#[link_name = "_fopen"]
+extern fun c_stream_fopen(path: *u8, mode: *u8) *void
+
+#[link_name = "_fwrite"]
+extern fun c_stream_fwrite(ptr: *u8, size: i64, count: i64, file: *void) i64
+
+#[link_name = "_fclose"]
+extern fun c_stream_fclose(file: *void) i32
+
+#[link_name = "_fputc"]
+extern fun c_stream_fputc(ch: i32, file: *void) i32
+
+#[link_name = "_fgetc"]
+extern fun c_stream_fgetc(file: *void) i32
+
+#[link_name = "_usleep"]
+extern fun c_usleep(microseconds: i64) i32
+
+pub fun writeViewerFrame(canvas: Canvas, frame: i64) void {
+    let active = frame % 2
+    if active == 0 {
+        writeRgba(canvas, "targets/gfx-front.rgba")
+    } else {
+        writeRgba(canvas, "targets/gfx-back.rgba")
+    }
+    writeViewerState(canvas, frame, active)
+}
+
+pub fun sleepMillis(ms: i64) void {
+    if ms <= 0 {
+        return;
+    }
+    let result = c_usleep(ms * 1000)
+    if result != 0 {
+        @panic("failed to sleep")
+    }
+}
+
+pub fun readViewerInput() ViewerInput {
+    let path = "targets/gfx-input.txt"
+    let file = c_stream_fopen(path.data, "rb".data)
+    let first = c_stream_fgetc(file)
+    let _sep = c_stream_fgetc(file)
+    let second = c_stream_fgetc(file)
+    closeFile(file, "failed to close viewer input")
+
+    return .{
+        up: first == 49,
+        down: second == 49,
+    }
+}
+
+fun writeViewerState(canvas: Canvas, frame: i64, active: i64) void {
+    let file = openForWrite("targets/gfx-stream.txt")
+    writeStreamText(file, "MESA_RGBA_STREAM_V1")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{canvasWidth(canvas)} {canvasHeight(canvas)}")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{active}")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{frame}")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{canvasDrawCalls(canvas)}")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{canvasTouchedPixels(canvas)}")
+    writeStreamByte(file, 10)
+    writeStreamText(file, "{canvasClippedWrites(canvas)}")
+    writeStreamByte(file, 10)
+    closeFile(file, "failed to close viewer state output")
+}
+
+fun writeRgba(canvas: Canvas, path: str) void {
+    let file = openForWrite(path)
+    for y = 0..canvasHeight(canvas) {
+        for x = 0..canvasWidth(canvas) {
+            let color = canvasSample(canvas, point(x, y))
+            writeStreamByte(file, color.r)
+            writeStreamByte(file, color.g)
+            writeStreamByte(file, color.b)
+            writeStreamByte(file, color.a)
+        }
+    }
+    closeFile(file, "failed to close RGBA output")
+}
+
+fun openForWrite(path: str) *void {
+    return c_stream_fopen(path.data, "wb".data)
+}
+
+fun closeFile(file: *void, message: str) void {
+    let closed = c_stream_fclose(file)
+    if closed != 0 {
+        @panic(message)
+    }
+}
+
+fun writeStreamText(file: *void, text: str) void {
+    let wrote = c_stream_fwrite(text.data, 1, text.len, file)
+    if wrote != text.len {
+        @panic("failed to write stream text")
+    }
+}
+
+fun writeStreamByte(file: *void, byte: i64) void {
+    let result = c_stream_fputc(byte, file)
+    if result < 0 {
+        @panic("failed to write stream byte")
+    }
+}

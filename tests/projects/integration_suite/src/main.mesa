@@ -1,0 +1,97 @@
+import io
+import mem
+from mem import PoolAllocator, poolFreeSlot
+
+from math import Vec2
+from physics import Body as PhysicsBody, make as makePhysics, answer as physicsAnswer
+from a import Body as ABody, Shape as AShape, E as AE, make as makeA, value as valueA, read as readA, pass as passA
+from b import Body as BBody, Shape as BShape, E as BE, make as makeB, value as valueB, read as readB, pass as passB
+
+fun takeA(e: AE!i64) i64 {
+    return e catch { _ => -1 }
+}
+
+fun takeB(e: BE!i64) i64 {
+    return e catch { _ => -1 }
+}
+
+test "pkg-less local subtree works" {
+    @assert(answer() == 42)
+}
+
+test "bare std imports and allocator constructors work" {
+    let out = io.stdout()
+    let err = io.stderr()
+    io.write(out, "")
+    io.write(err, "")
+
+    let arena = mem.ArenaAllocator.init(mem.PageBuffer.init(64))
+    with arena : .reset {
+        let p: *Vec2 = .{ x: 1.0, y: 2.0 }
+        @assert(p.x == 1.0)
+        @assert(p.y == 2.0)
+    }
+
+    let values = vec[1, 2, 3]
+    let text: str = "hello"
+    @assert(len(values) == 3)
+    @assert(cap(values) == 3)
+    @assert(len(text) == 5)
+}
+
+struct PoolNode {
+    value: i64,
+}
+
+test "pool allocator recycles freed slots" {
+    let arena = mem.ArenaAllocator.init(mem.PageBuffer.init(256))
+    let seed: PoolNode = .{ value: 0 }
+    let var pool: PoolAllocator[PoolNode] = PoolAllocator.init(arena, 2, seed)
+    with pool {
+        let first: *PoolNode = .{ value: 7 }
+        let second: *PoolNode = .{ value: 9 }
+        @assert(first.value + second.value == 16)
+        poolFreeSlot(&pool, first)
+        let third: *PoolNode = .{ value: 11 }
+        @assert(third.value == 11)
+    }
+}
+
+test "debug allocator tracks allocation stats" {
+    let arena = mem.ArenaAllocator.init(mem.PageBuffer.init(256))
+    let var dbg = mem.DebugAllocator.init(arena)
+    with dbg {
+        let p: *PoolNode = .{ value: 5 }
+        @assert(p.value == 5)
+    }
+    @assert(dbg.alloc_count == 1)
+    @assert(dbg.active_allocations == 1)
+    @assert(dbg.live_bytes == @sizeOf(PoolNode))
+    @assert(dbg.peak_allocations == 1)
+    @assert(dbg.peak_bytes == @sizeOf(PoolNode))
+}
+
+test "package facade imports work" {
+    let body: PhysicsBody = makePhysics()
+    let zero: Vec2 = .{ x: 0.0, y: 0.0 }
+    @assert(zero.x == 0.0)
+    @assert(body.position.x == 1.0)
+    @assert(body.position.y == 2.0)
+    @assert(physicsAnswer() == 42)
+}
+
+test "backend mangling across packages works" {
+    let a_body: ABody = makeA()
+    let b_body: BBody = makeB()
+    @assert(valueA(a_body) + valueB(b_body) == 3)
+}
+
+test "interface and error support across packages work" {
+    let a_body: ABody = makeA()
+    let b_body: BBody = makeB()
+    let a_shape: any AShape = a_body
+    let b_shape: any BShape = b_body
+    @assert(readA(a_shape) + readB(b_shape) == 3)
+    @assert(takeA(passA(10)) == 10)
+    @assert(takeB(passB(20)) == 20)
+}

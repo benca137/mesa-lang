@@ -1,0 +1,56 @@
+pkg gfx
+
+pub fun makeCheckerSprite(light: Color, dark: Color) Sprite {
+    return .{
+        width: 6,
+        height: 6,
+        pixels: vec[
+            packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark),
+            packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light),
+            packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark),
+            packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light),
+            packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark),
+            packColor(dark), packColor(light), packColor(dark), packColor(light), packColor(dark), packColor(light)
+        ],
+    }
+}
+
+pub fun makeBallSprite(body: Color, sparkle: Color) Sprite {
+    let empty = packColor(transparent())
+    let packed_body = packColor(body)
+    let packed_sparkle = packColor(sparkle)
+    return .{
+        width: 7,
+        height: 7,
+        pixels: vec[
+            empty, empty, packed_body, packed_body, packed_body, empty, empty,
+            empty, packed_body, packed_body, packed_sparkle, packed_body, packed_body, empty,
+            packed_body, packed_body, packed_body, packed_body, packed_body, packed_body, packed_body,
+            packed_body, packed_sparkle, packed_body, packed_body, packed_body, packed_sparkle, packed_body,
+            packed_body, packed_body, packed_body, packed_body, packed_body, packed_body, packed_body,
+            empty, packed_body, packed_body, packed_sparkle, packed_body, packed_body, empty,
+            empty, empty, packed_body, packed_body, packed_body, empty, empty
+        ],
+    }
+}
+
+pub fun drawSprite(canvas: *Canvas, sprite: Sprite, origin: Point) void {
+    beginDraw(canvas)
+
+        for y = 0..sprite.height {
+        for x = 0..sprite.width {
+            let idx = y * sprite.width + x
+            let src = unpackColor(sprite.pixels[idx])
+            writePixel(canvas, point(origin.x + x, origin.y + y), src)
+        }
+    }
+}
+
+test "gfx/sprite_blit_preserves_transparent_pixels" {
+    let var canvas = canvas16x12(black())
+    let sprite = makeBallSprite(white(), blue())
+    drawSprite(&canvas, sprite, point(4, 2))
+
+    @assert(sameColor(canvasSample(canvas, point(4, 2)), black()))
+    @assert(!sameColor(canvasSample(canvas, point(7, 5)), black()))
+}

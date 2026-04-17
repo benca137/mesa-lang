@@ -1,0 +1,11 @@
+pkg physics
+
+from math import Vec2
+
+pub fun bodyPosition(body: Body) Vec2 {
+    body.position
+}
+
+pub fun bodyVelocity(body: Body) Vec2 {
+    body.velocity
+}

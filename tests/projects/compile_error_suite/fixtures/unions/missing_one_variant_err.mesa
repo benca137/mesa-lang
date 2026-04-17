@@ -1,0 +1,8 @@
+union Suit { Hearts, Diamonds, Clubs, Spades }
+fun color(s: Suit) str {
+    return match s {
+        .Hearts   => { "red"   },
+        .Diamonds => { "red"   },
+        .Clubs    => { "black" },
+    };  //~ error: missing variants
+}

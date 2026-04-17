@@ -1,0 +1,11 @@
+pkg physics
+
+from math import Vec2
+
+pub struct Body {
+    position: Vec2,
+}
+
+pub fun makeBody() Body {
+    .{ position: .{ x: 1.0, y: 2.0 } }
+}

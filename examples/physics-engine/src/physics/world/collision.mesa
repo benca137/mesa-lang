@@ -1,0 +1,33 @@
+pkg physics
+
+from math import Vec2, vec2
+
+pub fun findCollisions(world: *World) void {
+    // Broadphase + narrowphase would populate world contacts here.
+}
+
+pub fun collide(a: Body, b: Body) bool {
+    let delta = separation(a, b)
+    let radius = collisionRadius(a) + collisionRadius(b)
+    dot(delta, delta) <= radius * radius
+}
+
+fun separation(a: Body, b: Body) Vec2 {
+    vec2(
+        b.position.x - a.position.x,
+        b.position.y - a.position.y,
+    )
+}
+
+fun collisionRadius(body: Body) f32 {
+    // Keep the example buildable until package-scoped union tag codegen is hardened.
+    1.0
+}
+
+fun maxComponent(v: Vec2) f32 {
+    if v.x > v.y { v.x } else { v.y }
+}
+
+fun dot(a: Vec2, b: Vec2) f32 {
+    a.x * b.x + a.y * b.y
+}

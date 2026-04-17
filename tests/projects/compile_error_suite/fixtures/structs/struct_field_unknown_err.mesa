@@ -1,0 +1,4 @@
+struct Point { x: f64, y: f64 }
+fun f(p: Point) f64 {
+    return p.z;  //~ error: no field
+}

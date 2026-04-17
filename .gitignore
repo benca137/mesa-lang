@@ -1,0 +1,14 @@
+.DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Mesa compiler build outputs
+.build/
+bin/
+out
+
+# Generated test/example binaries
+**/targets/

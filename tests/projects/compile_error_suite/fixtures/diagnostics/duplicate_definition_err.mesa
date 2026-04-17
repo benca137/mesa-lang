@@ -1,0 +1,4 @@
+fun main() void {
+    let count = 1
+    let count = 2
+}

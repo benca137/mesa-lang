@@ -1,0 +1,33 @@
+pkg b
+
+pub interface Shape {
+    fun value(self: @this) i64
+}
+
+pub struct Body {
+    value: i64,
+}
+
+def Shape for Body {
+    fun value(self: Body) i64 {
+        return self.value
+    }
+}
+
+pub error E { Bad }
+
+pub fun make() Body {
+    .{ value: 2 }
+}
+
+pub fun value(body: Body) i64 {
+    body.value
+}
+
+pub fun read(shape: any Shape) i64 {
+    shape.value()
+}
+
+pub fun pass(n: i64) E!i64 {
+    return n
+}

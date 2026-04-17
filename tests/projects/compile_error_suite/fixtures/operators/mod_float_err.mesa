@@ -1,0 +1,5 @@
+
+// f64 modulo IS defined — fmod semantics
+fun f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a % b;
+}

@@ -1,0 +1,12 @@
+error E { Bad }
+
+fun fail() E!i64 {
+    return .Bad
+}
+
+fun bad() void {
+    let arena = ArenaAllocator(64)
+    with arena : .reset {
+        try fail()
+    }
+} handle |e| { }

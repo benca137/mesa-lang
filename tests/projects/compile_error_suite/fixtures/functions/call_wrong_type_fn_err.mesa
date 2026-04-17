@@ -1,0 +1,4 @@
+fun takes_str(s: str) void {}
+fun f() void {
+    takes_str(42);  //~ error: type mismatch
+}

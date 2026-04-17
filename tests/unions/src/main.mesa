@@ -1,0 +1,423 @@
+union unions__all_payload_bool_ok__U { A(bool), B(bool), C(bool) }
+fun unions__all_payload_bool_ok__f(u: unions__all_payload_bool_ok__U) bool {
+    return match u { .A(v) => {v}, .B(v) => {v}, .C(v) => {v} };
+}
+
+union unions__all_payload_f64_ok__U { A(f64), B(f64), C(f64) }
+fun unions__all_payload_f64_ok__f(u: unions__all_payload_f64_ok__U) f64 {
+    return match u { .A(v) => {v}, .B(v) => {v}, .C(v) => {v} };
+}
+
+union unions__all_payload_i64_ok__U { A(i64), B(i64), C(i64) }
+fun unions__all_payload_i64_ok__f(u: unions__all_payload_i64_ok__U) i64 {
+    return match u { .A(v) => {v}, .B(v) => {v}, .C(v) => {v} };
+}
+
+union unions__basic_union_ok__Color { Red, Green, Blue }
+fun unions__basic_union_ok__f(c: unions__basic_union_ok__Color) i64 {
+    return match c {
+        .Red => {0}, .Green => {1}, .Blue => {2},
+    };
+}
+
+union unions__either_ok__Either { Left(i64), Right(f64) }
+fun unions__either_ok__is_left(e: unions__either_ok__Either) bool {
+    return match e { .Left(_) => {true}, .Right(_) => {false} };
+}
+
+union unions__exhaustive_all_variants_ok__Suit { Hearts, Diamonds, Clubs, Spades }
+fun unions__exhaustive_all_variants_ok__color(s: unions__exhaustive_all_variants_ok__Suit) str {
+    return match s {
+        .Hearts   => { "red"   },
+        .Diamonds => { "red"   },
+        .Clubs    => { "black" },
+        .Spades   => { "black" },
+    };
+}
+
+union unions__four_payload_ok__Q { W(i64), X(i64), Y(i64), Z(i64) }
+fun unions__four_payload_ok__sum(q: unions__four_payload_ok__Q) i64 {
+    return match q { .W(v) => {v}, .X(v) => {v}, .Y(v) => {v}, .Z(v) => {v} };
+}
+
+union unions__maybe_ok__Maybe { Just(i64), Nothing }
+fun unions__maybe_ok__from_maybe(m: unions__maybe_ok__Maybe, d: i64) i64 {
+    return match m { .Just(v) => {v}, .Nothing => {d} };
+}
+
+union unions__nested_union_ok__Inner { A, B }
+union unions__nested_union_ok__Outer { X(unions__nested_union_ok__Inner), Y }
+fun unions__nested_union_ok__f(o: unions__nested_union_ok__Outer) bool {
+    return match o {
+        .X(i) => { match i { .A => {true}, .B => {false} } },
+        .Y    => { false },
+    };
+}
+
+union unions__payload_binding_ok__Expr { Lit(i64), Neg(i64), Add(i64) }
+fun unions__payload_binding_ok__eval(e: unions__payload_binding_ok__Expr) i64 {
+    return match e {
+        .Lit(n) => { n },
+        .Neg(n) => { -n },
+        .Add(n) => { n + n },
+    };
+}
+
+union unions__result_union_ok__Res { Val(f64), Err(str) }
+fun unions__result_union_ok__unwrap_or(r: unions__result_union_ok__Res, d: f64) f64 {
+    return match r { .Val(v) => {v}, .Err(_) => {d} };
+}
+
+union unions__three_unit_ok__Tri { A, B, C }
+fun unions__three_unit_ok__f(t: unions__three_unit_ok__Tri) i64 {
+    return match t { .A => {1}, .B => {2}, .C => {3} };
+}
+
+union unions__union_1var_wildcard_ok__U1 { V0 }
+fun unions__union_1var_wildcard_ok__f(u: unions__union_1var_wildcard_ok__U1) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_2var_wildcard_ok__U2 { V0, V1 }
+fun unions__union_2var_wildcard_ok__f(u: unions__union_2var_wildcard_ok__U2) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_3var_wildcard_ok__U3 { V0, V1, V2 }
+fun unions__union_3var_wildcard_ok__f(u: unions__union_3var_wildcard_ok__U3) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_4var_wildcard_ok__U4 { V0, V1, V2, V3 }
+fun unions__union_4var_wildcard_ok__f(u: unions__union_4var_wildcard_ok__U4) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_5var_wildcard_ok__U5 { V0, V1, V2, V3, V4 }
+fun unions__union_5var_wildcard_ok__f(u: unions__union_5var_wildcard_ok__U5) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_6var_wildcard_ok__U6 { V0, V1, V2, V3, V4, V5 }
+fun unions__union_6var_wildcard_ok__f(u: unions__union_6var_wildcard_ok__U6) bool {
+    return match u { .V0 => { true }, _ => { false } };
+}
+
+union unions__union_as_fn_param_ok__Op { Add(i64), Sub(i64), Mul(i64) }
+fun unions__union_as_fn_param_ok__apply(op: unions__union_as_fn_param_ok__Op, x: i64) i64 {
+    return match op {
+        .Add(n) => { x + n },
+        .Sub(n) => { x - n },
+        .Mul(n) => { x * n },
+    };
+}
+
+union unions__union_in_optional_ok__Color { Red, Green, Blue }
+fun unions__union_in_optional_ok__parse_color(s: str) ?unions__union_in_optional_ok__Color {
+    if s == "red"   { return .Red; }
+    if s == "green" { return .Green; }
+    if s == "blue"  { return .Blue; }
+    return none;
+}
+
+union unions__union_many_variants_ok__Token {
+    Ident(str),
+    Int(i64),
+    Float(f64),
+    LParen,
+    RParen,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Eof,
+}
+fun unions__union_many_variants_ok__is_op(t: unions__union_many_variants_ok__Token) bool {
+    return match t {
+        .Plus  => {true},
+        .Minus => {true},
+        .Star  => {true},
+        .Slash => {true},
+        _      => {false},
+    };
+}
+
+union unions__union_multi_payload_ok__Value {
+    Int(i64),
+    Float(f64),
+    Bool(bool),
+    Text(str),
+    Nothing,
+}
+fun unions__union_multi_payload_ok__is_truthy(v: unions__union_multi_payload_ok__Value) bool {
+    return match v {
+        .Int(n)   => { n != 0 },
+        .Float(f) => { f != 0.0 },
+        .Bool(b)  => { b },
+        _         => { false },
+    };
+}
+
+union unions__union_nested_match_ok__A { X(i64), Y }
+union unions__union_nested_match_ok__B { P(unions__union_nested_match_ok__A), Q }
+fun unions__union_nested_match_ok__f(b: unions__union_nested_match_ok__B) i64 {
+    return match b {
+        .P(a) => { match a { .X(n) => {n}, .Y => {0}, } },
+        .Q    => { -1 },
+    };
+}
+
+union unions__union_payload_bool_ok__Box { Val(bool), Empty }
+fun unions__union_payload_bool_ok__unwrap(b: unions__union_payload_bool_ok__Box) bool {
+    return match b { .Val(v) => { v }, .Empty => { false } };
+}
+
+union unions__union_payload_f64_ok__Box { Val(f64), Empty }
+fun unions__union_payload_f64_ok__unwrap(b: unions__union_payload_f64_ok__Box) f64 {
+    return match b { .Val(v) => { v }, .Empty => { 0.0 } };
+}
+
+union unions__union_payload_i32_ok__Box { Val(i32), Empty }
+fun unions__union_payload_i32_ok__unwrap(b: unions__union_payload_i32_ok__Box) i32 {
+    return match b { .Val(v) => { v }, .Empty => { 0 } };
+}
+
+union unions__union_payload_i64_ok__Box { Val(i64), Empty }
+fun unions__union_payload_i64_ok__unwrap(b: unions__union_payload_i64_ok__Box) i64 {
+    return match b { .Val(v) => { v }, .Empty => { 0 } };
+}
+
+union unions__union_payload_str_ok__Box { Val(str), Empty }
+fun unions__union_payload_str_ok__unwrap(b: unions__union_payload_str_ok__Box) str {
+    return match b { .Val(v) => { v }, .Empty => { "ok" } };
+}
+
+union unions__union_recursive_like_ok__Tree { Leaf(i64), Branch(i64) }
+fun unions__union_recursive_like_ok__value(t: unions__union_recursive_like_ok__Tree) i64 {
+    return match t { .Leaf(v) => { v }, .Branch(v) => { v } };
+}
+
+union unions__union_wildcard_ok__Color { Red, Green, Blue }
+fun unions__union_wildcard_ok__f(c: unions__union_wildcard_ok__Color) i64 {
+    return match c {
+        .Red => {0},
+        _    => {1},
+    };
+}
+
+union unions__union_with_payload_ok__Shape {
+    Circle(f64),
+    Rectangle(f64, f64),
+    Point,
+}
+fun unions__union_with_payload_ok__area(s: unions__union_with_payload_ok__Shape) f64 {
+    return match s {
+        .Circle(r)       => { r * r },
+        .Rectangle(w, h) => { w * h },
+        .Point           => { 0.0 },
+        _                => { 0.0 },
+    };
+}
+
+union unions__unit_variant_expression_ok__Color { Red, Green, Blue }
+fun unions__unit_variant_expression_ok__red() unions__unit_variant_expression_ok__Color {
+    return .Red;
+}
+fun unions__unit_variant_expression_ok__is_red(c: unions__unit_variant_expression_ok__Color) bool {
+    return match c { .Red => {true}, _ => {false} };
+}
+
+union unions__variant_in_match_arm_ok__Dir { North, South, East, West }
+fun unions__variant_in_match_arm_ok__opposite(d: unions__variant_in_match_arm_ok__Dir) unions__variant_in_match_arm_ok__Dir {
+    return match d {
+        .North => { .South },
+        .South => { .North },
+        .East  => { .West  },
+        .West  => { .East  },
+    };
+}
+
+test "unions/all_payload_bool_ok.mesa" {
+    @assert(unions__all_payload_bool_ok__f(.A(true)))
+    @assert(!unions__all_payload_bool_ok__f(.B(false)))
+    @assert(unions__all_payload_bool_ok__f(.C(true)))
+}
+
+test "unions/all_payload_f64_ok.mesa" {
+    @assert(unions__all_payload_f64_ok__f(.A(1.5)) == 1.5)
+    @assert(unions__all_payload_f64_ok__f(.B(2.5)) == 2.5)
+    @assert(unions__all_payload_f64_ok__f(.C(3.5)) == 3.5)
+}
+
+test "unions/all_payload_i64_ok.mesa" {
+    @assert(unions__all_payload_i64_ok__f(.A(1)) == 1)
+    @assert(unions__all_payload_i64_ok__f(.B(2)) == 2)
+    @assert(unions__all_payload_i64_ok__f(.C(3)) == 3)
+}
+
+test "unions/basic_union_ok.mesa" {
+    @assert(unions__basic_union_ok__f(.Red) == 0)
+    @assert(unions__basic_union_ok__f(.Green) == 1)
+    @assert(unions__basic_union_ok__f(.Blue) == 2)
+}
+
+test "unions/either_ok.mesa" {
+    @assert(unions__either_ok__is_left(.Left(4)))
+    @assert(!unions__either_ok__is_left(.Right(2.0)))
+}
+
+test "unions/exhaustive_all_variants_ok.mesa" {
+    @assert(unions__exhaustive_all_variants_ok__color(.Hearts) == "red")
+    @assert(unions__exhaustive_all_variants_ok__color(.Clubs) == "black")
+}
+
+test "unions/four_payload_ok.mesa" {
+    @assert(unions__four_payload_ok__sum(.W(1)) == 1)
+    @assert(unions__four_payload_ok__sum(.X(2)) == 2)
+    @assert(unions__four_payload_ok__sum(.Y(3)) == 3)
+    @assert(unions__four_payload_ok__sum(.Z(4)) == 4)
+}
+
+test "unions/maybe_ok.mesa" {
+    @assert(unions__maybe_ok__from_maybe(.Just(7), 0) == 7)
+    @assert(unions__maybe_ok__from_maybe(.Nothing, 9) == 9)
+}
+
+test "unions/nested_union_ok.mesa" {
+    @assert(unions__nested_union_ok__f(unions__nested_union_ok__Outer.X(unions__nested_union_ok__Inner.A)))
+    @assert(!unions__nested_union_ok__f(unions__nested_union_ok__Outer.X(unions__nested_union_ok__Inner.B)))
+    @assert(!unions__nested_union_ok__f(unions__nested_union_ok__Outer.Y))
+}
+
+test "unions/payload_binding_ok.mesa" {
+    @assert(unions__payload_binding_ok__eval(.Lit(7)) == 7)
+    @assert(unions__payload_binding_ok__eval(.Neg(7)) == -7)
+    @assert(unions__payload_binding_ok__eval(.Add(7)) == 14)
+}
+
+test "unions/result_union_ok.mesa" {
+    @assert(unions__result_union_ok__unwrap_or(.Val(2.5), 0.0) == 2.5)
+    @assert(unions__result_union_ok__unwrap_or(.Err("bad"), 1.0) == 1.0)
+}
+
+test "unions/three_unit_ok.mesa" {
+    @assert(unions__three_unit_ok__f(unions__three_unit_ok__Tri.A) == 1)
+    @assert(unions__three_unit_ok__f(unions__three_unit_ok__Tri.B) == 2)
+    @assert(unions__three_unit_ok__f(unions__three_unit_ok__Tri.C) == 3)
+}
+
+test "unions/union_1var_wildcard_ok.mesa" {
+    @assert(unions__union_1var_wildcard_ok__f(unions__union_1var_wildcard_ok__U1.V0))
+}
+
+test "unions/union_2var_wildcard_ok.mesa" {
+    @assert(unions__union_2var_wildcard_ok__f(unions__union_2var_wildcard_ok__U2.V0))
+    @assert(!unions__union_2var_wildcard_ok__f(unions__union_2var_wildcard_ok__U2.V1))
+}
+
+test "unions/union_3var_wildcard_ok.mesa" {
+    @assert(unions__union_3var_wildcard_ok__f(unions__union_3var_wildcard_ok__U3.V0))
+    @assert(!unions__union_3var_wildcard_ok__f(unions__union_3var_wildcard_ok__U3.V2))
+}
+
+test "unions/union_4var_wildcard_ok.mesa" {
+    @assert(unions__union_4var_wildcard_ok__f(unions__union_4var_wildcard_ok__U4.V0))
+    @assert(!unions__union_4var_wildcard_ok__f(unions__union_4var_wildcard_ok__U4.V3))
+}
+
+test "unions/union_5var_wildcard_ok.mesa" {
+    @assert(unions__union_5var_wildcard_ok__f(unions__union_5var_wildcard_ok__U5.V0))
+    @assert(!unions__union_5var_wildcard_ok__f(unions__union_5var_wildcard_ok__U5.V4))
+}
+
+test "unions/union_6var_wildcard_ok.mesa" {
+    @assert(unions__union_6var_wildcard_ok__f(unions__union_6var_wildcard_ok__U6.V0))
+    @assert(!unions__union_6var_wildcard_ok__f(unions__union_6var_wildcard_ok__U6.V5))
+}
+
+test "unions/union_as_fn_param_ok.mesa" {
+    @assert(unions__union_as_fn_param_ok__apply(unions__union_as_fn_param_ok__Op.Add(3), 7) == 10)
+    @assert(unions__union_as_fn_param_ok__apply(unions__union_as_fn_param_ok__Op.Sub(3), 7) == 4)
+    @assert(unions__union_as_fn_param_ok__apply(unions__union_as_fn_param_ok__Op.Mul(3), 7) == 21)
+}
+
+test "unions/union_in_optional_ok.mesa" {
+    let red = unions__union_in_optional_ok__parse_color("red")
+    let unknown = unions__union_in_optional_ok__parse_color("cyan")
+    if red |c| { @assert(match c { .Red => { true }, _ => { false } }) } else { @assert(false) }
+    if unknown |c| { @assert(false) } else { @assert(true) }
+}
+
+test "unions/union_many_variants_ok.mesa" {
+    @assert(unions__union_many_variants_ok__is_op(unions__union_many_variants_ok__Token.Plus))
+    @assert(unions__union_many_variants_ok__is_op(unions__union_many_variants_ok__Token.Slash))
+    @assert(!unions__union_many_variants_ok__is_op(unions__union_many_variants_ok__Token.Ident("x")))
+}
+
+test "unions/union_multi_payload_ok.mesa" {
+    @assert(unions__union_multi_payload_ok__is_truthy(unions__union_multi_payload_ok__Value.Int(1)))
+    @assert(!unions__union_multi_payload_ok__is_truthy(unions__union_multi_payload_ok__Value.Int(0)))
+    @assert(unions__union_multi_payload_ok__is_truthy(unions__union_multi_payload_ok__Value.Bool(true)))
+    @assert(!unions__union_multi_payload_ok__is_truthy(unions__union_multi_payload_ok__Value.Text("x")))
+}
+
+test "unions/union_nested_match_ok.mesa" {
+    @assert(unions__union_nested_match_ok__f(unions__union_nested_match_ok__B.P(unions__union_nested_match_ok__A.X(9))) == 9)
+    @assert(unions__union_nested_match_ok__f(unions__union_nested_match_ok__B.P(unions__union_nested_match_ok__A.Y)) == 0)
+    @assert(unions__union_nested_match_ok__f(unions__union_nested_match_ok__B.Q) == -1)
+}
+
+test "unions/union_payload_bool_ok.mesa" {
+    @assert(unions__union_payload_bool_ok__unwrap(unions__union_payload_bool_ok__Box.Val(true)))
+    @assert(!unions__union_payload_bool_ok__unwrap(unions__union_payload_bool_ok__Box.Empty))
+}
+
+test "unions/union_payload_f64_ok.mesa" {
+    @assert(unions__union_payload_f64_ok__unwrap(unions__union_payload_f64_ok__Box.Val(2.5)) == 2.5)
+    @assert(unions__union_payload_f64_ok__unwrap(unions__union_payload_f64_ok__Box.Empty) == 0.0)
+}
+
+test "unions/union_payload_i32_ok.mesa" {
+    @assert(unions__union_payload_i32_ok__unwrap(unions__union_payload_i32_ok__Box.Val(7)) == 7)
+    @assert(unions__union_payload_i32_ok__unwrap(unions__union_payload_i32_ok__Box.Empty) == 0)
+}
+
+test "unions/union_payload_i64_ok.mesa" {
+    @assert(unions__union_payload_i64_ok__unwrap(unions__union_payload_i64_ok__Box.Val(9)) == 9)
+    @assert(unions__union_payload_i64_ok__unwrap(unions__union_payload_i64_ok__Box.Empty) == 0)
+}
+
+test "unions/union_payload_str_ok.mesa" {
+    @assert(unions__union_payload_str_ok__unwrap(unions__union_payload_str_ok__Box.Val("x")) == "x")
+    @assert(unions__union_payload_str_ok__unwrap(unions__union_payload_str_ok__Box.Empty) == "ok")
+}
+
+test "unions/union_recursive_like_ok.mesa" {
+    @assert(unions__union_recursive_like_ok__value(.Leaf(3)) == 3)
+    @assert(unions__union_recursive_like_ok__value(.Branch(4)) == 4)
+}
+
+test "unions/union_wildcard_ok.mesa" {
+    @assert(unions__union_wildcard_ok__f(unions__union_wildcard_ok__Color.Red) == 0)
+    @assert(unions__union_wildcard_ok__f(unions__union_wildcard_ok__Color.Blue) == 1)
+}
+
+test "unions/union_with_payload_ok.mesa" {
+    @assert(unions__union_with_payload_ok__area(.Circle(3.0)) == 9.0)
+    @assert(unions__union_with_payload_ok__area(.Rectangle(3.0, 4.0)) == 12.0)
+    @assert(unions__union_with_payload_ok__area(.Point) == 0.0)
+}
+
+test "unions/unit_variant_expression_ok.mesa" {
+    @assert(unions__unit_variant_expression_ok__is_red(unions__unit_variant_expression_ok__red()))
+    @assert(!unions__unit_variant_expression_ok__is_red(unions__unit_variant_expression_ok__Color.Green))
+}
+
+test "unions/variant_in_match_arm_ok.mesa" {
+    @assert(match unions__variant_in_match_arm_ok__opposite(unions__variant_in_match_arm_ok__Dir.North) { .South => { true }, _ => { false } })
+    @assert(match unions__variant_in_match_arm_ok__opposite(unions__variant_in_match_arm_ok__Dir.West) { .East => { true }, _ => { false } })
+}
+
+fun main() void {
+    println("corpus")
+}

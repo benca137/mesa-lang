@@ -1,0 +1,7 @@
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let myPkg = b.addPackage("myPkg", root = "src/myPkg")
+    let init_test_entry = b.createEntry("src/main.mesa")
+    let init_test = b.addExecutable("init_test", entry = init_test_entry, imports = .{ std, myPkg })
+    b.install(init_test)
+}

@@ -1,0 +1,34 @@
+pkg mem
+
+pub struct FixedBuffer {
+    base: *void,
+    capacity: i64,
+
+    pub fun init(base: *void, capacity: i64) @this {
+        .{
+            base: base,
+            capacity: capacity,
+        }
+    }
+}
+
+def Buffer for FixedBuffer {
+    fun base_ptr(self: *FixedBuffer) *void {
+        self.base
+    }
+
+    fun capacity_bytes(self: *FixedBuffer) i64 {
+        self.capacity
+    }
+
+    fun reserve(self: *FixedBuffer, min_capacity: i64, align: i64) void {
+        let needed = alignForward(min_capacity, align)
+        if needed > self.capacity {
+            @panic("FixedBuffer: capacity exceeded")
+        }
+    }
+
+    fun release(self: *FixedBuffer) void {
+        return;
+    }
+}

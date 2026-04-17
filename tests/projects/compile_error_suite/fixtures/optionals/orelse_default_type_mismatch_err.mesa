@@ -1,0 +1,4 @@
+// orelse with bool vs integer - should mismatch
+fun f(x: ?i64) bool {
+    return x orelse false;  //~ error: type mismatch
+}

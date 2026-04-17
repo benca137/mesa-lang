@@ -1,0 +1,113 @@
+// nbody.mesa — N-body gravitational simulation
+//
+// Simulates gravitational attraction between three point masses.
+// Uses Euler integration with a fixed timestep.
+// Demonstrates: structs, pointer methods, for/while loops,
+//               address-of (@), string interpolation, f64 math.
+//
+// Compiles with: mesa nbody.mesa -o nbody && ./nbody
+
+// ── Body ──────────────────────────────────────────────────────
+
+struct Body {
+    x: f64,
+    y: f64,
+    vx: f64,
+    vy: f64,
+    m: f64,
+}
+
+// ── Math helpers ──────────────────────────────────────────────
+
+fun sqrt_f64(x: f64) f64 {
+    // Newton-Raphson sqrt, 8 iterations
+    if x <= 0.0, return 0.0
+    let var g = x * 0.5
+    for i = 0...8 {
+        g = (g + x / g) * 0.5
+    }
+    return g
+}
+
+// ── Energy ────────────────────────────────────────────────────
+
+fun kinetic_energy(b0: Body, b1: Body, b2: Body) f64 {
+    let ke0 = 0.5 * b0.m * (b0.vx * b0.vx + b0.vy * b0.vy)
+    let ke1 = 0.5 * b1.m * (b1.vx * b1.vx + b1.vy * b1.vy)
+    let ke2 = 0.5 * b2.m * (b2.vx * b2.vx + b2.vy * b2.vy)
+    return ke0 + ke1 + ke2
+}
+
+// ── Pairwise gravity ──────────────────────────────────────────
+
+fun apply_gravity(bi: *Body, bj: *Body, dt: f64) void {
+    let G = 39.478417
+    let dx = bj.x - bi.x
+    let dy = bj.y - bi.y
+    let r2 = dx * dx + dy * dy
+    let r = sqrt_f64(r2)
+    if r > 1.0 {
+        let f:  f64 = G * bi.m * bj.m / r2
+        let fx = f * dx / r
+        let fy = f * dy / r
+        bi.vx = bi.vx + (fx / bi.m) * dt
+        bi.vy = bi.vy + (fy / bi.m) * dt
+        bj.vx = bj.vx - (fx / bj.m) * dt
+        bj.vy = bj.vy - (fy / bj.m) * dt
+    }
+}
+
+// ── Euler step ────────────────────────────────────────────────
+
+fun step(sun: *Body, earth: *Body, jupiter: *Body, dt: f64) void {
+    apply_gravity(sun,   earth,   dt)
+    apply_gravity(sun,   jupiter, dt)
+    apply_gravity(earth, jupiter, dt)
+    sun.x     = sun.x     + sun.vx     * dt
+    sun.y     = sun.y     + sun.vy     * dt
+    earth.x   = earth.x   + earth.vx   * dt
+    earth.y   = earth.y   + earth.vy   * dt
+    jupiter.x = jupiter.x + jupiter.vx * dt
+    jupiter.y = jupiter.y + jupiter.vy * dt
+}
+
+// ── Entry point ───────────────────────────────────────────────
+
+fun main() void {
+    let dt = 1000.0
+    let steps = 10000
+
+    let meters := 1.0`m`
+
+    let var sun: Body = .{
+        x: 0.0, y: 0.0, vx: 0.0, vy: 0.0,
+        m: 1,
+    }
+    let var earth: Body = .{
+        x: 1, y: 0.0, vx: 0.0, vy: 6.27778,
+        m: 3e-6,
+    }
+    let var jupiter: Body = .{
+        x: 5.2, y: 0.0, vx: 0.0, vy: 2.755223,
+        m: 9.54588e-4,
+    }
+
+    println("N-body: Sun + Earth + Jupiter")
+    println("dt={dt}s  steps={steps}  (~116 days)")
+    println("")
+    println("step       KE (J)")
+    println("----       ------")
+
+    let var s = 0
+    while s < steps {
+        if s % 1000 == 0 {
+            let ke = kinetic_energy(sun, earth, jupiter)
+            println("{s}          {ke}")
+        }
+        step(&sun, &earth, &jupiter, dt)
+        s = s + 1
+    }
+
+    println("")
+    println("Done. Final sun position: ({sun.x}, {sun.y})")
+}

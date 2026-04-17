@@ -1,0 +1,40 @@
+from math import vec2
+from physics import Body, BodyDesc, ShapeDesc, createWorld, addBody, step, bodyPosition, bodyVelocity
+
+fun main() void {
+    let var world = createWorld(vec2(0.0, -9.81))
+
+    let ball: Body = addBody(&world, .{
+        position: vec2(0.0, 4.0),
+        velocity: vec2(1.0, 0.0),
+        material: .{
+            density: 1.0,
+            restitution: 0.7,
+            static_friction: 0.5,
+            dynamic_friction: 0.3,
+        },
+        shape: .Circle(0.5),
+        is_static: false,
+    })
+
+    let ground_desc: BodyDesc = .{
+        position: vec2(0.0, -10.0),
+        velocity: vec2(0.0, 0.0),
+        material: .{
+            density: 1.0,
+            restitution: 0.1,
+            static_friction: 0.8,
+            dynamic_friction: 0.6,
+        },
+        shape: .Box(vec2(20.0, 1.0)),
+        is_static: true,
+    }
+
+    let _ground = addBody(&world, ground_desc)
+    step(&world, 1.0 / 60.0)
+
+    let p = bodyPosition(ball)
+    let v = bodyVelocity(ball)
+    println(p.y)
+    println(v.x)
+}

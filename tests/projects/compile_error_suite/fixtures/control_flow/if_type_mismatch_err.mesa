@@ -1,0 +1,3 @@
+fun f(b: bool) i64 {
+    return if b { 1 } else { true };  //~ error: type mismatch
+}

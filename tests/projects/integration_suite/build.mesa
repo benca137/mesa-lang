@@ -1,0 +1,14 @@
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let math = b.addPackage("math", root = "src/math")
+    let physics = b.addPackage("physics", root = "src/physics")
+    let a_pkg = b.addPackage("a", root = "src/a")
+    let b_pkg = b.addPackage("b", root = "src/b")
+    let entry = b.createEntry("src/main.mesa")
+    let suite = b.addExecutable(
+        "integration-suite",
+        entry = entry,
+        imports = .{ std, math, physics, a_pkg, b_pkg },
+    )
+    b.install(suite)
+}

@@ -1,0 +1,4 @@
+union U5 { V0, V1, V2, V3, V4, }
+fun f(u: U5) i64 {
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, };  //~ error: missing variants
+}

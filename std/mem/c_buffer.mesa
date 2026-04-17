@@ -1,0 +1,40 @@
+pkg mem
+
+pub struct CBuffer {
+    base: *void,
+    capacity: i64,
+
+    pub fun init(initial_capacity: i64) @this {
+        let capacity = maxI64(initial_capacity, 1)
+        .{
+            base: @cAlloc(capacity, 16),
+            capacity: capacity,
+        }
+    }
+}
+
+def Buffer for CBuffer {
+    fun base_ptr(self: *CBuffer) *void {
+        self.base
+    }
+
+    fun capacity_bytes(self: *CBuffer) i64 {
+        self.capacity
+    }
+
+    fun reserve(self: *CBuffer, min_capacity: i64, align: i64) void {
+        let needed = alignForward(min_capacity, align)
+        if needed <= self.capacity {
+            return;
+        }
+
+        let next_capacity = growCapacity(self.capacity, needed)
+        self.base = @cRealloc(self.base, self.capacity, next_capacity, normalizeAlign(align))
+        self.capacity = next_capacity
+    }
+
+    fun release(self: *CBuffer) void {
+        @cFree(self.base)
+        self.capacity = 0
+    }
+}

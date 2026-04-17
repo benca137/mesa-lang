@@ -1,0 +1,583 @@
+fun complex__abs(x: f64) f64 { return if x < 0.0 { -x } else { x }; }
+fun complex__approx(a: f64, b: f64) bool { return complex__abs(a - b) < 0.00001; }
+
+struct complex__Vec2 { x: f64, y: f64 }
+struct complex__Vec3 { x: f64, y: f64, z: f64 }
+struct complex__Mat2 { a: f64, b: f64, c: f64, d: f64 }
+struct complex__State { pos: f64, vel: f64 }
+struct complex__Particle {
+    x: f64, y: f64, vx: f64, vy: f64, alive: bool,
+    fun update(self: *complex__Particle, dt: f64) void {
+        self.x = self.x + self.vx * dt;
+        self.y = self.y + self.vy * dt;
+    }
+    fun kill(self: *complex__Particle) void { self.alive = false; }
+}
+struct complex__Body { px: f64, py: f64, vx: f64, vy: f64, mass: f64 }
+struct complex__Spring { pos: f64, vel: f64, k: f64, mass: f64 }
+struct complex__ListNode { val: i64, next_idx: i64 }
+struct complex__Node { val: i64, depth: i64 }
+struct complex__A { x: f64 }
+struct complex__B { y: f64 }
+struct complex__X { a: i64 }
+struct complex__Y { b: i64 }
+struct complex__Z { c: i64 }
+struct complex__V1 { f0: f64 }
+struct complex__V2 { f0: f64, f1: f64 }
+struct complex__V3 { f0: f64, f1: f64, f2: f64 }
+struct complex__V4 { f0: f64, f1: f64, f2: f64, f3: f64 }
+struct complex__Handler { tag: str }
+struct complex__TreeHeight { left_h: i64, right_h: i64 }
+union complex__Event { Click(i64), KeyPress(i64), Resize(i64), Quit }
+union complex__GameState { Menu, Playing(i64), Paused(i64), GameOver(i64) }
+union complex__StateMachine { Idle, Active, Done }
+union complex__Status { Ok, Err(str) }
+struct complex__Response { code: i64, status: complex__Status }
+
+fun complex__to_radians(deg: f64) f64 {
+    return deg * 3.141592653589793 / 180.0;
+}
+
+fun complex__to_degrees(rad: f64) f64 {
+    return rad * 180.0 / 3.141592653589793;
+}
+
+fun complex__bary(p: complex__Vec2, a: complex__Vec2, b: complex__Vec2, c: complex__Vec2) f64 {
+    let area2 = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)
+    let area_p = (p.x - a.x) * (c.y - a.y) - (c.x - a.x) * (p.y - a.y)
+    return area_p / area2;
+}
+
+fun complex__binary_search(v: vec[i64], target: i64) ?i64 {
+    let var lo: i64 = 0
+    let var hi: i64 = len(v) - 1
+    while lo <= hi {
+        let mid: i64 = (lo + hi) / 2
+        if v[mid] == target { return mid; }
+        if v[mid] < target { lo = mid + 1; } else { hi = mid - 1; }
+    }
+    return none;
+}
+
+fun complex__height(n: complex__TreeHeight) i64 {
+    return if n.left_h > n.right_h { n.left_h + 1 } else { n.right_h + 1 };
+}
+
+fun complex__clamp(x: f64, lo: f64, hi: f64) f64 {
+    if x < lo { return lo; }
+    if x > hi { return hi; }
+    return x;
+}
+
+fun complex__smoothstep(edge0: f64, edge1: f64, x: f64) f64 {
+    let t: f64 = complex__clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t);
+}
+
+fun complex__collatz(n: i64) i64 {
+    let var x: i64 = n
+    let var s: i64 = 0
+    while x != 1 {
+        if x % 2 == 0 { x = x / 2; } else { x = x * 3 + 1; }
+        s += 1
+    }
+    return s;
+}
+
+fun complex__count_down(n: i64) i64 {
+    let var x: i64 = n
+    let var total: i64 = 0
+    while x > 0 { total += x; x -= 1; }
+    return total;
+}
+
+fun complex__digit_sum(n: i64) i64 {
+    let var s: i64 = 0
+    let var x: i64 = n
+    while x > 0 { s += x % 10; x = x / 10; }
+    return s;
+}
+
+fun complex__digital_root(n: i64) i64 {
+    let var x: i64 = n
+    while x >= 10 { x = complex__digit_sum(x); }
+    return x;
+}
+
+fun complex__dot(a: vec[f64], b: vec[f64]) f64 {
+    let var s: f64 = 0.0
+    for i = 0..len(a) { s += a[i] * b[i]; }
+    return s;
+}
+
+fun complex__div(a: f64, b: f64) ?f64 {
+    if b == 0.0 { return none; }
+    return a / b;
+}
+
+fun complex__compute(x: f64, y: f64, z: f64) ?f64 {
+    let ab = complex__div(x, y) orelse 0.0
+    let bc = complex__div(y, z) orelse 0.0
+    return ab + bc;
+}
+
+fun complex__step_state(s: *complex__State, acc: f64, dt: f64) void {
+    s.vel = s.vel + acc * dt;
+    s.pos = s.pos + s.vel * dt;
+}
+
+fun complex__process_event(e: complex__Event) bool {
+    return match e {
+        .Click(x) => { x > 0 },
+        .KeyPress(k) => { k != 27 },
+        .Resize(_) => { true },
+        .Quit => { false },
+    };
+}
+
+fun complex__fib_iter(n: i64) i64 {
+    if n <= 1 { return n; }
+    let var a: i64 = 0
+    let var b: i64 = 1
+    for i = 2...n { let t: i64 = a + b; a = b; b = t; }
+    return b;
+}
+
+fun complex__fib_rec(n: i64) i64 {
+    if n <= 1 { return n; }
+    return complex__fib_rec(n - 1) + complex__fib_rec(n - 2);
+}
+
+fun complex__fizzbuzz_count(n: i64) i64 {
+    let var count: i64 = 0
+    for i = 1...n {
+        if i % 3 == 0 or i % 5 == 0 { count += 1; }
+    }
+    return count;
+}
+
+fun complex__score(s: complex__GameState) i64 {
+    return match s {
+        .Menu => { 0 },
+        .Playing(pts) => { pts },
+        .Paused(pts) => { pts },
+        .GameOver(pts) => { pts },
+    };
+}
+
+fun complex__is_active(s: complex__GameState) bool {
+    return match s { .Playing(_) => { true }, _ => { false } };
+}
+
+fun complex__gcd(a: i64, b: i64) i64 {
+    let var x: i64 = a
+    let var y: i64 = b
+    while y != 0 { let t: i64 = y; y = x % y; x = t; }
+    return x;
+}
+
+fun complex__hash(x: i64) i64 {
+    let var h: i64 = x
+    h = h ^ (h / 16)
+    h = h * 1168111939
+    h = h ^ (h / 16)
+    return h;
+}
+
+fun complex__shift_right(v: vec[i64], pos: i64, val: i64) void {
+    let var i: i64 = pos
+    while i > 0 and v[i - 1] > val { v[i] = v[i - 1]; i -= 1; }
+    v[i] = val;
+}
+
+fun complex__lerp(a: f64, b: f64, t: f64) f64 { return a + (b - a) * t; }
+
+fun complex__cubic_bezier(p0: f64, p1: f64, p2: f64, p3: f64, t: f64) f64 {
+    let t2: f64 = t * t
+    let t3: f64 = t2 * t
+    let mt: f64 = 1.0 - t
+    let mt2: f64 = mt * mt
+    let mt3: f64 = mt2 * mt
+    return mt3 * p0 + 3.0 * mt2 * t * p1 + 3.0 * mt * t2 * p2 + t3 * p3;
+}
+
+fun complex__sum_list(nodes: vec[complex__ListNode], start: i64) i64 {
+    let var total: i64 = 0
+    let var idx: i64 = start
+    while idx >= 0 { total += nodes[idx].val; idx = nodes[idx].next_idx; }
+    return total;
+}
+
+fun complex__mul(m: complex__Mat2, n: complex__Mat2) complex__Mat2 {
+    return .{
+        a: m.a * n.a + m.b * n.c,
+        b: m.a * n.b + m.b * n.d,
+        c: m.c * n.a + m.d * n.c,
+        d: m.c * n.b + m.d * n.d,
+    };
+}
+
+fun complex__det(m: complex__Mat2) f64 { return m.a * m.d - m.b * m.c; }
+fun complex__trace(m: complex__Mat2) f64 { return m.a + m.d; }
+
+fun complex__max_sub(v: vec[i64]) i64 {
+    let var best: i64 = v[0]
+    let var cur: i64 = v[0]
+    for i = 1..len(v) {
+        cur = if v[i] > cur + v[i] { v[i] } else { cur + v[i] }
+        if cur > best { best = cur; }
+    }
+    return best;
+}
+
+fun complex__moving_avg(v: vec[f64], n: i64) f64 {
+    let var s: f64 = 0.0
+    for i = 0..n { s += v[i]; }
+    return s / n;
+}
+
+fun complex__even(n: i64) bool {
+    if n == 0 { return true; }
+    return complex__odd(n - 1);
+}
+
+fun complex__odd(n: i64) bool {
+    if n == 0 { return false; }
+    return complex__even(n - 1);
+}
+
+fun complex__sqrt_newton(x: f64) f64 {
+    if x <= 0.0 { return 0.0; }
+    let var g: f64 = x * 0.5
+    for i = 0...15 { g = (g + x / g) * 0.5; }
+    return g;
+}
+
+fun complex__scale(v: complex__Vec3, s: f64) complex__Vec3 {
+    return .{x: v.x * s, y: v.y * s, z: v.z * s};
+}
+
+fun complex__kinetic_energy(b: complex__Body) f64 {
+    return 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy);
+}
+
+fun complex__euler_body(b: *complex__Body, ax: f64, ay: f64, dt: f64) void {
+    b.vx = b.vx + ax * dt;
+    b.vy = b.vy + ay * dt;
+    b.px = b.px + b.vx * dt;
+    b.py = b.py + b.vy * dt;
+}
+
+fun complex__pow(b: i64, e: i64) i64 {
+    if e == 0 { return 1; }
+    if e % 2 == 0 { let h: i64 = complex__pow(b, e / 2); return h * h; }
+    return b * complex__pow(b, e - 1);
+}
+
+fun complex__sum_to(n: i64) i64 {
+    if n <= 0 { return 0; }
+    return n + complex__sum_to(n - 1);
+}
+
+fun complex__rle_count(v: vec[i64], start: i64) i64 {
+    let val: i64 = v[start]
+    let var n: i64 = 0
+    for i = start..len(v) {
+        if v[i] == val { n += 1; } else { break; }
+    }
+    return n;
+}
+
+fun complex__count_leading(v: vec[i64], val: i64) i64 {
+    let var count: i64 = 0
+    for x in v {
+        if x == val { count += 1; } else { break; }
+    }
+    return count;
+}
+
+fun complex__count_runs(v: vec[i64], val: i64) i64 {
+    let var runs: i64 = 0
+    let var in_run: bool = false
+    for x in v {
+        if x == val and !in_run { runs += 1; in_run = true; }
+        if x != val { in_run = false; }
+    }
+    return runs;
+}
+
+fun complex__count_primes_up_to(limit: i64) i64 {
+    let var count: i64 = 0
+    for n = 2...limit {
+        let var is_prime: bool = true
+        for d = 2...n : d * d <= n {
+            if n % d == 0 { is_prime = false; break; }
+        }
+        if is_prime { count += 1; }
+    }
+    return count;
+}
+
+fun complex__smooth_step(x: f64) f64 {
+    let t: f64 = complex__clamp(x, 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t);
+}
+
+fun complex__mix(a: f64, b: f64, amount: f64) f64 {
+    return complex__lerp(a, b, complex__smooth_step(amount));
+}
+
+fun complex__force(s: complex__Spring) f64 { return -s.k * s.pos; }
+
+fun complex__step_spring(s: *complex__Spring, dt: f64) void {
+    let a: f64 = complex__force(*s) / s.mass
+    s.vel = s.vel + a * dt;
+    s.pos = s.pos + s.vel * dt;
+}
+
+fun complex__is_done(s: complex__StateMachine) bool {
+    return match s { .Done => { true }, _ => { false } };
+}
+
+fun complex__advance(s: complex__StateMachine) complex__StateMachine {
+    return match s {
+        .Idle => { .Active },
+        .Active => { .Done },
+        .Done => { .Done },
+    };
+}
+
+fun complex__mean(v: vec[f64], n: i64) f64 {
+    let var s: f64 = 0.0
+    for i = 0..n { s += v[i]; }
+    return s / n;
+}
+
+fun complex__sum1(v: complex__V1) f64 { return v.f0; }
+fun complex__sum2(v: complex__V2) f64 { return v.f0 + v.f1; }
+fun complex__sum3(v: complex__V3) f64 { return v.f0 + v.f1 + v.f2; }
+fun complex__sum4(v: complex__V4) f64 { return v.f0 + v.f1 + v.f2 + v.f3; }
+
+struct complex__MethodVec2 {
+    x: f64, y: f64,
+    fun dot(self: complex__MethodVec2, o: complex__MethodVec2) f64 { return self.x * o.x + self.y * o.y; }
+    fun len_sq(self: complex__MethodVec2) f64 { return self.dot(self); }
+}
+
+fun complex__process(h: complex__Handler, msg: str) bool { return msg == h.tag; }
+fun complex__sum3s(x: complex__X, y: complex__Y, z: complex__Z) i64 { return x.a + y.b + z.c; }
+fun complex__make_node(val: i64, depth: i64) complex__Node { return .{val: val, depth: depth}; }
+
+fun complex__sum_depth(nodes: vec[complex__Node]) i64 {
+    let var t: i64 = 0
+    for n in nodes { t += n.val * n.depth; }
+    return t;
+}
+
+fun complex__combine(a: complex__A, b: complex__B) f64 { return a.x + b.y; }
+
+fun complex__response_ok(r: complex__Response) bool {
+    return match r.status { .Ok => { true }, _ => { false } };
+}
+
+test "complex/angle_ok.mesa" {
+    @assert(complex__approx(complex__to_radians(180.0), 3.141592653589793))
+    @assert(complex__approx(complex__to_degrees(3.141592653589793), 180.0))
+}
+
+test "complex/barycentric_ok.mesa" {
+    let a: complex__Vec2 = .{x: 0.0, y: 0.0}
+    let b: complex__Vec2 = .{x: 1.0, y: 0.0}
+    let c: complex__Vec2 = .{x: 0.0, y: 1.0}
+    let p: complex__Vec2 = .{x: 0.5, y: 0.0}
+    @assert(complex__approx(complex__bary(p, a, b, c), 0.5))
+}
+
+test "complex/binary_search_ok.mesa" {
+    let found = complex__binary_search(vec[1, 3, 5, 7, 9], 7)
+    @assert((found orelse -1) == 3)
+}
+
+test "complex/binary_tree_height_ok.mesa" {
+    @assert(complex__height(.{left_h: 2, right_h: 4}) == 5)
+}
+
+test "complex/clamp_ok.mesa" {
+    @assert(complex__approx(complex__clamp(2.5, 0.0, 1.0), 1.0))
+    @assert(complex__smoothstep(0.0, 1.0, 0.5) > 0.0)
+}
+
+test "complex/collatz_ok.mesa" { @assert(complex__collatz(6) == 8) }
+test "complex/count_down_ok.mesa" { @assert(complex__count_down(4) == 10) }
+test "complex/digital_root_ok.mesa" { @assert(complex__digital_root(9876) == 3) }
+
+test "complex/dot_product_ok.mesa" {
+    @assert(complex__approx(complex__dot(vec[1.0, 2.0], vec[3.0, 4.0]), 11.0))
+}
+
+test "complex/error_propagation_ok.mesa" {
+    let r = complex__compute(8.0, 2.0, 4.0)
+    @assert(complex__approx((r orelse 0.0), 4.5))
+}
+
+test "complex/euler_ok.mesa" {
+    let var s: complex__State = .{pos: 0.0, vel: 1.0}
+    complex__step_state(&s, 1.0, 2.0)
+    @assert(complex__approx(s.pos, 6.0))
+}
+
+test "complex/event_system_ok.mesa" {
+    @assert(complex__process_event(.Click(1)))
+    @assert(!complex__process_event(.Quit))
+}
+
+test "complex/fib_iterative_ok.mesa" { @assert(complex__fib_iter(10) == 55) }
+test "complex/fibonacci_ok.mesa" { @assert(complex__fib_rec(8) == 21) }
+test "complex/fizzbuzz_ok.mesa" { @assert(complex__fizzbuzz_count(15) == 7) }
+
+test "complex/game_state_ok.mesa" {
+    @assert(complex__score(.Playing(12)) == 12)
+    @assert(complex__is_active(.Playing(1)))
+}
+
+test "complex/gcd_ok.mesa" { @assert(complex__gcd(54, 24) == 6) }
+test "complex/hash_like_ok.mesa" { @assert(complex__hash(42) != 42) }
+
+test "complex/insertion_sort_step_ok.mesa" {
+    let v = vec[1, 3, 5, 0]
+    complex__shift_right(v, 3, 2)
+    @assert(v[1] == 2 and v[2] == 3 and v[3] == 5)
+}
+
+test "complex/interpolate_ok.mesa" {
+    @assert(complex__approx(complex__lerp(0.0, 10.0, 0.25), 2.5))
+    @assert(complex__cubic_bezier(0.0, 0.0, 1.0, 1.0, 0.5) > 0.0)
+}
+
+test "complex/linked_list_like_ok.mesa" {
+    let nodes: vec[complex__ListNode] = vec[
+        .{val: 3, next_idx: 1},
+        .{val: 4, next_idx: 2},
+        .{val: 5, next_idx: -1},
+    ]
+    @assert(complex__sum_list(nodes, 0) == 12)
+}
+
+test "complex/matrix_like_ok.mesa" {
+    let a: complex__Mat2 = .{a: 1.0, b: 2.0, c: 3.0, d: 4.0}
+    let b: complex__Mat2 = .{a: 2.0, b: 0.0, c: 1.0, d: 2.0}
+    let m = complex__mul(a, b)
+    @assert(complex__approx(m.a, 4.0))
+    @assert(complex__approx(complex__det(a), -2.0))
+}
+
+test "complex/matrix_trace_ok.mesa" {
+    @assert(complex__approx(complex__trace(.{a: 1.0, b: 2.0, c: 3.0, d: 4.0}), 5.0))
+}
+
+test "complex/max_subarray_ok.mesa" {
+    @assert(complex__max_sub(vec[-2, 1, -3, 4, -1, 2, 1, -5, 4]) == 6)
+}
+
+test "complex/moving_avg_ok.mesa" {
+    @assert(complex__approx(complex__moving_avg(vec[2.0, 4.0, 6.0], 3), 4.0))
+}
+
+test "complex/mutual_recursion_ok.mesa" { @assert(complex__even(10) and !complex__odd(10)) }
+
+test "complex/newton_sqrt_ok.mesa" {
+    @assert(complex__approx(complex__sqrt_newton(9.0), 3.0))
+}
+
+test "complex/normalize_ok.mesa" {
+    let v = complex__scale(.{x: 1.0, y: 2.0, z: 3.0}, 2.0)
+    @assert(complex__approx(v.z, 6.0))
+}
+
+test "complex/particle_system_ok.mesa" {
+    let var p: complex__Particle = .{x: 0.0, y: 0.0, vx: 1.0, vy: 0.5, alive: true}
+    p.update(2.0)
+    p.kill()
+    @assert(!p.alive and complex__approx(p.x, 2.0))
+}
+
+test "complex/physics_ok.mesa" {
+    let var b: complex__Body = .{px: 0.0, py: 0.0, vx: 3.0, vy: 4.0, mass: 2.0}
+    @assert(complex__approx(complex__kinetic_energy(b), 25.0))
+    complex__euler_body(&b, 1.0, 0.0, 1.0)
+    @assert(complex__approx(b.px, 4.0))
+}
+
+test "complex/power_fast_ok.mesa" { @assert(complex__pow(2, 10) == 1024) }
+test "complex/recurse_3_ok.mesa" { @assert(complex__sum_to(3) == 6) }
+test "complex/recurse_4_ok.mesa" { @assert(complex__sum_to(4) == 10) }
+test "complex/recurse_5_ok.mesa" { @assert(complex__sum_to(5) == 15) }
+test "complex/recurse_6_ok.mesa" { @assert(complex__sum_to(6) == 21) }
+test "complex/recurse_7_ok.mesa" { @assert(complex__sum_to(7) == 28) }
+test "complex/recursive_fib_ok.mesa" { @assert(complex__fib_rec(7) == 13) }
+test "complex/recursive_sum_ok.mesa" { @assert(complex__sum_to(10) == 55) }
+
+test "complex/run_encode_ok.mesa" {
+    @assert(complex__rle_count(vec[2, 2, 2, 3, 3], 0) == 3)
+}
+
+test "complex/run_length_encode_ok.mesa" {
+    @assert(complex__count_leading(vec[5, 5, 5, 1], 5) == 3)
+}
+
+test "complex/scan_for_pattern_ok.mesa" {
+    @assert(complex__count_runs(vec[1, 1, 0, 1, 1, 1, 0], 1) == 2)
+}
+
+test "complex/sieve_like_ok.mesa" { @assert(complex__count_primes_up_to(10) == 4) }
+
+test "complex/signal_processing_ok.mesa" {
+    @assert(complex__mix(0.0, 10.0, 0.5) > 4.0)
+}
+
+test "complex/spring_ok.mesa" {
+    let var s: complex__Spring = .{pos: 1.0, vel: 0.0, k: 2.0, mass: 1.0}
+    complex__step_spring(&s, 0.5)
+    @assert(s.pos < 1.0)
+}
+
+test "complex/state_machine_ok.mesa" {
+    @assert(!complex__is_done(.Idle))
+    @assert(complex__is_done(complex__advance(.Active)))
+}
+
+test "complex/stats_ok.mesa" {
+    @assert(complex__approx(complex__mean(vec[2.0, 4.0, 6.0], 3), 4.0))
+}
+
+test "complex/struct1_sum_ok.mesa" { @assert(complex__approx(complex__sum1(.{f0: 1.5}), 1.5)) }
+test "complex/struct2_sum_ok.mesa" { @assert(complex__approx(complex__sum2(.{f0: 1.0, f1: 2.0}), 3.0)) }
+test "complex/struct3_sum_ok.mesa" { @assert(complex__approx(complex__sum3(.{f0: 1.0, f1: 2.0, f2: 3.0}), 6.0)) }
+test "complex/struct4_sum_ok.mesa" { @assert(complex__approx(complex__sum4(.{f0: 1.0, f1: 2.0, f2: 3.0, f3: 4.0}), 10.0)) }
+
+test "complex/struct_method_calls_method_ok.mesa" {
+    let v: complex__MethodVec2 = .{x: 3.0, y: 4.0}
+    @assert(complex__approx(v.len_sq(), 25.0))
+}
+
+test "complex/struct_with_fn_field_ok.mesa" {
+    @assert(complex__process(.{tag: "go"}, "go"))
+}
+
+test "complex/three_structs_ok.mesa" {
+    @assert(complex__sum3s(.{a: 1}, .{b: 2}, .{c: 3}) == 6)
+}
+
+test "complex/tree_ok.mesa" {
+    let nodes = vec[complex__make_node(2, 1), complex__make_node(3, 2)]
+    @assert(complex__sum_depth(nodes) == 8)
+}
+
+test "complex/two_structs_interact_ok.mesa" {
+    @assert(complex__approx(complex__combine(.{x: 1.5}, .{y: 2.5}), 4.0))
+}
+
+test "complex/union_in_struct_ok.mesa" {
+    let r: complex__Response = .{code: 200, status: .Ok}
+    @assert(complex__response_ok(r))
+}

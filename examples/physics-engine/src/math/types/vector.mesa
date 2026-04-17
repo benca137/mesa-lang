@@ -1,0 +1,10 @@
+pkg math
+
+pub struct Vec2 {
+    x: f32,
+    y: f32,
+}
+
+pub fun vec2(x: f32, y: f32) Vec2 {
+    .{ x: x, y: y }
+}

@@ -1,0 +1,6 @@
+fun f(x: ?i64) i64 {  //~ compile-ok
+    if x |v| {
+        return v;
+    }
+    return 0;
+}

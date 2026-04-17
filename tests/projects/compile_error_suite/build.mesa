@@ -1,0 +1,11 @@
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let helpers = b.addPackage("helpers", root = "src/helpers")
+    let entry = b.createEntry("src/main.mesa")
+    let suite = b.addExecutable(
+        "compile-error-suite",
+        entry = entry,
+        imports = .{ std, helpers },
+    )
+    b.install(suite)
+}

@@ -1,0 +1,2 @@
+fun f() i64 {
+}  //~ error: all paths

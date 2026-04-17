@@ -1,0 +1,3 @@
+fun f() void {
+    return 42;  //~ error: void
+}

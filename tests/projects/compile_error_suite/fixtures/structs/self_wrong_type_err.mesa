@@ -1,0 +1,5 @@
+struct A { x: i64 }
+struct B { y: i64 }
+def _ for A {
+    fun f(self: B) void { }  //~ compile-error
+}

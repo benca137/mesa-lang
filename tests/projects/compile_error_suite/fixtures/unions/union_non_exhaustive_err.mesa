@@ -1,0 +1,7 @@
+union Color { Red, Green, Blue }
+fun f(c: Color) i64 {
+    return match c {
+        .Red => {0},
+        .Green => {1},
+    };  //~ error: missing variants
+}

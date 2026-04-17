@@ -1,0 +1,8 @@
+// Using a bool payload where i64 is expected — not bridgeable by widening
+union Shape { Circle(bool), Point }
+fun f(s: Shape) i64 {
+    return match s {
+        .Circle(r) => { r },  //~ error: incompatible
+        _         => { 0 },
+    };
+}

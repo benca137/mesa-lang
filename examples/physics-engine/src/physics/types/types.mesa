@@ -1,0 +1,23 @@
+pkg physics
+
+from math import Vec2
+
+pub struct Material {
+    density: f32,
+    restitution: f32,
+    static_friction: f32,
+    dynamic_friction: f32,
+}
+
+pub union ShapeDesc {
+    Circle(f32),
+    Box(Vec2),
+}
+
+pub struct BodyDesc {
+    position: Vec2,
+    velocity: Vec2,
+    material: Material,
+    shape: ShapeDesc,
+    is_static: bool,
+}

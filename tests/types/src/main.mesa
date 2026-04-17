@@ -1,0 +1,469 @@
+let types__alias_count_ok__Count := i64
+fun types__alias_count_ok__f() i64 {
+    let x: types__alias_count_ok__Count = 0
+    return x
+}
+
+let types__alias_flag_ok__Flag := bool
+fun types__alias_flag_ok__f() bool {
+    let x: types__alias_flag_ok__Flag = false
+    return x
+}
+
+let types__alias_hertz_ok__Hertz := f64
+fun types__alias_hertz_ok__f() f64 {
+    let x: types__alias_hertz_ok__Hertz = 0.0
+    return x
+}
+
+let types__alias_in_struct_ok__Mass := f64
+let types__alias_in_struct_ok__Vel := f64
+struct types__alias_in_struct_ok__Body { mass: types__alias_in_struct_ok__Mass, vel: types__alias_in_struct_ok__Vel }
+fun types__alias_in_struct_ok__momentum(b: types__alias_in_struct_ok__Body) f64 {
+    return b.mass * b.vel
+}
+
+let types__alias_index_ok__Index := i64
+fun types__alias_index_ok__f() i64 {
+    let x: types__alias_index_ok__Index = 0
+    return x
+}
+
+let types__alias_meters_ok__Meters := f64
+fun types__alias_meters_ok__f() f64 {
+    let x: types__alias_meters_ok__Meters = 0.0
+    return x
+}
+
+let types__alias_multiple_ok__Width := f64
+let types__alias_multiple_ok__Height := f64
+let types__alias_multiple_ok__Area := f64
+fun types__alias_multiple_ok__rect_area(w: types__alias_multiple_ok__Width, h: types__alias_multiple_ok__Height) types__alias_multiple_ok__Area {
+    return w * h
+}
+
+let types__alias_named_tuple_ok__Position := .{x: f64, y: f64}
+fun types__alias_named_tuple_ok__origin() types__alias_named_tuple_ok__Position {
+    return .{x: 0.0, y: 0.0}
+}
+
+let types__alias_param_ok__Hz := f64
+let types__alias_param_ok__Sec := f64
+fun types__alias_param_ok__period(freq: types__alias_param_ok__Hz) types__alias_param_ok__Sec {
+    return 1.0 / freq
+}
+
+let types__alias_primitive_ok__Meters := f64
+let types__alias_primitive_ok__Seconds := f64
+let types__alias_primitive_ok__Score := i64
+fun types__alias_primitive_ok__f() types__alias_primitive_ok__Score { return 100 }
+
+let types__alias_score_ok__Score := i64
+fun types__alias_score_ok__f() i64 {
+    let x: types__alias_score_ok__Score = 0
+    return x
+}
+
+let types__alias_seconds_ok__Seconds := f64
+fun types__alias_seconds_ok__f() f64 {
+    let x: types__alias_seconds_ok__Seconds = 0.0
+    return x
+}
+
+let types__alias_tag_ok__Tag := str
+fun types__alias_tag_ok__f() str {
+    let x: types__alias_tag_ok__Tag = "ok"
+    return x
+}
+
+let types__alias_vec_bool_ok__Arr := vec[bool]
+fun types__alias_vec_bool_ok__f() types__alias_vec_bool_ok__Arr { return vec[] }
+
+let types__alias_vec_f64_ok__Arr := vec[f64]
+fun types__alias_vec_f64_ok__f() types__alias_vec_f64_ok__Arr { return vec[] }
+
+let types__alias_vec_i64_ok__Arr := vec[i64]
+fun types__alias_vec_i64_ok__f() types__alias_vec_i64_ok__Arr { return vec[] }
+
+fun types__bool_assign_ok__f() bool {
+    let x: bool = true
+    let y: bool = false
+    return x and y
+}
+
+fun types__bool_logic_ok__f(a: bool, b: bool, c: bool) bool {
+    return (a and b) or (!a and c)
+}
+
+fun types__f64_arith_ok__f(a: f64, b: f64) f64 {
+    return a * b + a - b / (a + 1.0)
+}
+
+fun types__float_assign_f32_ok__f() f32 {
+    let x: f32 = 3.14
+    return x
+}
+
+fun types__float_assign_f64_ok__f() f64 {
+    let x: f64 = 3.14
+    return x
+}
+
+fun types__float_int_literal_f32_ok__f() f32 {
+    let x: f32 = 42
+    return x
+}
+
+fun types__float_int_literal_f64_ok__f() f64 {
+    let x: f64 = 42
+    return x
+}
+
+fun types__i64_arith_ok__f(a: i64, b: i64) i64 {
+    return a * b + a - b / (a + 1)
+}
+
+let types__int_assign_i16_ok__x: i16 = 0
+fun types__int_assign_i16_ok__f() i16 {
+    let var n: i16 = 0
+    return n
+}
+
+let types__int_assign_i32_ok__x: i32 = 0
+fun types__int_assign_i32_ok__f() i32 {
+    let var n: i32 = 0
+    return n
+}
+
+let types__int_assign_i64_ok__x: i64 = 0
+fun types__int_assign_i64_ok__f() i64 {
+    let var n: i64 = 0
+    n = n + 1
+    return n
+}
+
+let types__int_assign_i8_ok__x: i8 = 0
+fun types__int_assign_i8_ok__f() i8 {
+    let var n: i8 = 0
+    return n
+}
+
+fun types__let_bool_explicit_ok__f() bool {
+    let x: bool = false
+    return x
+}
+
+fun types__let_f64_explicit_ok__f() f64 {
+    let x: f64 = 0.0
+    return x
+}
+
+fun types__let_i64_explicit_ok__f() i64 {
+    let x: i64 = 0
+    return x
+}
+
+fun types__let_infer_bool_ok__f() bool {
+    let x = true
+    let y = !x
+    return y
+}
+
+fun types__let_infer_float_ok__f() f64 {
+    let x = 3.14
+    let y = x * 2.0
+    return y
+}
+
+fun types__let_infer_fn_bool_ok__get() bool { return false }
+fun types__let_infer_fn_bool_ok__f() bool {
+    let x = types__let_infer_fn_bool_ok__get()
+    return x
+}
+
+fun types__let_infer_fn_f64_ok__get() f64 { return 0.0 }
+fun types__let_infer_fn_f64_ok__f() f64 {
+    let x = types__let_infer_fn_f64_ok__get()
+    return x
+}
+
+fun types__let_infer_fn_i64_ok__get() i64 { return 0 }
+fun types__let_infer_fn_i64_ok__f() i64 {
+    let x = types__let_infer_fn_i64_ok__get()
+    return x
+}
+
+fun types__let_infer_int_ok__f() i64 {
+    let x = 42
+    let y = x + 1
+    return y
+}
+
+fun types__let_str_explicit_ok__f() str {
+    let x: str = "ok"
+    return x
+}
+
+fun types__let_var_bool_ok__f() bool {
+    let var x: bool = false
+    return x
+}
+
+fun types__let_var_f64_ok__f() f64 {
+    let var x: f64 = 0.0
+    return x
+}
+
+fun types__let_var_i64_ok__f() i64 {
+    let var x: i64 = 0
+    return x
+}
+
+fun types__let_var_mutable_ok__f() i64 {
+    let var x: i64 = 0
+    x = 1
+    x += 1
+    x -= 1
+    x *= 2
+    return x
+}
+
+fun types__let_var_str_ok__f() str {
+    let var x: str = "ok"
+    return x
+}
+
+fun types__named_tuple_2field_ok__f() .{f0: i64, f1: i64} { return .{f0: 0, f1: 1} }
+fun types__named_tuple_3field_ok__f() .{f0: i64, f1: i64, f2: i64} { return .{f0: 0, f1: 1, f2: 2} }
+fun types__named_tuple_4field_ok__f() .{f0: i64, f1: i64, f2: i64, f3: i64} { return .{f0: 0, f1: 1, f2: 2, f3: 3} }
+fun types__named_tuple_5field_ok__f() .{f0: i64, f1: i64, f2: i64, f3: i64, f4: i64} { return .{f0: 0, f1: 1, f2: 2, f3: 3, f4: 4} }
+
+fun types__optional_chain_ok__f(a: ?i64, b: ?i64) i64 {
+    return (a orelse 0) + (b orelse 0)
+}
+fun types__optional_chain_ok__some(x: i64) ?i64 { return x }
+
+fun types__optional_optional_ok__f() ??i64 { return none }
+
+struct types__optional_struct_field_ok__Node { val: ?i64 }
+fun types__optional_struct_field_ok__f(n: types__optional_struct_field_ok__Node) i64 {
+    return n.val orelse 0
+}
+fun types__optional_struct_field_ok__some(x: i64) ?i64 { return x }
+
+fun types__pointer_deref_ok__f(p: *i64) i64 { return *p }
+fun types__pointer_deref_write_ok__f(p: *i64, v: i64) void { *p = v }
+fun types__pointer_deref_write_ok__roundtrip(v: i64) i64 {
+    let var x: i64 = 0
+    types__pointer_deref_write_ok__f(&x, v)
+    return x
+}
+
+fun types__pointer_of_pointer_ok__f() i64 {
+    let var x: i64 = 1
+    let p: *i64 = &x
+    let pp: **i64 = &p
+    return **pp
+}
+
+fun types__str_assign_ok__f() str {
+    let x: str = "hello"
+    return x
+}
+
+fun types__str_eq_ok__f(s: str) bool { return s == "hello" }
+
+fun types__uint_assign_u16_ok__f() u16 {
+    let x: u16 = 0
+    return x
+}
+fun types__uint_assign_u32_ok__f() u32 {
+    let x: u32 = 0
+    return x
+}
+fun types__uint_assign_u64_ok__f() u64 {
+    let x: u64 = 0
+    return x
+}
+fun types__uint_assign_u8_ok__f() u8 {
+    let x: u8 = 0
+    return x
+}
+
+fun types__use_before_decl_ok__f() i64 { return types__use_before_decl_ok__g() }
+fun types__use_before_decl_ok__g() i64 { return 42 }
+
+fun types__vec_bool_ok__f() vec[bool] { return vec[true, false, true] }
+fun types__vec_f64_ok__f() vec[f64] { return vec[1.0, 2.0, 3.0] }
+fun types__vec_i64_ok__f() vec[i64] { return vec[1, 2, 3, 4, 5] }
+fun types__vec_index_f64_ok__f(v: vec[f64], i: i64) f64 { return v[i] }
+fun types__vec_index_ok__f(v: vec[i64], i: i64) i64 { return v[i] }
+
+fun types__void_return_ok__f() void {
+    let x: i64 = 1
+}
+fun types__void_return_ok__done() i64 {
+    types__void_return_ok__f()
+    return 1
+}
+
+fun types__widen_f32_f64_ok__f(a: f32, b: f64) f64 { return a + b }
+fun types__widen_i16_i32_ok__f(a: i16, b: i32) i32 { return a + b }
+fun types__widen_i16_i64_ok__f(a: i16, b: i64) i64 { return a + b }
+fun types__widen_i32_f64_ok__f(a: i32, b: f64) f64 { return a + b }
+fun types__widen_i32_i64_ok__f(a: i32, b: i64) i64 { return a + b }
+fun types__widen_i64_f64_ok__f(a: i64, b: f64) f64 { return a + b }
+fun types__widen_i8_f32_ok__f(a: i8, b: f32) f64 { return a + b }
+fun types__widen_i8_f64_ok__f(a: i8, b: f64) f64 { return a + b }
+fun types__widen_i8_i16_ok__f(a: i8, b: i16) i16 { return a + b }
+fun types__widen_i8_i32_ok__f(a: i8, b: i32) i32 { return a + b }
+fun types__widen_i8_i64_ok__f(a: i8, b: i64) i64 { return a + b }
+fun types__widen_u16_u32_ok__f(a: u16, b: u32) u32 { return a + b }
+fun types__widen_u8_u16_ok__f(a: u8, b: u16) u16 { return a + b }
+fun types__widen_u8_u32_ok__f(a: u8, b: u32) u32 { return a + b }
+
+test "types/alias_count_ok.mesa" { @assert(types__alias_count_ok__f() == 0) }
+test "types/alias_flag_ok.mesa" { @assert(!types__alias_flag_ok__f()) }
+test "types/alias_hertz_ok.mesa" { @assert(types__alias_hertz_ok__f() == 0.0) }
+test "types/alias_in_struct_ok.mesa" { @assert(types__alias_in_struct_ok__momentum(.{ mass: 2.0, vel: 3.5 }) == 7.0) }
+test "types/alias_index_ok.mesa" { @assert(types__alias_index_ok__f() == 0) }
+test "types/alias_meters_ok.mesa" { @assert(types__alias_meters_ok__f() == 0.0) }
+test "types/alias_multiple_ok.mesa" { @assert(types__alias_multiple_ok__rect_area(3.0, 4.0) == 12.0) }
+
+test "types/alias_named_tuple_ok.mesa" {
+    let p = types__alias_named_tuple_ok__origin()
+    @assert(p.x == 0.0)
+    @assert(p.y == 0.0)
+}
+
+test "types/alias_param_ok.mesa" { @assert(types__alias_param_ok__period(4.0) == 0.25) }
+test "types/alias_primitive_ok.mesa" { @assert(types__alias_primitive_ok__f() == 100) }
+test "types/alias_score_ok.mesa" { @assert(types__alias_score_ok__f() == 0) }
+test "types/alias_seconds_ok.mesa" { @assert(types__alias_seconds_ok__f() == 0.0) }
+test "types/alias_tag_ok.mesa" { @assert(types__alias_tag_ok__f() == "ok") }
+test "types/alias_vec_bool_ok.mesa" { @assert(len(types__alias_vec_bool_ok__f()) == 0) }
+test "types/alias_vec_f64_ok.mesa" { @assert(len(types__alias_vec_f64_ok__f()) == 0) }
+test "types/alias_vec_i64_ok.mesa" { @assert(len(types__alias_vec_i64_ok__f()) == 0) }
+test "types/bool_assign_ok.mesa" { @assert(!types__bool_assign_ok__f()) }
+test "types/bool_logic_ok.mesa" { @assert(types__bool_logic_ok__f(true, true, false)); @assert(types__bool_logic_ok__f(false, true, true)); @assert(!types__bool_logic_ok__f(false, true, false)) }
+test "types/f64_arith_ok.mesa" { @assert(types__f64_arith_ok__f(2.0, 3.0) == 7.0) }
+test "types/float_assign_f32_ok.mesa" { let v = types__float_assign_f32_ok__f(); @assert(v > 3.0 and v < 3.2) }
+test "types/float_assign_f64_ok.mesa" { let v = types__float_assign_f64_ok__f(); @assert(v > 3.0 and v < 3.2) }
+test "types/float_int_literal_f32_ok.mesa" { @assert(types__float_int_literal_f32_ok__f() == 42.0) }
+test "types/float_int_literal_f64_ok.mesa" { @assert(types__float_int_literal_f64_ok__f() == 42.0) }
+test "types/i64_arith_ok.mesa" { @assert(types__i64_arith_ok__f(2, 3) == 7) }
+test "types/int_assign_i16_ok.mesa" { @assert(types__int_assign_i16_ok__f() == 0) }
+test "types/int_assign_i32_ok.mesa" { @assert(types__int_assign_i32_ok__f() == 0) }
+test "types/int_assign_i64_ok.mesa" { @assert(types__int_assign_i64_ok__f() == 1) }
+test "types/int_assign_i8_ok.mesa" { @assert(types__int_assign_i8_ok__f() == 0) }
+test "types/let_bool_explicit_ok.mesa" { @assert(!types__let_bool_explicit_ok__f()) }
+test "types/let_f64_explicit_ok.mesa" { @assert(types__let_f64_explicit_ok__f() == 0.0) }
+test "types/let_i64_explicit_ok.mesa" { @assert(types__let_i64_explicit_ok__f() == 0) }
+test "types/let_infer_bool_ok.mesa" { @assert(!types__let_infer_bool_ok__f()) }
+test "types/let_infer_float_ok.mesa" { let v = types__let_infer_float_ok__f(); @assert(v > 6.2 and v < 6.3) }
+test "types/let_infer_fn_bool_ok.mesa" { @assert(!types__let_infer_fn_bool_ok__f()) }
+test "types/let_infer_fn_f64_ok.mesa" { @assert(types__let_infer_fn_f64_ok__f() == 0.0) }
+test "types/let_infer_fn_i64_ok.mesa" { @assert(types__let_infer_fn_i64_ok__f() == 0) }
+test "types/let_infer_int_ok.mesa" { @assert(types__let_infer_int_ok__f() == 43) }
+test "types/let_str_explicit_ok.mesa" { @assert(types__let_str_explicit_ok__f() == "ok") }
+test "types/let_var_bool_ok.mesa" { @assert(!types__let_var_bool_ok__f()) }
+test "types/let_var_f64_ok.mesa" { @assert(types__let_var_f64_ok__f() == 0.0) }
+test "types/let_var_i64_ok.mesa" { @assert(types__let_var_i64_ok__f() == 0) }
+test "types/let_var_mutable_ok.mesa" { @assert(types__let_var_mutable_ok__f() == 2) }
+test "types/let_var_str_ok.mesa" { @assert(types__let_var_str_ok__f() == "ok") }
+
+test "types/named_tuple_2field_ok.mesa" {
+    let v = types__named_tuple_2field_ok__f()
+    @assert(v.f0 == 0)
+    @assert(v.f1 == 1)
+}
+test "types/named_tuple_3field_ok.mesa" {
+    let v = types__named_tuple_3field_ok__f()
+    @assert(v.f0 == 0)
+    @assert(v.f1 == 1)
+    @assert(v.f2 == 2)
+}
+test "types/named_tuple_4field_ok.mesa" {
+    let v = types__named_tuple_4field_ok__f()
+    @assert(v.f0 == 0)
+    @assert(v.f1 == 1)
+    @assert(v.f2 == 2)
+    @assert(v.f3 == 3)
+}
+test "types/named_tuple_5field_ok.mesa" {
+    let v = types__named_tuple_5field_ok__f()
+    @assert(v.f0 == 0)
+    @assert(v.f1 == 1)
+    @assert(v.f2 == 2)
+    @assert(v.f3 == 3)
+    @assert(v.f4 == 4)
+}
+
+test "types/optional_chain_ok.mesa" {
+    @assert(types__optional_chain_ok__f(types__optional_chain_ok__some(2), none) == 2)
+    @assert(types__optional_chain_ok__f(none, types__optional_chain_ok__some(5)) == 5)
+    @assert(types__optional_chain_ok__f(types__optional_chain_ok__some(2), types__optional_chain_ok__some(5)) == 7)
+}
+
+test "types/optional_optional_ok.mesa" {
+    let x = types__optional_optional_ok__f()
+    if x |v| { @assert(false) } else { @assert(true) }
+}
+
+test "types/optional_struct_field_ok.mesa" {
+    @assert(types__optional_struct_field_ok__f(.{ val: none }) == 0)
+    @assert(types__optional_struct_field_ok__f(.{ val: types__optional_struct_field_ok__some(9) }) == 9)
+}
+
+test "types/pointer_deref_ok.mesa" {
+    let var x: i64 = 12
+    @assert(types__pointer_deref_ok__f(&x) == 12)
+}
+test "types/pointer_deref_write_ok.mesa" { @assert(types__pointer_deref_write_ok__roundtrip(33) == 33) }
+test "types/pointer_of_pointer_ok.mesa" { @assert(types__pointer_of_pointer_ok__f() == 1) }
+test "types/str_assign_ok.mesa" { @assert(types__str_assign_ok__f() == "hello") }
+test "types/str_eq_ok.mesa" { @assert(types__str_eq_ok__f("hello")); @assert(!types__str_eq_ok__f("goodbye")) }
+test "types/uint_assign_u16_ok.mesa" { @assert(types__uint_assign_u16_ok__f() == 0) }
+test "types/uint_assign_u32_ok.mesa" { @assert(types__uint_assign_u32_ok__f() == 0) }
+test "types/uint_assign_u64_ok.mesa" { @assert(types__uint_assign_u64_ok__f() == 0) }
+test "types/uint_assign_u8_ok.mesa" { @assert(types__uint_assign_u8_ok__f() == 0) }
+test "types/use_before_decl_ok.mesa" { @assert(types__use_before_decl_ok__f() == 42) }
+
+test "types/vec_bool_ok.mesa" {
+    let v = types__vec_bool_ok__f()
+    @assert(len(v) == 3)
+    @assert(v[0])
+    @assert(!v[1])
+}
+test "types/vec_f64_ok.mesa" {
+    let v = types__vec_f64_ok__f()
+    @assert(len(v) == 3)
+    @assert(v[2] == 3.0)
+}
+test "types/vec_i64_ok.mesa" {
+    let v = types__vec_i64_ok__f()
+    @assert(len(v) == 5)
+    @assert(v[4] == 5)
+}
+test "types/vec_index_f64_ok.mesa" { @assert(types__vec_index_f64_ok__f(vec[1.0, 2.0, 3.5], 2) == 3.5) }
+test "types/vec_index_ok.mesa" { @assert(types__vec_index_ok__f(vec[4, 5, 6], 1) == 5) }
+test "types/void_return_ok.mesa" { @assert(types__void_return_ok__done() == 1) }
+
+test "types/widen_f32_f64_ok.mesa" { @assert(types__widen_f32_f64_ok__f(2.0, 3.0) == 5.0) }
+test "types/widen_i16_i32_ok.mesa" { @assert(types__widen_i16_i32_ok__f(2, 3) == 5) }
+test "types/widen_i16_i64_ok.mesa" { @assert(types__widen_i16_i64_ok__f(2, 3) == 5) }
+test "types/widen_i32_f64_ok.mesa" { @assert(types__widen_i32_f64_ok__f(2, 3.0) == 5.0) }
+test "types/widen_i32_i64_ok.mesa" { @assert(types__widen_i32_i64_ok__f(2, 3) == 5) }
+test "types/widen_i64_f64_ok.mesa" { @assert(types__widen_i64_f64_ok__f(2, 3.0) == 5.0) }
+test "types/widen_i8_f32_ok.mesa" { @assert(types__widen_i8_f32_ok__f(2, 3.0) == 5.0) }
+test "types/widen_i8_f64_ok.mesa" { @assert(types__widen_i8_f64_ok__f(2, 3.0) == 5.0) }
+test "types/widen_i8_i16_ok.mesa" { @assert(types__widen_i8_i16_ok__f(2, 3) == 5) }
+test "types/widen_i8_i32_ok.mesa" { @assert(types__widen_i8_i32_ok__f(2, 3) == 5) }
+test "types/widen_i8_i64_ok.mesa" { @assert(types__widen_i8_i64_ok__f(2, 3) == 5) }
+test "types/widen_u16_u32_ok.mesa" { @assert(types__widen_u16_u32_ok__f(2, 3) == 5) }
+test "types/widen_u8_u16_ok.mesa" { @assert(types__widen_u8_u16_ok__f(2, 3) == 5) }
+test "types/widen_u8_u32_ok.mesa" { @assert(types__widen_u8_u32_ok__f(2, 3) == 5) }
+
+fun main() void {
+    println("corpus")
+}

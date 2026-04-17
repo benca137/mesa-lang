@@ -1,0 +1,14 @@
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let math = b.addPackage("math", root = "src/math")
+    let physics = b.addPackage("physics", root = "src/physics")
+    let entry = b.createEntry("src/main.mesa")
+
+    let physics_engine = b.addExecutable(
+        "physics-engine",
+        entry = entry,
+        imports = .{ std, math, physics }
+    )
+
+    b.install(physics_engine)
+}

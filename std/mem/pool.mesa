@@ -1,0 +1,111 @@
+pkg mem
+
+fun _poolPointerBytes() i64 {
+    @sizeOf(i64)
+}
+
+fun _poolLinkSlots(base: *void, capacity: i64, slot_size: i64) void {
+    if capacity <= 1 {
+        return;
+    }
+
+    for i = 0..capacity {
+        if i + 1 >= capacity {
+            break;
+        }
+
+        let current = @ptrAdd(base, i * slot_size)
+        let var next = @ptrAdd(base, (i + 1) * slot_size)
+        @memcpy(current, &next, _poolPointerBytes())
+    }
+}
+
+pub struct PoolAllocator[T] {
+    inner: *any Allocator,
+    storage: *void,
+    free_head: *void,
+    capacity: i64,
+    available: i64,
+    slot_size: i64,
+    slot_align: i64,
+
+    pub fun init(inner: *any Allocator, capacity: i64, prototype: T) PoolAllocator[T] {
+        if capacity <= 0 {
+            @panic("PoolAllocator capacity must be > 0")
+        }
+
+        let slot_align = @alignOf(T)
+        let payload = maxI64(@sizeOf(T), _poolPointerBytes())
+        let slot_size = alignForward(payload, slot_align)
+        let total_bytes = slot_size * capacity
+        let storage: *void = inner.alloc(total_bytes, slot_align)
+        _poolLinkSlots(storage, capacity, slot_size)
+
+        .{
+            inner: inner,
+            storage: storage,
+            free_head: storage,
+            capacity: capacity,
+            available: capacity,
+            slot_size: slot_size,
+            slot_align: slot_align,
+        }
+    }
+
+    pub fun reset(self: *PoolAllocator[T]) void {
+        _poolLinkSlots(self.storage, self.capacity, self.slot_size)
+        self.free_head = self.storage
+        self.available = self.capacity
+    }
+
+    pub fun free(self: *PoolAllocator[T]) void {
+        self.inner.free_bytes(self.storage, self.slot_size * self.capacity)
+        self.available = 0
+        self.capacity = 0
+    }
+
+}
+
+pub fun poolFreeSlot[T](pool: *PoolAllocator[T], ptr: *T) void {
+    if pool.available > 0 {
+        let var next = pool.free_head
+        @memcpy(ptr, &next, _poolPointerBytes())
+    }
+    @memcpy(&pool.free_head, &ptr, _poolPointerBytes())
+    pool.available += 1
+}
+
+def Allocator for PoolAllocator {
+    fun alloc(self: *@this, size: i64, align: i64) *void {
+        if size > self.slot_size or align > self.slot_align {
+            @panic("PoolAllocator alloc exceeds slot layout")
+        }
+        if self.available <= 0 {
+            @panic("PoolAllocator exhausted")
+        }
+
+        let slot = self.free_head
+        if self.available > 1 {
+            @memcpy(&self.free_head, slot, _poolPointerBytes())
+        }
+        self.available -= 1
+        return slot
+    }
+
+    fun realloc(self: *PoolAllocator, ptr: *void, old_size: i64, new_size: i64, align: i64) *void {
+        if new_size <= self.slot_size and align <= self.slot_align {
+            return ptr;
+        }
+        @panic("PoolAllocator cannot grow realloc beyond slot layout")
+        return ptr;
+    }
+
+    fun free_bytes(self: *PoolAllocator, ptr: *void, size: i64) void {
+        if self.available > 0 {
+            let var next = self.free_head
+            @memcpy(ptr, &next, _poolPointerBytes())
+        }
+        self.free_head = ptr
+        self.available += 1
+    }
+}

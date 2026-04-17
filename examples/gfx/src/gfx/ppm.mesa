@@ -1,0 +1,50 @@
+pkg gfx
+
+#[link_name = "_fopen"]
+extern fun c_fopen(path: *u8, mode: *u8) *void
+
+#[link_name = "_fwrite"]
+extern fun c_fwrite(ptr: *u8, size: i64, count: i64, file: *void) i64
+
+#[link_name = "_fclose"]
+extern fun c_fclose(file: *void) i32
+
+#[link_name = "_fputc"]
+extern fun c_fputc(ch: i32, file: *void) i32
+
+pub fun writePpm(canvas: Canvas, path: str) void {
+    let file = c_fopen(path.data, "wb".data)
+    writeText(file, "P3")
+    writeByte(file, 10)
+    writeText(file, "{canvasWidth(canvas)} {canvasHeight(canvas)}")
+    writeByte(file, 10)
+    writeText(file, "255")
+    writeByte(file, 10)
+
+    for y = 0..canvasHeight(canvas) {
+        for x = 0..canvasWidth(canvas) {
+            let color = canvasSample(canvas, point(x, y))
+            writeText(file, "{color.r} {color.g} {color.b}")
+            writeByte(file, 10)
+        }
+    }
+
+    let closed = c_fclose(file)
+    if closed != 0 {
+        @panic("failed to close PPM output file")
+    }
+}
+
+fun writeText(file: *void, text: str) void {
+    let wrote = c_fwrite(text.data, 1, text.len, file)
+    if wrote != text.len {
+        @panic("failed to write PPM output")
+    }
+}
+
+fun writeByte(file: *void, byte: i32) void {
+    let result = c_fputc(byte, file)
+    if result < 0 {
+        @panic("failed to write PPM byte")
+    }
+}

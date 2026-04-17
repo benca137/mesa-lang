@@ -1,0 +1,4 @@
+fun f() void {
+    while 42 {  //~ error:
+    }
+}

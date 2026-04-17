@@ -1,0 +1,590 @@
+fun edge_cases__abs(x: f64) f64 { return if x < 0.0 { -x } else { x }; }
+fun edge_cases__approx(a: f64, b: f64) bool { return edge_cases__abs(a - b) < 0.000001; }
+
+struct edge_cases__Builder {
+    val: i64,
+    fun set(self: *edge_cases__Builder, v: i64) void { self.val = v; }
+    fun get(self: edge_cases__Builder) i64 { return self.val; }
+}
+
+struct edge_cases__V {
+    x: f64,
+    fun scale(self: edge_cases__V, s: f64) f64 { return self.x * s; }
+    fun offset(self: edge_cases__V, d: f64) f64 { return self.x + d; }
+}
+
+union edge_cases__Choice { A, B }
+union edge_cases__MatchA { X(i64), Y }
+
+interface edge_cases__Shape {
+    fun area(self: @this) f64
+    fun perim(self: @this) f64
+}
+
+struct edge_cases__Sq { s: f64 }
+def edge_cases__Shape for edge_cases__Sq {
+    fun area(self: edge_cases__Sq) f64 { return self.s * self.s; }
+    fun perim(self: edge_cases__Sq) f64 { return 4.0 * self.s; }
+}
+
+struct edge_cases__BigStruct {
+    a: i64, b: i64, c: i64, d: i64, e: i64,
+    f: f64, g: f64, h: f64, i2: f64, j: f64,
+    flag1: bool, flag2: bool, flag3: bool,
+}
+
+struct edge_cases__Empty {}
+union edge_cases__VecUnion { A, B }
+
+struct edge_cases__N {
+    val: i64,
+    fun positive(self: edge_cases__N) bool { return self.val > 0; }
+}
+
+struct edge_cases__SignedN {
+    v: i64,
+    fun is_pos(self: edge_cases__SignedN) bool { return self.v > 0; }
+    fun is_neg(self: edge_cases__SignedN) bool { return self.v < 0; }
+}
+
+struct edge_cases__OptPtF64 { x: f64, y: f64 }
+struct edge_cases__OptPtI64 { x: i64, y: i64 }
+
+let edge_cases__Count := i64
+let edge_cases__Rate := f64
+
+fun edge_cases__bool_match(b: bool) str {
+    return match b { true => { "yes" }, false => { "no" } };
+}
+
+fun edge_cases__complex_cond(x: i64, y: i64, z: i64) bool {
+    return (x > 0 and y > 0) or (z == 0 and x != y);
+}
+
+fun edge_cases__nested_if(a: bool, b: bool, c: bool, d: bool) i64 {
+    if a {
+        if b {
+            if c {
+                if d { return 1; } else { return 2; }
+            } else { return 3; }
+        } else { return 4; }
+    } else { return 5; }
+}
+
+fun edge_cases__nested_if_5(a: bool, b: bool, c: bool, d: bool, e: bool) i64 {
+    if a { if b { if c { if d { if e { return 1; } else { return 2; } } else { return 3; } } else { return 4; } } else { return 5; } }
+    return 0;
+}
+
+fun edge_cases__months(s: str) i64 {
+    if s == "spring" { return 3; }
+    if s == "summer" { return 6; }
+    if s == "autumn" { return 9; }
+    return 12;
+}
+
+fun edge_cases__is_positive(x: i64) bool { return x > 0; }
+
+fun edge_cases__make_closure(b: bool) fun(i64) i64 {
+    if b { return fun(x: i64) i64 { return x; }; }
+    return fun(x: i64) i64 { return -x; };
+}
+
+fun edge_cases__make_fn() fun(i64) i64 {
+    return fun(x: i64) i64 { return x; };
+}
+
+fun edge_cases__make_adder(n: i64) fun(i64) i64 {
+    return fun(x: i64) i64 { return x + n; };
+}
+
+fun edge_cases__inc(x: i64) i64 { return x + 1; }
+
+fun edge_cases__many_params_sum(a: i64, b: i64, c: i64, d: i64, e: i64, f2: f64, g: f64, h: bool) i64 {
+    return a + b + c + d + e;
+}
+
+fun edge_cases__sign(x: i64) i64 {
+    if x < 0 { return -1; }
+    if x == 0 { return 0; }
+    return 1;
+}
+
+fun edge_cases__max3(x: i64, y: i64, z: i64) i64 {
+    if x > y and x > z { return x; }
+    if y > z { return y; }
+    return z;
+}
+
+fun edge_cases__return_nested_if(a: bool, b: bool) i64 {
+    if a and b { return 1; }
+    if a { return 2; }
+    if b { return 3; }
+    return 4;
+}
+
+fun edge_cases__compute_rate(n: edge_cases__Count, r: edge_cases__Rate) edge_cases__Rate {
+    return r * n;
+}
+
+test "edge_cases/bool_in_optional_ok.mesa" {
+    let b: ?bool = true
+    @assert((b orelse false))
+}
+
+test "edge_cases/bool_match_ok.mesa" {
+    @assert(edge_cases__bool_match(true) == "yes")
+    @assert(edge_cases__bool_match(false) == "no")
+}
+
+test "edge_cases/bool_negation_chain_ok.mesa" {
+    let a = true
+    let b = false
+    let c = false
+    @assert((!(!a and !b) or !c))
+}
+
+test "edge_cases/chained_arithmetic_ok.mesa" {
+    let x: f64 = 3.0
+    let y = ((x + 1.0) * (x - 1.0)) / (x * x + 1.0)
+    @assert(edge_cases__approx(y, 0.8))
+}
+
+test "edge_cases/chained_method_calls_ok.mesa" {
+    let var b: edge_cases__Builder = .{val: 0}
+    b.set(42)
+    @assert(b.get() == 42)
+}
+
+test "edge_cases/chained_method_ok.mesa" {
+    let v: edge_cases__V = .{x: 4.0}
+    @assert(edge_cases__approx(v.scale(2.0) + v.offset(1.0), 13.0))
+}
+
+test "edge_cases/complex_cond_ok.mesa" {
+    @assert(edge_cases__complex_cond(1, 2, 3))
+    @assert(edge_cases__complex_cond(1, -1, 0))
+}
+
+test "edge_cases/comptime_expr_ok.mesa" {
+    let x: i64 = comptime 1 + 1
+    @assert(x == 2)
+}
+
+test "edge_cases/comptime_ok.mesa" {
+    let x: i64 = comptime 2 + 3
+    @assert(x == 5)
+}
+
+test "edge_cases/conditional_assign_ok.mesa" {
+    let var x: i64 = if true { 1 } else { 0 }
+    @assert(x * 2 == 2)
+}
+
+test "edge_cases/da_closure_ok.mesa" {
+    @assert(edge_cases__make_adder(4)(6) == 10)
+}
+
+test "edge_cases/da_for_body_ok.mesa" {
+    let var total: i64 = 0
+    for i = 1...100 { total += i; }
+    @assert(total == 5050)
+}
+
+test "edge_cases/da_for_range_ok.mesa" {
+    let var sum: i64 = 0
+    for i = 1...10 { sum += i; }
+    @assert(sum == 55)
+}
+
+test "edge_cases/da_match_all_arms_ok.mesa" {
+    let c: edge_cases__Choice = .B
+    let x = match c { .A => { 1 }, .B => { 2 } }
+    @assert(x == 2)
+}
+
+test "edge_cases/da_nested_ok.mesa" {
+    let var x: i64 = 0
+    if true {
+        let var y: i64 = 1
+        x = y + 1
+    }
+    @assert(x == 2)
+}
+
+test "edge_cases/da_while_init_ok.mesa" {
+    let var x: i64 = 0
+    while x < 10 { x += 1; }
+    @assert(x == 10)
+}
+
+test "edge_cases/deeply_nested_expr_ok.mesa" {
+    @assert((((3 + 1) * (3 + 2)) - ((3 - 1) * (3 - 2))) == 18)
+}
+
+test "edge_cases/deeply_nested_if_ok.mesa" {
+    @assert(edge_cases__nested_if(true, true, true, false) == 2)
+    @assert(edge_cases__nested_if(false, true, true, true) == 5)
+}
+
+test "edge_cases/deeply_nested_match_ok.mesa" {
+    let a: edge_cases__MatchA = .X(-3)
+    let v = match a {
+        .X(n) => {
+            match n > 0 {
+                true => { n },
+                false => { -n },
+            }
+        },
+        .Y => { 0 },
+    }
+    @assert(v == 3)
+}
+
+test "edge_cases/division_result_ok.mesa" {
+    @assert(9 / 3 == 3)
+}
+
+test "edge_cases/e_const_ok.mesa" {
+    let e: f64 = 2.718281828459045
+    @assert(edge_cases__approx(e, 2.718281828459045))
+}
+
+test "edge_cases/empty_block_ok.mesa" {
+    let var x: i64 = 1
+    if true { }
+    @assert(x == 1)
+}
+
+test "edge_cases/empty_fn_void_ok.mesa" {
+    let x: i64 = 1
+    @assert(x == 1)
+}
+
+test "edge_cases/empty_string_ok.mesa" {
+    @assert("" == "")
+}
+
+test "edge_cases/empty_struct_ok.mesa" {
+    let _e: edge_cases__Empty = .{}
+    @assert(true == true)
+}
+
+test "edge_cases/empty_vec_ok.mesa" {
+    let v: vec[i64] = vec[]
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+
+test "edge_cases/float_precision_ok.mesa" {
+    let x: f64 = 0.1 + 0.2
+    @assert(x > 0.299 and x < 0.301)
+}
+
+test "edge_cases/fn_call_in_condition_ok.mesa" {
+    let var seen = false
+    if edge_cases__is_positive(3) { seen = true; }
+    @assert(seen)
+}
+
+test "edge_cases/fn_returns_fn_ok.mesa" {
+    @assert(edge_cases__make_closure(false)(5) == -5)
+}
+
+test "edge_cases/function_returns_function_ok.mesa" {
+    @assert(edge_cases__make_fn()(9) == 9)
+}
+
+test "edge_cases/inf_like_ok.mesa" {
+    let x: f64 = 1.0 / 0.0
+    @assert(x != 0.0)
+}
+
+test "edge_cases/interface_two_methods_ok.mesa" {
+    let s: edge_cases__Sq = .{s: 2.0}
+    @assert(edge_cases__approx(s.area(), 4.0))
+    @assert(edge_cases__approx(s.perim(), 8.0))
+}
+
+test "edge_cases/large_literal_ok.mesa" {
+    @assert(9223372036854775807 == 9223372036854775807)
+}
+
+test "edge_cases/large_struct_ok.mesa" {
+    let s: edge_cases__BigStruct = .{
+        a: 1, b: 2, c: 3, d: 4, e: 5,
+        f: 1.0, g: 2.0, h: 3.0, i2: 4.0, j: 5.0,
+        flag1: true, flag2: false, flag3: true,
+    }
+    @assert(s.a + s.e == 6)
+}
+
+test "edge_cases/literal_c_light_ok.mesa" {
+    @assert(3.0e8 > 299999999.0)
+}
+
+test "edge_cases/literal_e_mass_ok.mesa" {
+    @assert(9.109e-31 > 0.0)
+}
+
+test "edge_cases/literal_g_const_ok.mesa" {
+    @assert(6.674e-11 > 0.0)
+}
+
+test "edge_cases/literal_large_ok.mesa" {
+    @assert(1e10 == 10000000000.0)
+}
+
+test "edge_cases/literal_neg_one_ok.mesa" {
+    @assert(-1.0 < 0.0)
+}
+
+test "edge_cases/literal_small_neg_exp_ok.mesa" {
+    @assert(edge_cases__approx(1.5e-3, 0.0015))
+}
+
+test "edge_cases/literal_zero_ok.mesa" {
+    @assert(0.0 == 0.0)
+}
+
+test "edge_cases/long_call_chain_ok.mesa" {
+    @assert(edge_cases__inc(edge_cases__inc(edge_cases__inc(edge_cases__inc(edge_cases__inc(0))))) == 5)
+}
+
+test "edge_cases/many_params_ok.mesa" {
+    @assert(edge_cases__many_params_sum(1, 2, 3, 4, 5, 1.0, 2.0, true) == 15)
+}
+
+test "edge_cases/max_int_literal_ok.mesa" {
+    @assert(9223372036854775807 > 0)
+}
+
+test "edge_cases/method_call_in_condition_ok.mesa" {
+    let n: edge_cases__N = .{val: 5}
+    let var seen = false
+    if n.positive() { seen = true; }
+    @assert(seen)
+}
+
+test "edge_cases/method_returns_bool_ok.mesa" {
+    let n: edge_cases__SignedN = .{v: -2}
+    @assert(n.is_pos() or n.is_neg())
+}
+
+test "edge_cases/min_negative_ok.mesa" {
+    @assert(-9223372036854775807 < 0)
+}
+
+test "edge_cases/mixed_comparisons_ok.mesa" {
+    @assert(1 < 2 and 2 < 3 and 1 != 3)
+}
+
+test "edge_cases/multi_let_ok.mesa" {
+    let a: i64 = 1
+    let b: i64 = 2
+    let c: i64 = 3
+    let d: i64 = 4
+    let e: i64 = 5
+    @assert(a + b + c + d + e == 15)
+}
+
+test "edge_cases/multi_return_ok.mesa" {
+    @assert(edge_cases__sign(-5) == -1)
+    @assert(edge_cases__sign(0) == 0)
+    @assert(edge_cases__sign(7) == 1)
+}
+
+test "edge_cases/multiple_assignments_ok.mesa" {
+    let var x: i64 = 0
+    x = 1
+    x = 2
+    x = x + 1
+    @assert(x == 3)
+}
+
+test "edge_cases/multiple_if_returns_ok.mesa" {
+    @assert(edge_cases__max3(3, 8, 4) == 8)
+}
+
+test "edge_cases/negative_literal_ok.mesa" {
+    @assert(-1 == -1)
+}
+
+test "edge_cases/negative_modulo_ok.mesa" {
+    @assert(-5 % 2 == -1)
+}
+
+test "edge_cases/negative_zero_ok.mesa" {
+    @assert(-0.0 == 0.0)
+}
+
+test "edge_cases/nested_if_5deep_ok.mesa" {
+    @assert(edge_cases__nested_if_5(true, true, true, true, false) == 2)
+}
+
+test "edge_cases/nested_optional_struct_ok.mesa" {
+    let pt: edge_cases__OptPtF64 = .{x: 2.0, y: 3.0}
+    let p: ?edge_cases__OptPtF64 = pt
+    if p |pt| {
+        @assert(edge_cases__approx(pt.x * pt.y, 6.0))
+    } else {
+        @assert(false)
+    }
+}
+
+test "edge_cases/one_error_suppresses_ok.mesa" {
+    let result = @test.compile("fun f() void {\n    let x: bool = 42\n    let y = x + 1\n}\n")
+    @assert(!result.ok)
+    @assert(result.errors.len >= 1)
+}
+
+test "edge_cases/optional_of_optional_ok.mesa" {
+    let x: ??i64 = none
+    @assert(((x orelse none) orelse 7) == 7)
+}
+
+test "edge_cases/pi_ok.mesa" {
+    @assert(edge_cases__approx(3.141592653589793, 3.141592653589793))
+}
+
+test "edge_cases/println_bool_expr_ok.mesa" {
+    let x: i64 = 2
+    if x > 0 { println("positive"); } else { println("not positive"); }
+    @assert(x > 0)
+}
+
+test "edge_cases/println_bool_ok.mesa" {
+    let b = true
+    if b { println("true"); } else { println("false"); }
+    @assert(b)
+}
+
+test "edge_cases/println_expr_ok.mesa" {
+    let x: i64 = 4
+    println(x + 1)
+    @assert(x + 1 == 5)
+}
+
+test "edge_cases/println_f64_ok.mesa" {
+    let x: f64 = 3.14
+    println(x)
+    @assert(edge_cases__approx(x, 3.14))
+}
+
+test "edge_cases/println_float_expr_ok.mesa" {
+    let x: f64 = 2.5
+    println(x * 2.0)
+    @assert(edge_cases__approx(x * 2.0, 5.0))
+}
+
+test "edge_cases/println_i64_ok.mesa" {
+    let x: i64 = 42
+    println(x)
+    @assert(x == 42)
+}
+
+test "edge_cases/println_int_expr_ok.mesa" {
+    let n: i64 = 7
+    println(n * 2 + 1)
+    @assert(n * 2 + 1 == 15)
+}
+
+test "edge_cases/println_str_ok.mesa" {
+    let s = "hello"
+    println(s)
+    @assert(s == "hello")
+}
+
+test "edge_cases/return_from_nested_if_ok.mesa" {
+    @assert(edge_cases__return_nested_if(false, true) == 3)
+}
+
+test "edge_cases/scientific_notation_ok.mesa" {
+    let g: f64 = 6.674e-11
+    let c: f64 = 3.0e8
+    @assert(g * c > 0.0)
+}
+
+test "edge_cases/shadow_loop_var_ok.mesa" {
+    let var x: i64 = 0
+    for i = 0...10 {
+        let x: i64 = i * 2
+        @assert(x % 2 == 0)
+    }
+    @assert(x == 0)
+}
+
+test "edge_cases/single_elem_vec_ok.mesa" {
+    let v = vec[42]
+    @assert(len(v) == 1)
+    @assert(v[0] == 42)
+}
+
+test "edge_cases/string_with_escapes_ok.mesa" {
+    let s = "hello\nworld"
+    @assert(len(s) == 12)
+}
+
+test "edge_cases/struct_in_optional_ok.mesa" {
+    let p: edge_cases__OptPtI64 = .{x: 1, y: 2}
+    let maybe: ?edge_cases__OptPtI64 = p
+    if maybe |pt| {
+        @assert(pt.x + pt.y == 3)
+    } else {
+        @assert(false)
+    }
+}
+
+test "edge_cases/test1000_ok.mesa" {
+    @assert(1000 == 1000)
+}
+
+test "edge_cases/test1001_ok.mesa" {
+    let x: f64 = 2.0
+    @assert(edge_cases__approx(x * x - 1.0, 3.0))
+}
+
+test "edge_cases/test1002_ok.mesa" {
+    let a = true
+    let b = false
+    @assert((!(a and b)) == ((!a) or (!b)))
+}
+
+test "edge_cases/type_alias_used_in_fn_ok.mesa" {
+    @assert(edge_cases__approx(edge_cases__compute_rate(3, 2.5), 7.5))
+}
+
+test "edge_cases/union_in_vec_ok.mesa" {
+    let v: vec[edge_cases__VecUnion] = vec[.A, .B, .A]
+    @assert(len(v) == 3)
+}
+
+test "edge_cases/unit_union_all_arms_ok.mesa" {
+    @assert(edge_cases__months("winter") == 12)
+    @assert(edge_cases__months("summer") == 6)
+}
+
+test "edge_cases/unit_union_ok.mesa" {
+    @assert(edge_cases__months("spring") == 3)
+}
+
+test "edge_cases/unused_let_ok.mesa" {
+    let _x: i64 = 42
+    @assert(true == true)
+}
+
+test "edge_cases/vec_with_expr_ok.mesa" {
+    let a: i64 = 2
+    let b: i64 = 3
+    let c: i64 = 4
+    let v = vec[a + b, b * c, a - c]
+    @assert(v[0] == 5 and v[1] == 12 and v[2] == -2)
+}
+
+test "edge_cases/zero_division_type_ok.mesa" {
+    @assert((8 / 2) == 4)
+}
+
+test "edge_cases/zero_literal_ok.mesa" {
+    @assert(0 == 0)
+}

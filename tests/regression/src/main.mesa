@@ -1,0 +1,195 @@
+fun regression__helpers__some_i64(x: i64) ?i64 { return x; }
+fun regression__helpers__some_f64(x: f64) ?f64 { return x; }
+fun regression__helpers__some_bool(x: bool) ?bool { return x; }
+
+// regression__bool_equality_ok
+fun regression__bool_equality_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a == b;
+}
+
+// regression__closure_captures_outer_ok
+fun regression__closure_captures_outer_ok__make_adder(n: i64) fun(i64) i64 {  //~ compile-ok
+    return fun(x: i64) i64 { return x + n; };
+}
+
+// regression__compound_assign_mutable_ok
+fun regression__compound_assign_mutable_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 5;
+    x += 1; x -= 1; x *= 2; x /= 2;
+    return x;
+}
+
+// regression__float_beats_int_ok
+fun regression__float_beats_int_ok__f(a: i64, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// regression__int_widening_ok
+fun regression__int_widening_ok__f(a: i8, b: i64) i64 {  //~ compile-ok
+    return a + b;
+}
+
+// regression__interface_method_call_ok
+interface regression__interface_method_call_ok__Val { fun val(self: @this) i64; }
+struct regression__interface_method_call_ok__N { x: i64 }
+def regression__interface_method_call_ok__Val for regression__interface_method_call_ok__N {
+    fun val(self: regression__interface_method_call_ok__N) i64 { return self.x; }
+}
+fun regression__interface_method_call_ok__f(n: regression__interface_method_call_ok__N) i64 {  //~ compile-ok
+    return n.val();
+}
+
+// regression__method_self_ptr_skip_ok
+struct regression__method_self_ptr_skip_ok__Counter {
+    n: i64,
+    fun inc(self: *regression__method_self_ptr_skip_ok__Counter) void { self.n = self.n + 1; }
+    fun get(self: regression__method_self_ptr_skip_ok__Counter) i64 { return self.n; }
+}
+fun regression__method_self_ptr_skip_ok__f() i64 {  //~ compile-ok
+    let var c: regression__method_self_ptr_skip_ok__Counter = .{n: 0};
+    c.inc();
+    return c.get();
+}
+
+// regression__method_self_skip_ok
+struct regression__method_self_skip_ok__Counter {
+    n: i64,
+    fun get(self: regression__method_self_skip_ok__Counter) i64 { return self.n; }
+}
+fun regression__method_self_skip_ok__f(c: regression__method_self_skip_ok__Counter) i64 {  //~ compile-ok
+    return c.get();
+}
+
+// regression__method_with_args_ok
+struct regression__method_with_args_ok__V {
+    x: f64,
+    y: f64,
+    fun dot(self: regression__method_with_args_ok__V, o: regression__method_with_args_ok__V) f64 {
+        return self.x*o.x + self.y*o.y;
+    }
+}
+fun regression__method_with_args_ok__f(a: regression__method_with_args_ok__V, b: regression__method_with_args_ok__V) f64 {  //~ compile-ok
+    return a.dot(b);
+}
+
+// regression__multi_struct_methods_ok
+struct regression__multi_struct_methods_ok__C {
+    n: i64,
+    fun get(self: regression__multi_struct_methods_ok__C) i64 { return self.n; }
+    fun pos(self: regression__multi_struct_methods_ok__C) bool { return self.n > 0; }
+    fun zero(self: regression__multi_struct_methods_ok__C) bool { return self.n == 0; }
+}
+fun regression__multi_struct_methods_ok__f(c: regression__multi_struct_methods_ok__C) bool {  //~ compile-ok
+    return c.pos() or c.zero();
+}
+
+// regression__orelse_bool_bool_ok
+fun regression__orelse_bool_bool_ok__f(x: ?bool) bool {  //~ compile-ok
+    return x orelse false;
+}
+
+// regression__orelse_float_float_ok
+fun regression__orelse_float_float_ok__f(x: ?f64) f64 {  //~ compile-ok
+    return x orelse 0.0;
+}
+
+// regression__orelse_int_int_ok
+fun regression__orelse_int_int_ok__f(x: ?i64) i64 {  //~ compile-ok
+    return x orelse 0;
+}
+
+// regression__str_equality_ok
+fun regression__str_equality_ok__f(a: str, b: str) bool {  //~ compile-ok
+    return a == b;
+}
+
+// regression__unit_variant_expr_ok
+union regression__unit_variant_expr_ok__Dir { North, South, East, West }
+fun regression__unit_variant_expr_ok__opposite(d: regression__unit_variant_expr_ok__Dir) regression__unit_variant_expr_ok__Dir {  //~ compile-ok
+    return match d {
+        .North => { .South },
+        .South => { .North },
+        .East  => { .West },
+        .West  => { .East },
+    };
+}
+
+// regression__unit_variant_in_fn_ok
+union regression__unit_variant_in_fn_ok__St { Init, Ready, Done }
+fun regression__unit_variant_in_fn_ok__next(s: regression__unit_variant_in_fn_ok__St) regression__unit_variant_in_fn_ok__St {  //~ compile-ok
+    return match s { .Init => { .Ready }, .Ready => { .Done }, .Done => { .Done } };
+}
+
+test "regression/bool_equality_ok.mesa" {
+    @assert(regression__bool_equality_ok__f(true, true))
+    @assert(!regression__bool_equality_ok__f(true, false))
+}
+
+test "regression/closure_captures_outer_ok.mesa" {
+    let add3 = regression__closure_captures_outer_ok__make_adder(3);
+    @assert(add3(5) == 8)
+}
+
+test "regression/compound_assign_mutable_ok.mesa" {
+    @assert(regression__compound_assign_mutable_ok__f() == 5)
+}
+
+test "regression/float_beats_int_ok.mesa" {
+    @assert(regression__float_beats_int_ok__f(2, 1.5) == 3.5)
+}
+
+test "regression/int_widening_ok.mesa" {
+    @assert(regression__int_widening_ok__f(3, 10) == 13)
+}
+
+test "regression/interface_method_call_ok.mesa" {
+    @assert(regression__interface_method_call_ok__f(.{x: 12}) == 12)
+}
+
+test "regression/method_self_ptr_skip_ok.mesa" {
+    @assert(regression__method_self_ptr_skip_ok__f() == 1)
+}
+
+test "regression/method_self_skip_ok.mesa" {
+    @assert(regression__method_self_skip_ok__f(.{n: 7}) == 7)
+}
+
+test "regression/method_with_args_ok.mesa" {
+    @assert(regression__method_with_args_ok__f(.{x: 1.0, y: 2.0}, .{x: 3.0, y: 4.0}) == 11.0)
+}
+
+test "regression/multi_struct_methods_ok.mesa" {
+    @assert(regression__multi_struct_methods_ok__f(.{n: 2}))
+    @assert(regression__multi_struct_methods_ok__f(.{n: 0}))
+    @assert(!regression__multi_struct_methods_ok__f(.{n: -1}))
+}
+
+test "regression/orelse_bool_bool_ok.mesa" {
+    @assert(regression__orelse_bool_bool_ok__f(regression__helpers__some_bool(true)))
+    @assert(!regression__orelse_bool_bool_ok__f(none))
+}
+
+test "regression/orelse_float_float_ok.mesa" {
+    @assert(regression__orelse_float_float_ok__f(regression__helpers__some_f64(2.5)) == 2.5)
+    @assert(regression__orelse_float_float_ok__f(none) == 0.0)
+}
+
+test "regression/orelse_int_int_ok.mesa" {
+    @assert(regression__orelse_int_int_ok__f(regression__helpers__some_i64(6)) == 6)
+    @assert(regression__orelse_int_int_ok__f(none) == 0)
+}
+
+test "regression/str_equality_ok.mesa" {
+    @assert(regression__str_equality_ok__f("hi", "hi"))
+    @assert(!regression__str_equality_ok__f("hi", "bye"))
+}
+
+test "regression/unit_variant_expr_ok.mesa" {
+    let flipped = regression__unit_variant_expr_ok__opposite(.East);
+    @assert(match flipped { .West => { true }, _ => { false } })
+}
+
+test "regression/unit_variant_in_fn_ok.mesa" {
+    let next = regression__unit_variant_in_fn_ok__next(.Init);
+    @assert(match next { .Ready => { true }, _ => { false } })
+}

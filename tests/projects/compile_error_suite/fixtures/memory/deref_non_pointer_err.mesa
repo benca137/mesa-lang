@@ -1,0 +1,4 @@
+fun f() void {
+    let x: i64 = 5;
+    let y = *x;  //~ error:
+}

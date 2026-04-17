@@ -1,0 +1,11 @@
+pkg physics
+
+from physics import Body
+
+pub fun make() Body {
+    makeBody()
+}
+
+pub fun answer() i64 {
+    42
+}

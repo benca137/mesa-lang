@@ -1,0 +1,246 @@
+// patterns__exhaustive_bool_both_ok
+fun patterns__exhaustive_bool_both_ok__f(b: bool) i64 {  //~ compile-ok
+    return match b { true => {1}, false => {0} };
+}
+
+// patterns__exhaustive_int_binding_ok
+fun patterns__exhaustive_int_binding_ok__f(n: i64) i64 {  //~ compile-ok
+    return match n { x => { x * 2 } };
+}
+
+// patterns__exhaustive_wildcard_only_ok
+union patterns__exhaustive_wildcard_only_ok__C { R, G, B }
+fun patterns__exhaustive_wildcard_only_ok__f(c: patterns__exhaustive_wildcard_only_ok__C) i64 {  //~ compile-ok
+    return match c { _ => { 0 } };
+}
+
+// patterns__let_immutable_ok
+fun patterns__let_immutable_ok__f() i64 {  //~ compile-ok
+    let x: i64 = 42;
+    return x;
+}
+
+// patterns__let_infer_ok
+fun patterns__let_infer_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    let c = a + b;
+    return c;
+}
+
+// patterns__let_mutable_ok
+fun patterns__let_mutable_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    x = 42;
+    return x;
+}
+
+// patterns__let_shadow_ok
+fun patterns__let_shadow_ok__f() i64 {  //~ compile-ok
+    let x: i64 = 1;
+    let y: i64 = {
+        let x: i64 = 2;
+        x
+    };
+    return x + y;
+}
+
+// patterns__match_3_arms_ok
+union patterns__match_3_arms_ok__U { V0, V1, V2 }
+fun patterns__match_3_arms_ok__f(u: patterns__match_3_arms_ok__U) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 } };
+}
+
+// patterns__match_4_arms_ok
+union patterns__match_4_arms_ok__U { V0, V1, V2, V3 }
+fun patterns__match_4_arms_ok__f(u: patterns__match_4_arms_ok__U) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 } };
+}
+
+// patterns__match_5_arms_ok
+union patterns__match_5_arms_ok__U { V0, V1, V2, V3, V4 }
+fun patterns__match_5_arms_ok__f(u: patterns__match_5_arms_ok__U) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, .V4 => { 4 } };
+}
+
+// patterns__match_6_arms_ok
+union patterns__match_6_arms_ok__U { V0, V1, V2, V3, V4, V5 }
+fun patterns__match_6_arms_ok__f(u: patterns__match_6_arms_ok__U) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, .V4 => { 4 }, .V5 => { 5 } };
+}
+
+// patterns__match_arm_shadow_ok
+fun patterns__match_arm_shadow_ok__f(n: i64) i64 {  //~ compile-ok
+    let x: i64 = 99;
+    return match n {
+        0 => { x },
+        x => { x * 2 },
+    };
+}
+
+// patterns__match_ident_binding_ok
+fun patterns__match_ident_binding_ok__f(n: i64) i64 {  //~ compile-ok
+    return match n {
+        x => { x * 2 },
+    };
+}
+
+// patterns__match_nested_union_ok
+union patterns__match_nested_union_ok__Expr {
+    Lit(i64),
+    Neg(i64),
+}
+fun patterns__match_nested_union_ok__eval(e: patterns__match_nested_union_ok__Expr) i64 {  //~ compile-ok
+    return match e {
+        .Lit(n) => { n },
+        .Neg(n) => { -n },
+    };
+}
+
+// patterns__match_union_2var_full_ok
+union patterns__match_union_2var_full_ok__U2 { V0, V1 }
+fun patterns__match_union_2var_full_ok__f(u: patterns__match_union_2var_full_ok__U2) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 } };
+}
+
+// patterns__match_union_3var_full_ok
+union patterns__match_union_3var_full_ok__U3 { V0, V1, V2 }
+fun patterns__match_union_3var_full_ok__f(u: patterns__match_union_3var_full_ok__U3) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 } };
+}
+
+// patterns__match_union_4var_full_ok
+union patterns__match_union_4var_full_ok__U4 { V0, V1, V2, V3 }
+fun patterns__match_union_4var_full_ok__f(u: patterns__match_union_4var_full_ok__U4) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 } };
+}
+
+// patterns__match_union_5var_full_ok
+union patterns__match_union_5var_full_ok__U5 { V0, V1, V2, V3, V4 }
+fun patterns__match_union_5var_full_ok__f(u: patterns__match_union_5var_full_ok__U5) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, .V4 => { 4 } };
+}
+
+// patterns__match_union_6var_full_ok
+union patterns__match_union_6var_full_ok__U6 { V0, V1, V2, V3, V4, V5 }
+fun patterns__match_union_6var_full_ok__f(u: patterns__match_union_6var_full_ok__U6) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, .V4 => { 4 }, .V5 => { 5 } };
+}
+
+// patterns__match_union_7var_full_ok
+union patterns__match_union_7var_full_ok__U7 { V0, V1, V2, V3, V4, V5, V6 }
+fun patterns__match_union_7var_full_ok__f(u: patterns__match_union_7var_full_ok__U7) i64 {  //~ compile-ok
+    return match u { .V0 => { 0 }, .V1 => { 1 }, .V2 => { 2 }, .V3 => { 3 }, .V4 => { 4 }, .V5 => { 5 }, .V6 => { 6 } };
+}
+
+// patterns__match_union_binding_ok
+union patterns__match_union_binding_ok__Opt { Some(i64), None }
+fun patterns__match_union_binding_ok__f(o: patterns__match_union_binding_ok__Opt) i64 {  //~ compile-ok
+    return match o {
+        .Some(v) => { v },
+        .None => { 0 },
+    };
+}
+
+// patterns__match_union_no_payload_ok
+union patterns__match_union_no_payload_ok__Dir { North, South, East, West }
+fun patterns__match_union_no_payload_ok__dx(d: patterns__match_union_no_payload_ok__Dir) i64 {  //~ compile-ok
+    return match d {
+        .East => { 1 },
+        .West => { -1 },
+        _ => { 0 },
+    };
+}
+
+test "patterns/exhaustive_bool_both_ok.mesa" {
+    @assert(patterns__exhaustive_bool_both_ok__f(true) == 1)
+    @assert(patterns__exhaustive_bool_both_ok__f(false) == 0)
+}
+
+test "patterns/exhaustive_int_binding_ok.mesa" {
+    @assert(patterns__exhaustive_int_binding_ok__f(7) == 14)
+}
+
+test "patterns/exhaustive_wildcard_only_ok.mesa" {
+    @assert(patterns__exhaustive_wildcard_only_ok__f(.R) == 0)
+    @assert(patterns__exhaustive_wildcard_only_ok__f(.B) == 0)
+}
+
+test "patterns/let_immutable_ok.mesa" {
+    @assert(patterns__let_immutable_ok__f() == 42)
+}
+
+test "patterns/let_infer_ok.mesa" {
+    @assert(patterns__let_infer_ok__f(4, 5) == 9)
+}
+
+test "patterns/let_mutable_ok.mesa" {
+    @assert(patterns__let_mutable_ok__f() == 42)
+}
+
+test "patterns/let_shadow_ok.mesa" {
+    @assert(patterns__let_shadow_ok__f() == 3)
+}
+
+test "patterns/match_3_arms_ok.mesa" {
+    @assert(patterns__match_3_arms_ok__f(.V2) == 2)
+}
+
+test "patterns/match_4_arms_ok.mesa" {
+    @assert(patterns__match_4_arms_ok__f(.V3) == 3)
+}
+
+test "patterns/match_5_arms_ok.mesa" {
+    @assert(patterns__match_5_arms_ok__f(.V4) == 4)
+}
+
+test "patterns/match_6_arms_ok.mesa" {
+    @assert(patterns__match_6_arms_ok__f(.V5) == 5)
+}
+
+test "patterns/match_arm_shadow_ok.mesa" {
+    @assert(patterns__match_arm_shadow_ok__f(0) == 99)
+    @assert(patterns__match_arm_shadow_ok__f(8) == 16)
+}
+
+test "patterns/match_ident_binding_ok.mesa" {
+    @assert(patterns__match_ident_binding_ok__f(6) == 12)
+}
+
+test "patterns/match_nested_union_ok.mesa" {
+    @assert(patterns__match_nested_union_ok__eval(.Lit(9)) == 9)
+    @assert(patterns__match_nested_union_ok__eval(.Neg(9)) == -9)
+}
+
+test "patterns/match_union_2var_full_ok.mesa" {
+    @assert(patterns__match_union_2var_full_ok__f(patterns__match_union_2var_full_ok__U2.V1) == 1)
+}
+
+test "patterns/match_union_3var_full_ok.mesa" {
+    @assert(patterns__match_union_3var_full_ok__f(patterns__match_union_3var_full_ok__U3.V2) == 2)
+}
+
+test "patterns/match_union_4var_full_ok.mesa" {
+    @assert(patterns__match_union_4var_full_ok__f(patterns__match_union_4var_full_ok__U4.V3) == 3)
+}
+
+test "patterns/match_union_5var_full_ok.mesa" {
+    @assert(patterns__match_union_5var_full_ok__f(patterns__match_union_5var_full_ok__U5.V4) == 4)
+}
+
+test "patterns/match_union_6var_full_ok.mesa" {
+    @assert(patterns__match_union_6var_full_ok__f(patterns__match_union_6var_full_ok__U6.V5) == 5)
+}
+
+test "patterns/match_union_7var_full_ok.mesa" {
+    @assert(patterns__match_union_7var_full_ok__f(patterns__match_union_7var_full_ok__U7.V6) == 6)
+}
+
+test "patterns/match_union_binding_ok.mesa" {
+    @assert(patterns__match_union_binding_ok__f(.Some(12)) == 12)
+    @assert(patterns__match_union_binding_ok__f(.None) == 0)
+}
+
+test "patterns/match_union_no_payload_ok.mesa" {
+    @assert(patterns__match_union_no_payload_ok__dx(.East) == 1)
+    @assert(patterns__match_union_no_payload_ok__dx(.West) == -1)
+    @assert(patterns__match_union_no_payload_ok__dx(.North) == 0)
+}

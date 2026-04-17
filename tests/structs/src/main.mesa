@@ -1,0 +1,609 @@
+struct structs__aabb_contains_ok__AABB { x: f64, y: f64, w: f64, h: f64 }
+fun structs__aabb_contains_ok__contains(r: structs__aabb_contains_ok__AABB, px: f64, py: f64) bool {
+    return px >= r.x and px < r.x + r.w and py >= r.y and py < r.y + r.h;
+}
+
+struct structs__basic_struct_ok__Point { x: f64, y: f64 }
+fun structs__basic_struct_ok__f(p: structs__basic_struct_ok__Point) f64 { return p.x + p.y; }
+
+struct structs__color_blend_ok__RGB { r: f64, g: f64, b: f64 }
+fun structs__color_blend_ok__blend(a: structs__color_blend_ok__RGB, b: structs__color_blend_ok__RGB, t: f64) structs__color_blend_ok__RGB {
+    return .{r: a.r+(b.r-a.r)*t, g: a.g+(b.g-a.g)*t, b: a.b+(b.b-a.b)*t};
+}
+
+struct structs__field_chain_ok__A { x: i64 }
+struct structs__field_chain_ok__B { a: structs__field_chain_ok__A }
+struct structs__field_chain_ok__C { b: structs__field_chain_ok__B }
+fun structs__field_chain_ok__f(c: structs__field_chain_ok__C) i64 { return c.b.a.x; }
+
+struct structs__method_multi_field_ok__Particle {
+    x: f64, y: f64, vx: f64, vy: f64,
+    fun update(self: *structs__method_multi_field_ok__Particle, dt: f64) void {
+        self.x = self.x + self.vx * dt;
+        self.y = self.y + self.vy * dt;
+    }
+}
+
+struct structs__multiple_methods_ok__Vec2 {
+    x: f64, y: f64,
+    fun dot(self: structs__multiple_methods_ok__Vec2, other: structs__multiple_methods_ok__Vec2) f64 {
+        return self.x * other.x + self.y * other.y;
+    }
+    fun len_sq(self: structs__multiple_methods_ok__Vec2) f64 {
+        return self.x * self.x + self.y * self.y;
+    }
+    fun scale(self: *structs__multiple_methods_ok__Vec2, factor: f64) void {
+        self.x = self.x * factor;
+        self.y = self.y * factor;
+    }
+}
+fun structs__multiple_methods_ok__f(a: structs__multiple_methods_ok__Vec2, b: structs__multiple_methods_ok__Vec2) f64 { return a.dot(b); }
+
+struct structs__nested_struct_access_ok__Inner { val: i64 }
+struct structs__nested_struct_access_ok__Outer { inner: structs__nested_struct_access_ok__Inner, tag: bool }
+fun structs__nested_struct_access_ok__f(o: structs__nested_struct_access_ok__Outer) i64 { return o.inner.val; }
+
+struct structs__nested_struct_ok__Vec2 { x: f64, y: f64 }
+struct structs__nested_struct_ok__Rect { pos: structs__nested_struct_ok__Vec2, size: structs__nested_struct_ok__Vec2 }
+fun structs__nested_struct_ok__area(r: structs__nested_struct_ok__Rect) f64 { return r.size.x * r.size.y; }
+
+struct structs__plane_dist_ok__Plane { nx: f64, ny: f64, nz: f64, d: f64 }
+fun structs__plane_dist_ok__dist(p: structs__plane_dist_ok__Plane, x: f64, y: f64, z: f64) f64 {
+    return p.nx*x + p.ny*y + p.nz*z + p.d;
+}
+
+struct structs__point_dist_sq_ok__P { x: f64, y: f64 }
+fun structs__point_dist_sq_ok__dist_sq(a: structs__point_dist_sq_ok__P, b: structs__point_dist_sq_ok__P) f64 {
+    let dx: f64 = a.x - b.x;
+    let dy: f64 = a.y - b.y;
+    return dx*dx + dy*dy;
+}
+
+struct structs__quat_norm_sq_ok__Quat { x: f64, y: f64, z: f64, w: f64 }
+fun structs__quat_norm_sq_ok__norm_sq(q: structs__quat_norm_sq_ok__Quat) f64 {
+    return q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
+}
+
+struct structs__struct_1_methods_ok__S1 { val: i64
+    fun m0(self: structs__struct_1_methods_ok__S1) i64 { return self.val + 0; }
+}
+fun structs__struct_1_methods_ok__f(s: structs__struct_1_methods_ok__S1) i64 { return s.m0(); }
+
+struct structs__struct_1field_ok__S1 { f0: i64 }
+fun structs__struct_1field_ok__f(s: structs__struct_1field_ok__S1) i64 { return s.f0; }
+
+struct structs__struct_2_methods_ok__S2 { val: i64
+    fun m0(self: structs__struct_2_methods_ok__S2) i64 { return self.val + 0; }
+    fun m1(self: structs__struct_2_methods_ok__S2) i64 { return self.val + 1; }
+}
+fun structs__struct_2_methods_ok__f(s: structs__struct_2_methods_ok__S2) i64 { return s.m0() + s.m1(); }
+
+struct structs__struct_2field_ok__S2 { f0: i64, f1: i64 }
+fun structs__struct_2field_ok__f(s: structs__struct_2field_ok__S2) i64 { return s.f0 + s.f1; }
+
+struct structs__struct_3_methods_ok__S3 { val: i64
+    fun m0(self: structs__struct_3_methods_ok__S3) i64 { return self.val + 0; }
+    fun m1(self: structs__struct_3_methods_ok__S3) i64 { return self.val + 1; }
+    fun m2(self: structs__struct_3_methods_ok__S3) i64 { return self.val + 2; }
+}
+fun structs__struct_3_methods_ok__f(s: structs__struct_3_methods_ok__S3) i64 { return s.m0() + s.m1() + s.m2(); }
+
+struct structs__struct_3field_ok__S3 { f0: i64, f1: i64, f2: i64 }
+fun structs__struct_3field_ok__f(s: structs__struct_3field_ok__S3) i64 { return s.f0 + s.f1 + s.f2; }
+
+struct structs__struct_4_methods_ok__S4 { val: i64
+    fun m0(self: structs__struct_4_methods_ok__S4) i64 { return self.val + 0; }
+    fun m1(self: structs__struct_4_methods_ok__S4) i64 { return self.val + 1; }
+    fun m2(self: structs__struct_4_methods_ok__S4) i64 { return self.val + 2; }
+    fun m3(self: structs__struct_4_methods_ok__S4) i64 { return self.val + 3; }
+}
+fun structs__struct_4_methods_ok__f(s: structs__struct_4_methods_ok__S4) i64 { return s.m0() + s.m1() + s.m2() + s.m3(); }
+
+struct structs__struct_4field_ok__S4 { f0: i64, f1: i64, f2: i64, f3: i64 }
+fun structs__struct_4field_ok__f(s: structs__struct_4field_ok__S4) i64 { return s.f0 + s.f1 + s.f2 + s.f3; }
+
+struct structs__struct_5_methods_ok__S5 { val: i64
+    fun m0(self: structs__struct_5_methods_ok__S5) i64 { return self.val + 0; }
+    fun m1(self: structs__struct_5_methods_ok__S5) i64 { return self.val + 1; }
+    fun m2(self: structs__struct_5_methods_ok__S5) i64 { return self.val + 2; }
+    fun m3(self: structs__struct_5_methods_ok__S5) i64 { return self.val + 3; }
+    fun m4(self: structs__struct_5_methods_ok__S5) i64 { return self.val + 4; }
+}
+fun structs__struct_5_methods_ok__f(s: structs__struct_5_methods_ok__S5) i64 { return s.m0() + s.m1() + s.m2() + s.m3() + s.m4(); }
+
+struct structs__struct_5field_ok__S5 { f0: i64, f1: i64, f2: i64, f3: i64, f4: i64 }
+fun structs__struct_5field_ok__f(s: structs__struct_5field_ok__S5) i64 { return s.f0 + s.f1 + s.f2 + s.f3 + s.f4; }
+
+struct structs__struct_6field_ok__S6 { f0: i64, f1: i64, f2: i64, f3: i64, f4: i64, f5: i64 }
+fun structs__struct_6field_ok__f(s: structs__struct_6field_ok__S6) i64 { return s.f0 + s.f1 + s.f2 + s.f3 + s.f4 + s.f5; }
+
+struct structs__struct_all_field_types_ok__Mixed {
+    a: i64,
+    b: f64,
+    c: bool,
+    d: str,
+}
+fun structs__struct_all_field_types_ok__f(m: structs__struct_all_field_types_ok__Mixed) bool { return m.c; }
+
+struct structs__struct_copy_ok__Vec3 { x: f64, y: f64, z: f64 }
+fun structs__struct_copy_ok__copy(v: structs__struct_copy_ok__Vec3) structs__struct_copy_ok__Vec3 {
+    return .{x: v.x, y: v.y, z: v.z};
+}
+
+struct structs__struct_eq_method_ok__Point { x: i64, y: i64 }
+fun structs__struct_eq_method_ok__eq(a: structs__struct_eq_method_ok__Point, b: structs__struct_eq_method_ok__Point) bool {
+    return a.x == b.x and a.y == b.y;
+}
+
+struct structs__struct_field_access_i16_ok__S { v: i16 }
+fun structs__struct_field_access_i16_ok__get(s: structs__struct_field_access_i16_ok__S) i16 { return s.v; }
+
+struct structs__struct_field_access_i32_ok__S { v: i32 }
+fun structs__struct_field_access_i32_ok__get(s: structs__struct_field_access_i32_ok__S) i32 { return s.v; }
+
+struct structs__struct_field_access_i8_ok__S { v: i8 }
+fun structs__struct_field_access_i8_ok__get(s: structs__struct_field_access_i8_ok__S) i8 { return s.v; }
+
+struct structs__struct_field_access_u16_ok__S { v: u16 }
+fun structs__struct_field_access_u16_ok__get(s: structs__struct_field_access_u16_ok__S) u16 { return s.v; }
+
+struct structs__struct_field_access_u32_ok__S { v: u32 }
+fun structs__struct_field_access_u32_ok__get(s: structs__struct_field_access_u32_ok__S) u32 { return s.v; }
+
+struct structs__struct_field_access_u64_ok__S { v: u64 }
+fun structs__struct_field_access_u64_ok__get(s: structs__struct_field_access_u64_ok__S) u64 { return s.v; }
+
+struct structs__struct_field_access_u8_ok__S { v: u8 }
+fun structs__struct_field_access_u8_ok__get(s: structs__struct_field_access_u8_ok__S) u8 { return s.v; }
+
+struct structs__struct_field_bool_ok__S { val: bool }
+fun structs__struct_field_bool_ok__f(s: structs__struct_field_bool_ok__S) bool { return s.val; }
+
+struct structs__struct_field_f32_ok__S { val: f32 }
+fun structs__struct_field_f32_ok__f(s: structs__struct_field_f32_ok__S) f32 { return s.val; }
+
+struct structs__struct_field_f64_ok__S { val: f64 }
+fun structs__struct_field_f64_ok__f(s: structs__struct_field_f64_ok__S) f64 { return s.val; }
+
+struct structs__struct_field_i16_ok__S { val: i16 }
+fun structs__struct_field_i16_ok__f(s: structs__struct_field_i16_ok__S) i16 { return s.val; }
+
+struct structs__struct_field_i32_ok__S { val: i32 }
+fun structs__struct_field_i32_ok__f(s: structs__struct_field_i32_ok__S) i32 { return s.val; }
+
+struct structs__struct_field_i64_ok__S { val: i64 }
+fun structs__struct_field_i64_ok__f(s: structs__struct_field_i64_ok__S) i64 { return s.val; }
+
+struct structs__struct_field_i8_ok__S { val: i8 }
+fun structs__struct_field_i8_ok__f(s: structs__struct_field_i8_ok__S) i8 { return s.val; }
+
+struct structs__struct_field_str_ok__S { val: str }
+fun structs__struct_field_str_ok__f(s: structs__struct_field_str_ok__S) str { return s.val; }
+
+struct structs__struct_field_u32_ok__S { val: u32 }
+fun structs__struct_field_u32_ok__f(s: structs__struct_field_u32_ok__S) u32 { return s.val; }
+
+struct structs__struct_field_u64_ok__S { val: u64 }
+fun structs__struct_field_u64_ok__f(s: structs__struct_field_u64_ok__S) u64 { return s.val; }
+
+struct structs__struct_field_u8_ok__S { val: u8 }
+fun structs__struct_field_u8_ok__f(s: structs__struct_field_u8_ok__S) u8 { return s.val; }
+
+struct structs__struct_in_vec_ok__Point { x: f64, y: f64 }
+fun structs__struct_in_vec_ok__f() vec[structs__struct_in_vec_ok__Point] {
+    return vec[.{x: 0.0, y: 0.0}, .{x: 1.0, y: 1.0}];
+}
+
+struct structs__struct_init_missing_field_ok__Point { x: f64, y: f64 }
+fun structs__struct_init_missing_field_ok__make() structs__struct_init_missing_field_ok__Point {
+    let p: structs__struct_init_missing_field_ok__Point = .{x: 1.0, y: 2.0};
+    return p;
+}
+
+struct structs__struct_init_ok__Point { x: f64, y: f64 }
+fun structs__struct_init_ok__f() structs__struct_init_ok__Point { return .{x: 1.0, y: 2.0}; }
+
+struct structs__struct_lerp_ok__Vec2 { x: f64, y: f64 }
+fun structs__struct_lerp_ok__lerp(a: structs__struct_lerp_ok__Vec2, b: structs__struct_lerp_ok__Vec2, t: f64) structs__struct_lerp_ok__Vec2 {
+    return .{
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+    };
+}
+
+struct structs__struct_method_ok__Counter {
+    n: i64,
+    fun get(self: structs__struct_method_ok__Counter) i64 { return self.n; }
+}
+fun structs__struct_method_ok__f(c: structs__struct_method_ok__Counter) i64 { return c.get(); }
+
+struct structs__struct_min_max_ok__Range { lo: f64, hi: f64 }
+fun structs__struct_min_max_ok__clamp(r: structs__struct_min_max_ok__Range, x: f64) f64 {
+    if x < r.lo { return r.lo; }
+    if x > r.hi { return r.hi; }
+    return x;
+}
+
+struct structs__struct_mut_method_ok__Counter {
+    n: i64,
+    fun inc(self: *structs__struct_mut_method_ok__Counter) void { self.n = self.n + 1; }
+}
+
+struct structs__struct_norm_sq_ok__Vec3 { x: f64, y: f64, z: f64 }
+fun structs__struct_norm_sq_ok__norm_sq(v: structs__struct_norm_sq_ok__Vec3) f64 {
+    return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+
+struct structs__struct_optional_field_ok__Config {
+    name: str,
+    timeout: ?i64,
+    retries: i64,
+}
+fun structs__struct_optional_field_ok__timeout_or_default(c: structs__struct_optional_field_ok__Config) i64 {
+    return c.timeout orelse 30;
+}
+fun structs__struct_optional_field_ok__some(x: i64) ?i64 { return x; }
+
+struct structs__struct_pointer_field_access_ok__Node {
+    val: i64,
+    fun update(self: *structs__struct_pointer_field_access_ok__Node, v: i64) void {
+        self.val = v;
+    }
+}
+
+struct structs__struct_reset_ok__Timer { elapsed: f64, limit: f64 }
+fun structs__struct_reset_ok__reset(t: *structs__struct_reset_ok__Timer) void { t.elapsed = 0.0; }
+fun structs__struct_reset_ok__expired(t: structs__struct_reset_ok__Timer) bool { return t.elapsed >= t.limit; }
+
+struct structs__struct_return_ok__Range { lo: i64, hi: i64 }
+fun structs__struct_return_ok__make_range(lo: i64, hi: i64) structs__struct_return_ok__Range { return .{lo: lo, hi: hi}; }
+fun structs__struct_return_ok__width(r: structs__struct_return_ok__Range) i64 { return r.hi - r.lo; }
+
+struct structs__struct_three_methods_ok__Stack {
+    top: i64,
+    size: i64,
+    fun push(self: *structs__struct_three_methods_ok__Stack, v: i64) void { self.top = v; self.size = self.size + 1; }
+    fun pop(self: *structs__struct_three_methods_ok__Stack) i64 { self.size = self.size - 1; return self.top; }
+    fun empty(self: structs__struct_three_methods_ok__Stack) bool { return self.size == 0; }
+}
+fun structs__struct_three_methods_ok__f() i64 {
+    let var s: structs__struct_three_methods_ok__Stack = .{top: 0, size: 0};
+    s.push(42);
+    return s.pop();
+}
+
+struct structs__struct_update_field_ok__Counter { n: i64, max: i64 }
+fun structs__struct_update_field_ok__tick(c: *structs__struct_update_field_ok__Counter) bool {
+    if c.n >= c.max { return false; }
+    c.n = c.n + 1;
+    return true;
+}
+
+struct structs__struct_vec_field_ok__Path {
+    points: vec[f64],
+    len: i64,
+}
+fun structs__struct_vec_field_ok__f(p: structs__struct_vec_field_ok__Path) i64 { return p.len; }
+
+struct structs__vec2_add_ok__Vec2 { x: f64, y: f64 }
+fun structs__vec2_add_ok__add(a: structs__vec2_add_ok__Vec2, b: structs__vec2_add_ok__Vec2) structs__vec2_add_ok__Vec2 {
+    return .{x: a.x + b.x, y: a.y + b.y};
+}
+
+struct structs__vec2_dot_ok__Vec2 { x: f64, y: f64 }
+fun structs__vec2_dot_ok__dot(a: structs__vec2_dot_ok__Vec2, b: structs__vec2_dot_ok__Vec2) f64 {
+    return a.x * b.x + a.y * b.y;
+}
+
+struct structs__vec2_mul_ok__Vec2 { x: f64, y: f64 }
+fun structs__vec2_mul_ok__mul(a: structs__vec2_mul_ok__Vec2, b: structs__vec2_mul_ok__Vec2) structs__vec2_mul_ok__Vec2 {
+    return .{x: a.x * b.x, y: a.y * b.y};
+}
+
+struct structs__vec2_scale_ok__Vec2 { x: f64, y: f64 }
+fun structs__vec2_scale_ok__scale(v: structs__vec2_scale_ok__Vec2, s: f64) structs__vec2_scale_ok__Vec2 {
+    return .{x: v.x * s, y: v.y * s};
+}
+
+struct structs__vec2_sub_ok__Vec2 { x: f64, y: f64 }
+fun structs__vec2_sub_ok__sub(a: structs__vec2_sub_ok__Vec2, b: structs__vec2_sub_ok__Vec2) structs__vec2_sub_ok__Vec2 {
+    return .{x: a.x - b.x, y: a.y - b.y};
+}
+
+struct structs__vec3_cross_ok__Vec3 { x: f64, y: f64, z: f64 }
+fun structs__vec3_cross_ok__cross(a: structs__vec3_cross_ok__Vec3, b: structs__vec3_cross_ok__Vec3) structs__vec3_cross_ok__Vec3 {
+    return .{
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x,
+    };
+}
+
+test "structs/aabb_contains_ok.mesa" {
+    let r: structs__aabb_contains_ok__AABB = .{ x: 0.0, y: 0.0, w: 10.0, h: 5.0 }
+    @assert(structs__aabb_contains_ok__contains(r, 3.0, 2.0))
+    @assert(!structs__aabb_contains_ok__contains(r, 10.0, 2.0))
+}
+
+test "structs/basic_struct_ok.mesa" {
+    let p: structs__basic_struct_ok__Point = .{ x: 1.5, y: 2.5 }
+    @assert(structs__basic_struct_ok__f(p) == 4.0)
+}
+
+test "structs/color_blend_ok.mesa" {
+    let a: structs__color_blend_ok__RGB = .{ r: 0.0, g: 0.5, b: 1.0 }
+    let b: structs__color_blend_ok__RGB = .{ r: 1.0, g: 0.5, b: 0.0 }
+    let mixed = structs__color_blend_ok__blend(a, b, 0.25)
+    @assert(mixed.r == 0.25)
+    @assert(mixed.g == 0.5)
+    @assert(mixed.b == 0.75)
+}
+
+test "structs/field_chain_ok.mesa" {
+    let c: structs__field_chain_ok__C = .{ b: .{ a: .{ x: 9 } } }
+    @assert(structs__field_chain_ok__f(c) == 9)
+}
+
+test "structs/method_multi_field_ok.mesa" {
+    let var p: structs__method_multi_field_ok__Particle = .{ x: 0.0, y: 0.0, vx: 2.0, vy: -1.0 }
+    p.update(0.5)
+    @assert(p.x == 1.0)
+    @assert(p.y == -0.5)
+}
+
+test "structs/multiple_methods_ok.mesa" {
+    let var a: structs__multiple_methods_ok__Vec2 = .{ x: 2.0, y: 3.0 }
+    let b: structs__multiple_methods_ok__Vec2 = .{ x: 4.0, y: 5.0 }
+    @assert(structs__multiple_methods_ok__f(a, b) == 23.0)
+    @assert(a.len_sq() == 13.0)
+    a.scale(2.0)
+    @assert(a.x == 4.0)
+    @assert(a.y == 6.0)
+}
+
+test "structs/nested_struct_access_ok.mesa" {
+    let o: structs__nested_struct_access_ok__Outer = .{ inner: .{ val: 11 }, tag: true }
+    @assert(structs__nested_struct_access_ok__f(o) == 11)
+}
+
+test "structs/nested_struct_ok.mesa" {
+    let r: structs__nested_struct_ok__Rect = .{ pos: .{ x: 1.0, y: 2.0 }, size: .{ x: 3.0, y: 4.0 } }
+    @assert(structs__nested_struct_ok__area(r) == 12.0)
+}
+
+test "structs/plane_dist_ok.mesa" {
+    let p: structs__plane_dist_ok__Plane = .{ nx: 1.0, ny: 2.0, nz: 3.0, d: 4.0 }
+    @assert(structs__plane_dist_ok__dist(p, 1.0, 1.0, 1.0) == 10.0)
+}
+
+test "structs/point_dist_sq_ok.mesa" {
+    let a: structs__point_dist_sq_ok__P = .{ x: 1.0, y: 1.0 }
+    let b: structs__point_dist_sq_ok__P = .{ x: 4.0, y: 5.0 }
+    @assert(structs__point_dist_sq_ok__dist_sq(a, b) == 25.0)
+}
+
+test "structs/quat_norm_sq_ok.mesa" {
+    let q: structs__quat_norm_sq_ok__Quat = .{ x: 1.0, y: 2.0, z: 3.0, w: 4.0 }
+    @assert(structs__quat_norm_sq_ok__norm_sq(q) == 30.0)
+}
+
+test "structs/struct_1_methods_ok.mesa" {
+    @assert(structs__struct_1_methods_ok__f(.{ val: 7 }) == 7)
+}
+
+test "structs/struct_1field_ok.mesa" {
+    @assert(structs__struct_1field_ok__f(.{ f0: 8 }) == 8)
+}
+
+test "structs/struct_2_methods_ok.mesa" {
+    @assert(structs__struct_2_methods_ok__f(.{ val: 7 }) == 15)
+}
+
+test "structs/struct_2field_ok.mesa" {
+    @assert(structs__struct_2field_ok__f(.{ f0: 3, f1: 4 }) == 7)
+}
+
+test "structs/struct_3_methods_ok.mesa" {
+    @assert(structs__struct_3_methods_ok__f(.{ val: 7 }) == 24)
+}
+
+test "structs/struct_3field_ok.mesa" {
+    @assert(structs__struct_3field_ok__f(.{ f0: 1, f1: 2, f2: 3 }) == 6)
+}
+
+test "structs/struct_4_methods_ok.mesa" {
+    @assert(structs__struct_4_methods_ok__f(.{ val: 7 }) == 34)
+}
+
+test "structs/struct_4field_ok.mesa" {
+    @assert(structs__struct_4field_ok__f(.{ f0: 1, f1: 2, f2: 3, f3: 4 }) == 10)
+}
+
+test "structs/struct_5_methods_ok.mesa" {
+    @assert(structs__struct_5_methods_ok__f(.{ val: 7 }) == 45)
+}
+
+test "structs/struct_5field_ok.mesa" {
+    @assert(structs__struct_5field_ok__f(.{ f0: 1, f1: 2, f2: 3, f3: 4, f4: 5 }) == 15)
+}
+
+test "structs/struct_6field_ok.mesa" {
+    @assert(structs__struct_6field_ok__f(.{ f0: 1, f1: 2, f2: 3, f3: 4, f4: 5, f5: 6 }) == 21)
+}
+
+test "structs/struct_all_field_types_ok.mesa" {
+    let m: structs__struct_all_field_types_ok__Mixed = .{ a: 1, b: 2.5, c: true, d: "ok" }
+    @assert(structs__struct_all_field_types_ok__f(m))
+}
+
+test "structs/struct_copy_ok.mesa" {
+    let v: structs__struct_copy_ok__Vec3 = .{ x: 1.0, y: 2.0, z: 3.0 }
+    let copy = structs__struct_copy_ok__copy(v)
+    @assert(copy.x == 1.0)
+    @assert(copy.y == 2.0)
+    @assert(copy.z == 3.0)
+}
+
+test "structs/struct_eq_method_ok.mesa" {
+    @assert(structs__struct_eq_method_ok__eq(.{ x: 1, y: 2 }, .{ x: 1, y: 2 }))
+    @assert(!structs__struct_eq_method_ok__eq(.{ x: 1, y: 2 }, .{ x: 2, y: 1 }))
+}
+
+test "structs/struct_field_access_i16_ok.mesa" { @assert(structs__struct_field_access_i16_ok__get(.{ v: 12 }) == 12) }
+test "structs/struct_field_access_i32_ok.mesa" { @assert(structs__struct_field_access_i32_ok__get(.{ v: 13 }) == 13) }
+test "structs/struct_field_access_i8_ok.mesa" { @assert(structs__struct_field_access_i8_ok__get(.{ v: 7 }) == 7) }
+test "structs/struct_field_access_u16_ok.mesa" { @assert(structs__struct_field_access_u16_ok__get(.{ v: 12 }) == 12) }
+test "structs/struct_field_access_u32_ok.mesa" { @assert(structs__struct_field_access_u32_ok__get(.{ v: 13 }) == 13) }
+test "structs/struct_field_access_u64_ok.mesa" { @assert(structs__struct_field_access_u64_ok__get(.{ v: 14 }) == 14) }
+test "structs/struct_field_access_u8_ok.mesa" { @assert(structs__struct_field_access_u8_ok__get(.{ v: 7 }) == 7) }
+
+test "structs/struct_field_bool_ok.mesa" { @assert(structs__struct_field_bool_ok__f(.{ val: true })) }
+test "structs/struct_field_f32_ok.mesa" { @assert(structs__struct_field_f32_ok__f(.{ val: 1.5 }) == 1.5) }
+test "structs/struct_field_f64_ok.mesa" { @assert(structs__struct_field_f64_ok__f(.{ val: 2.5 }) == 2.5) }
+test "structs/struct_field_i16_ok.mesa" { @assert(structs__struct_field_i16_ok__f(.{ val: 5 }) == 5) }
+test "structs/struct_field_i32_ok.mesa" { @assert(structs__struct_field_i32_ok__f(.{ val: 6 }) == 6) }
+test "structs/struct_field_i64_ok.mesa" { @assert(structs__struct_field_i64_ok__f(.{ val: 7 }) == 7) }
+test "structs/struct_field_i8_ok.mesa" { @assert(structs__struct_field_i8_ok__f(.{ val: 8 }) == 8) }
+test "structs/struct_field_str_ok.mesa" { @assert(structs__struct_field_str_ok__f(.{ val: "ok" }) == "ok") }
+test "structs/struct_field_u32_ok.mesa" { @assert(structs__struct_field_u32_ok__f(.{ val: 9 }) == 9) }
+test "structs/struct_field_u64_ok.mesa" { @assert(structs__struct_field_u64_ok__f(.{ val: 10 }) == 10) }
+test "structs/struct_field_u8_ok.mesa" { @assert(structs__struct_field_u8_ok__f(.{ val: 11 }) == 11) }
+
+test "structs/struct_in_vec_ok.mesa" {
+    let pts = structs__struct_in_vec_ok__f()
+    @assert(len(pts) == 2)
+    @assert(pts[1].x == 1.0)
+    @assert(pts[1].y == 1.0)
+}
+
+test "structs/struct_init_missing_field_ok.mesa" {
+    let p = structs__struct_init_missing_field_ok__make()
+    @assert(p.x == 1.0)
+    @assert(p.y == 2.0)
+}
+
+test "structs/struct_init_ok.mesa" {
+    let p = structs__struct_init_ok__f()
+    @assert(p.x == 1.0)
+    @assert(p.y == 2.0)
+}
+
+test "structs/struct_lerp_ok.mesa" {
+    let a: structs__struct_lerp_ok__Vec2 = .{ x: 0.0, y: 0.0 }
+    let b: structs__struct_lerp_ok__Vec2 = .{ x: 10.0, y: 20.0 }
+    let mid = structs__struct_lerp_ok__lerp(a, b, 0.25)
+    @assert(mid.x == 2.5)
+    @assert(mid.y == 5.0)
+}
+
+test "structs/struct_method_ok.mesa" {
+    @assert(structs__struct_method_ok__f(.{ n: 42 }) == 42)
+}
+
+test "structs/struct_min_max_ok.mesa" {
+    let r: structs__struct_min_max_ok__Range = .{ lo: 0.0, hi: 10.0 }
+    @assert(structs__struct_min_max_ok__clamp(r, -1.0) == 0.0)
+    @assert(structs__struct_min_max_ok__clamp(r, 5.0) == 5.0)
+    @assert(structs__struct_min_max_ok__clamp(r, 11.0) == 10.0)
+}
+
+test "structs/struct_mut_method_ok.mesa" {
+    let var c: structs__struct_mut_method_ok__Counter = .{ n: 0 }
+    c.inc()
+    c.inc()
+    @assert(c.n == 2)
+}
+
+test "structs/struct_norm_sq_ok.mesa" {
+    @assert(structs__struct_norm_sq_ok__norm_sq(.{ x: 1.0, y: 2.0, z: 2.0 }) == 9.0)
+}
+
+test "structs/struct_optional_field_ok.mesa" {
+    let a: structs__struct_optional_field_ok__Config = .{ name: "a", timeout: none, retries: 1 }
+    let b: structs__struct_optional_field_ok__Config = .{ name: "b", timeout: structs__struct_optional_field_ok__some(5), retries: 2 }
+    @assert(structs__struct_optional_field_ok__timeout_or_default(a) == 30)
+    @assert(structs__struct_optional_field_ok__timeout_or_default(b) == 5)
+}
+
+test "structs/struct_pointer_field_access_ok.mesa" {
+    let var n: structs__struct_pointer_field_access_ok__Node = .{ val: 0 }
+    n.update(42)
+    @assert(n.val == 42)
+}
+
+test "structs/struct_reset_ok.mesa" {
+    let var t: structs__struct_reset_ok__Timer = .{ elapsed: 5.0, limit: 3.0 }
+    @assert(structs__struct_reset_ok__expired(t))
+    structs__struct_reset_ok__reset(&t)
+    @assert(t.elapsed == 0.0)
+    @assert(!structs__struct_reset_ok__expired(t))
+}
+
+test "structs/struct_return_ok.mesa" {
+    let r = structs__struct_return_ok__make_range(2, 9)
+    @assert(r.lo == 2)
+    @assert(r.hi == 9)
+    @assert(structs__struct_return_ok__width(r) == 7)
+}
+
+test "structs/struct_three_methods_ok.mesa" {
+    @assert(structs__struct_three_methods_ok__f() == 42)
+    let var s: structs__struct_three_methods_ok__Stack = .{ top: 0, size: 0 }
+    @assert(s.empty())
+    s.push(9)
+    @assert(!s.empty())
+    @assert(s.pop() == 9)
+}
+
+test "structs/struct_update_field_ok.mesa" {
+    let var c: structs__struct_update_field_ok__Counter = .{ n: 0, max: 2 }
+    @assert(structs__struct_update_field_ok__tick(&c))
+    @assert(c.n == 1)
+    @assert(structs__struct_update_field_ok__tick(&c))
+    @assert(!structs__struct_update_field_ok__tick(&c))
+}
+
+test "structs/struct_vec_field_ok.mesa" {
+    let p: structs__struct_vec_field_ok__Path = .{ points: vec[1.0, 2.0, 3.0], len: 3 }
+    @assert(structs__struct_vec_field_ok__f(p) == 3)
+    @assert(len(p.points) == 3)
+}
+
+test "structs/vec2_add_ok.mesa" {
+    let v = structs__vec2_add_ok__add(.{ x: 1.0, y: 2.0 }, .{ x: 3.0, y: 4.0 })
+    @assert(v.x == 4.0)
+    @assert(v.y == 6.0)
+}
+
+test "structs/vec2_dot_ok.mesa" {
+    @assert(structs__vec2_dot_ok__dot(.{ x: 1.0, y: 2.0 }, .{ x: 3.0, y: 4.0 }) == 11.0)
+}
+
+test "structs/vec2_mul_ok.mesa" {
+    let v = structs__vec2_mul_ok__mul(.{ x: 2.0, y: 3.0 }, .{ x: 4.0, y: 5.0 })
+    @assert(v.x == 8.0)
+    @assert(v.y == 15.0)
+}
+
+test "structs/vec2_scale_ok.mesa" {
+    let v = structs__vec2_scale_ok__scale(.{ x: 2.0, y: -3.0 }, 4.0)
+    @assert(v.x == 8.0)
+    @assert(v.y == -12.0)
+}
+
+test "structs/vec2_sub_ok.mesa" {
+    let v = structs__vec2_sub_ok__sub(.{ x: 5.0, y: 7.0 }, .{ x: 2.0, y: 3.0 })
+    @assert(v.x == 3.0)
+    @assert(v.y == 4.0)
+}
+
+test "structs/vec3_cross_ok.mesa" {
+    let v = structs__vec3_cross_ok__cross(.{ x: 1.0, y: 0.0, z: 0.0 }, .{ x: 0.0, y: 1.0, z: 0.0 })
+    @assert(v.x == 0.0)
+    @assert(v.y == 0.0)
+    @assert(v.z == 1.0)
+}
+
+fun main() void {
+    println("corpus")
+}

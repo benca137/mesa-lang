@@ -1,0 +1,32 @@
+pkg physics
+
+from math import Vec2
+
+pub struct Body {
+    position: Vec2,
+    velocity: Vec2,
+    material: Material,
+    shape: ShapeDesc,
+    inv_mass: f32,
+    is_static: bool,
+}
+
+pub struct World {
+    gravity: Vec2,
+    // bodies: vec[Body]
+}
+
+pub fun makeBody(desc: BodyDesc) Body {
+    .{
+        position: desc.position,
+        velocity: desc.velocity,
+        material: desc.material,
+        shape: desc.shape,
+        inv_mass: computeInvMass(desc),
+        is_static: desc.is_static,
+    }
+}
+
+fun computeInvMass(desc: BodyDesc) f32 {
+    if desc.is_static { 0.0 } else { desc.material.density }
+}

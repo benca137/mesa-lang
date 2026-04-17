@@ -1,0 +1,22 @@
+import mem
+
+error Fail {
+    Bad,
+}
+
+fun failure() Fail!void {
+    return .Bad
+}
+
+fun main() void {
+    let arena = mem.ArenaAllocator.init(mem.PageBuffer.init(4096))
+    with arena : .free {
+        defer println("Run after handle and before cleanup")
+        !defer println("Where do I run?")
+        try failure()
+    } handle |_| {
+        defer println("Deferred in handle")
+        println("Run first")
+    }
+    println("Run last")
+}

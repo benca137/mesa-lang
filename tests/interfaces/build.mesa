@@ -1,0 +1,10 @@
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let entry = b.createEntry("src/main.mesa")
+    let suite = b.addExecutable(
+        "corpus-interfaces",
+        entry = entry,
+        imports = .{ std },
+    )
+    b.install(suite)
+}

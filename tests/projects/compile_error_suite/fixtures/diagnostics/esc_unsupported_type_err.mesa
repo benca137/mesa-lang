@@ -1,0 +1,9 @@
+struct Node { val: i64 }
+
+fun bad() !*Node {
+    let arena = ArenaAllocator(64)
+    with arena : .reset {
+        let n: *Node = .{val: 1}
+        esc n
+    }
+}

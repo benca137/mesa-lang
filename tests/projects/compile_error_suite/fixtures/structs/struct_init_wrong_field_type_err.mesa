@@ -1,0 +1,7 @@
+
+// Struct field type checking is not yet implemented
+// Wrong field type currently compiles without error
+struct Point { x: f64, y: f64 }
+fun f() void {  //~ compile-ok
+    let p: Point = .{x: 1.0, y: 2.0};
+}

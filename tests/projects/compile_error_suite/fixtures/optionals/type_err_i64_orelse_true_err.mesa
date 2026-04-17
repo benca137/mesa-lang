@@ -1,0 +1,3 @@
+fun f(x: ?i64) void {
+    let y = x orelse true;  //~ error: type mismatch
+}

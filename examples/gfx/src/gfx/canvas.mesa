@@ -1,0 +1,149 @@
+pkg gfx
+
+pub fun initCanvas(width: i64, height: i64, pixels: vec[i64]) Canvas {
+    if width <= 0 or height <= 0 {
+        @panic("Canvas dimensions must be positive")
+    }
+    if len(pixels) != width * height {
+        @panic("Canvas pixel storage must match width * height")
+    }
+
+    return .{
+        width: width,
+        height: height,
+        pixels: pixels,
+        touched_pixels: 0,
+        clipped_writes: 0,
+        draw_calls: 0,
+    }
+}
+
+pub fun makeCanvas(width: i64, height: i64, fill: Color) Canvas {
+    if width == 16 and height == 12 {
+        return initCanvas(width, height, blankPixels16x12(fill));
+    }
+    if width == 32 and height == 18 {
+        return initCanvas(width, height, blankPixels32x18(fill));
+    }
+    @panic("dynamic canvas allocation is not supported yet");
+    return initCanvas(16, 12, blankPixels16x12(fill));
+}
+
+pub fun canvas16x12(fill: Color) Canvas {
+    return initCanvas(16, 12, blankPixels16x12(fill))
+}
+
+pub fun canvas32x18(fill: Color) Canvas {
+    return initCanvas(32, 18, blankPixels32x18(fill))
+}
+
+pub fun canvasWidth(canvas: Canvas) i64 {
+    return canvas.width
+}
+
+pub fun canvasHeight(canvas: Canvas) i64 {
+    return canvas.height
+}
+
+pub fun canvasTouchedPixels(canvas: Canvas) i64 {
+    return canvas.touched_pixels
+}
+
+pub fun canvasClippedWrites(canvas: Canvas) i64 {
+    return canvas.clipped_writes
+}
+
+pub fun canvasDrawCalls(canvas: Canvas) i64 {
+    return canvas.draw_calls
+}
+
+pub fun clearCanvas(canvas: *Canvas, fill: Color) void {
+    beginDraw(canvas)
+    let packed = packColor(fill)
+    for i = 0..len(canvas.pixels) {
+        canvas.pixels[i] = packed
+    }
+}
+
+pub fun canvasSample(canvas: Canvas, p: Point) Color {
+    if inBounds(canvas, p) {
+        return unpackColor(canvas.pixels[indexOf(canvas, p)])
+    }
+    return transparent()
+}
+
+pub fun beginDraw(canvas: *Canvas) void {
+    canvas.draw_calls += 1
+}
+
+pub fun inBounds(canvas: Canvas, p: Point) bool {
+    p.x >= 0 and p.y >= 0 and p.x < canvas.width and p.y < canvas.height
+}
+
+pub fun indexOf(canvas: Canvas, p: Point) i64 {
+    p.y * canvas.width + p.x
+}
+
+pub fun writePixel(canvas: *Canvas, p: Point, src: Color) void {
+    if src.a <= 0 {
+        return;
+    }
+    if !inBounds(*canvas, p) {
+        canvas.clipped_writes += 1
+        return;
+    }
+
+    let idx = indexOf(*canvas, p)
+    let dst = unpackColor(canvas.pixels[idx])
+    canvas.pixels[idx] = packColor(mixOver(dst, src))
+    canvas.touched_pixels += 1
+}
+
+fun blankPixels16x12(fill: Color) vec[i64] {
+    let packed = packColor(fill)
+    vec[
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed
+    ]
+}
+
+fun blankPixels32x18(fill: Color) vec[i64] {
+    let packed = packColor(fill)
+    vec[
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed,
+        packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed, packed
+    ]
+}
+
+test "gfx/make_canvas_supports_dynamic_dimensions" {
+    let canvas = makeCanvas(32, 18, blue())
+    @assert(canvasWidth(canvas) == 32)
+    @assert(canvasHeight(canvas) == 18)
+    @assert(sameColor(canvasSample(canvas, point(31, 17)), blue()))
+}

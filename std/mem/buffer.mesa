@@ -1,0 +1,34 @@
+pkg mem
+
+pub interface Buffer {
+    fun base_ptr(self: *@this) *void
+    fun capacity_bytes(self: *@this) i64
+    fun reserve(self: *@this, min_capacity: i64, align: i64) void
+    fun release(self: *@this) void
+}
+
+pub fun maxI64(a: i64, b: i64) i64 {
+    if a > b { a } else { b }
+}
+
+pub fun normalizeAlign(align: i64) i64 {
+    if align <= 1 { 1 } else { align }
+}
+
+pub fun alignForward(offset: i64, align: i64) i64 {
+    let actual = normalizeAlign(align)
+    let rem = offset % actual
+    if rem == 0 { offset } else { offset + (actual - rem) }
+}
+
+pub fun growCapacity(current: i64, needed: i64) i64 {
+    let doubled = if current <= 0 { needed } else { current * 2 }
+    return maxI64(doubled, needed)
+}
+
+pub fun roundUpToPage(size: i64) i64 {
+    let page = @pageSize()
+    let wanted = maxI64(size, page)
+    let rem = wanted % page
+    return if rem == 0 { wanted } else { wanted + (page - rem) }
+}

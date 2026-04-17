@@ -1,0 +1,4 @@
+fun f(a: i64, b: i64) i64 { return a + b; }
+fun g() void {
+    f(1);  //~ error: arguments
+}

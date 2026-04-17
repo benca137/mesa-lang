@@ -1,0 +1,8 @@
+interface Ops {
+    fun add(self: , other: Self) Self;
+    fun sub(self: , other: Self) Self;
+    fun mul(self: , other: Self) Self;
+}
+struct N { v: i64 }
+def Ops for N {
+}  //~ compile-error

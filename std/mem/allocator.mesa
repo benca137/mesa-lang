@@ -1,0 +1,7 @@
+pkg mem
+
+pub interface Allocator {
+    fun alloc(self: *@this, size: i64, align: i64) *void
+    fun realloc(self: *@this, ptr: *void, old_size: i64, new_size: i64, align: i64) *void
+    fun free_bytes(self: *@this, ptr: *void, size: i64) void
+}

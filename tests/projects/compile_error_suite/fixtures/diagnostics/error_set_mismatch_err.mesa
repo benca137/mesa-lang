@@ -1,0 +1,6 @@
+error ReadError { Missing }
+error WriteError { Full }
+
+fun fail() ReadError!void {
+    return .Full
+}

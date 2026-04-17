@@ -1,0 +1,6 @@
+fun f(n: i64) i64 {
+    return match n {
+        0 => { 0 },
+        _ => { true },  //~ error:
+    };
+}

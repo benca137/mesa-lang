@@ -1,0 +1,166 @@
+fun generics__generic_apply_ok__apply[A, B](f: fun(A) B, x: A) B {
+    return f(x);
+}
+
+fun generics__generic_apply_ok__double(x: i64) i64 { return x * 2; }
+
+struct generics__generic_box_ok__Box[T] { val: T }
+fun generics__generic_box_ok__unbox[T](b: generics__generic_box_ok__Box[T]) T { return b.val; }
+fun generics__generic_box_ok__rebox[T](b: generics__generic_box_ok__Box[T]) generics__generic_box_ok__Box[T] {
+    return .{val: b.val};
+}
+
+fun generics__generic_compose_ok__compose[A, B, C](f: fun(B) C, g: fun(A) B, x: A) C {
+    return f(g(x));
+}
+fun generics__generic_compose_ok__inc(x: i64) i64 { return x + 1; }
+fun generics__generic_compose_ok__square(x: i64) i64 { return x * x; }
+
+fun generics__generic_default_ok__default_or[T](x: ?T, d: T) T {
+    return x orelse d;
+}
+
+fun generics__generic_first_ok__first[T](v: vec[T], fallback: T) T {
+    if len(v) == 0 { return fallback; }
+    return v[0];
+}
+
+fun generics__generic_max_ok__gmax[T](a: T, b: T) T { return b; }
+
+fun generics__generic_min_ok__gmin[T](a: T, b: T) T { return a; }
+
+fun generics__generic_optional_ok__unwrap_or[T](x: ?T, fallback: T) T {
+    return x orelse fallback;
+}
+
+struct generics__generic_pair_first_ok__Pair[A, B] { fst: A, snd: B }
+fun generics__generic_pair_first_ok__first[A, B](p: generics__generic_pair_first_ok__Pair[A, B]) A {
+    return p.fst;
+}
+
+struct generics__generic_pair_second_ok__Pair[A, B] { fst: A, snd: B }
+fun generics__generic_pair_second_ok__second[A, B](p: generics__generic_pair_second_ok__Pair[A, B]) B {
+    return p.snd;
+}
+
+struct generics__generic_struct_method_ok__Box[T] {
+    val: T,
+    fun get(self: generics__generic_struct_method_ok__Box[T]) T { return self.val; }
+}
+
+struct generics__generic_struct_ok__Pair[A, B] { first: A, second: B }
+fun generics__generic_struct_ok__fst[A, B](p: generics__generic_struct_ok__Pair[A, B]) A { return p.first; }
+fun generics__generic_struct_ok__snd[A, B](p: generics__generic_struct_ok__Pair[A, B]) B { return p.second; }
+
+fun generics__generic_swap_ok__swap(a: *i64, b: *i64) void {
+    let tmp: i64 = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+fun generics__generic_vec_len_ok__vlen[T](v: vec[T]) i64 {
+    let var n: i64 = 0;
+    for _ in v { n += 1; }
+    return n;
+}
+
+fun generics__generic_vec_ok__head[T](v: vec[T], fallback: T) T {
+    if len(v) == 0 { return fallback; }
+    return v[0];
+}
+
+fun generics__identity_ok__identity[T](x: T) T { return x; }
+
+struct generics__pair_struct_ok__Pair[A, B] {
+    first: A,
+    second: B,
+}
+fun generics__pair_struct_ok__swap[A, B](p: generics__pair_struct_ok__Pair[A, B]) generics__pair_struct_ok__Pair[B, A] {
+    return .{first: p.second, second: p.first};
+}
+
+test "generics/generic_apply_ok.mesa" {
+    @assert(generics__generic_apply_ok__apply(generics__generic_apply_ok__double, 5) == 10)
+}
+
+test "generics/generic_box_ok.mesa" {
+    let bx: generics__generic_box_ok__Box[i64] = .{val: 7}
+    let reboxed = generics__generic_box_ok__rebox(bx)
+    @assert(generics__generic_box_ok__unbox(reboxed) == 7)
+}
+
+test "generics/generic_compose_ok.mesa" {
+    @assert(generics__generic_compose_ok__compose(generics__generic_compose_ok__square, generics__generic_compose_ok__inc, 4) == 25)
+}
+
+test "generics/generic_default_ok.mesa" {
+    @assert(generics__generic_default_ok__default_or(none, 9) == 9)
+    let x: ?i64 = 4
+    @assert(generics__generic_default_ok__default_or(x, 9) == 4)
+}
+
+test "generics/generic_first_ok.mesa" {
+    @assert(generics__generic_first_ok__first(vec[3, 4, 5], 0) == 3)
+}
+
+test "generics/generic_max_ok.mesa" {
+    @assert(generics__generic_max_ok__gmax(3, 8) == 8)
+}
+
+test "generics/generic_min_ok.mesa" {
+    @assert(generics__generic_min_ok__gmin(3, 8) == 3)
+}
+
+test "generics/generic_optional_ok.mesa" {
+    let x: ?i64 = 6
+    @assert(generics__generic_optional_ok__unwrap_or(x, 1) == 6)
+    @assert(generics__generic_optional_ok__unwrap_or(none, 1) == 1)
+}
+
+test "generics/generic_pair_first_ok.mesa" {
+    let pair: generics__generic_pair_first_ok__Pair[i64, i64] = .{fst: 11, snd: 22}
+    @assert(generics__generic_pair_first_ok__first(pair) == 11)
+}
+
+test "generics/generic_pair_second_ok.mesa" {
+    let pair: generics__generic_pair_second_ok__Pair[i64, i64] = .{fst: 11, snd: 22}
+    @assert(generics__generic_pair_second_ok__second(pair) == 22)
+}
+
+test "generics/generic_struct_method_ok.mesa" {
+    let bx: generics__generic_struct_method_ok__Box[i64] = .{val: 42}
+    @assert(bx.get() == 42)
+}
+
+test "generics/generic_struct_ok.mesa" {
+    let pair: generics__generic_struct_ok__Pair[i64, i64] = .{first: 2, second: 5}
+    @assert(generics__generic_struct_ok__fst(pair) == 2)
+    @assert(generics__generic_struct_ok__snd(pair) == 5)
+}
+
+test "generics/generic_swap_ok.mesa" {
+    let var a: i64 = 3
+    let var b: i64 = 8
+    generics__generic_swap_ok__swap(&a, &b)
+    @assert(a == 8 and b == 3)
+}
+
+test "generics/generic_vec_len_ok.mesa" {
+    @assert(generics__generic_vec_len_ok__vlen(vec["a", "b", "c"]) == 3)
+}
+
+test "generics/generic_vec_ok.mesa" {
+    @assert(generics__generic_vec_ok__head(vec[9, 8, 7], 0) == 9)
+}
+
+test "generics/identity_ok.mesa" {
+    @assert(generics__identity_ok__identity(13) == 13)
+    @assert(generics__identity_ok__identity("mesa") == "mesa")
+}
+
+test "generics/pair_struct_ok.mesa" {
+    let pair: generics__pair_struct_ok__Pair[i64, i64] = .{first: 1, second: 3}
+    let swapped = generics__pair_struct_ok__swap(pair)
+    @assert(swapped.first == 3)
+    @assert(swapped.second == 1)
+}

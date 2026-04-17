@@ -1,0 +1,97 @@
+pkg gfx
+
+pub fun fillRect(canvas: *Canvas, bounds: Rect, color: Color) void {
+    beginDraw(canvas)
+    for y = bounds.y..(bounds.y + bounds.h) {
+        for x = bounds.x..(bounds.x + bounds.w) {
+            writePixel(canvas, point(x, y), color)
+        }
+    }
+}
+
+pub fun strokeRect(canvas: *Canvas, bounds: Rect, color: Color) void {
+    if bounds.w <= 0 or bounds.h <= 0 {
+        return;
+    }
+
+    beginDraw(canvas)
+
+    let left = bounds.x
+    let right = bounds.x + bounds.w - 1
+    let top = bounds.y
+    let bottom = bounds.y + bounds.h - 1
+
+    for x = left..(right + 1) {
+        writePixel(canvas, point(x, top), color)
+        writePixel(canvas, point(x, bottom), color)
+    }
+
+    for y = top..(bottom + 1) {
+        writePixel(canvas, point(left, y), color)
+        writePixel(canvas, point(right, y), color)
+    }
+}
+
+pub fun drawLine(canvas: *Canvas, start: Point, finish: Point, color: Color) void {
+    beginDraw(canvas)
+
+    let var x0 = start.x
+    let var y0 = start.y
+    let dx = absI64(finish.x - start.x)
+    let sx = if start.x < finish.x { 1 } else { -1 }
+    let dy = -absI64(finish.y - start.y)
+    let sy = if start.y < finish.y { 1 } else { -1 }
+    let var err = dx + dy
+
+    while true {
+        writePixel(canvas, point(x0, y0), color)
+        if x0 == finish.x and y0 == finish.y {
+            break;
+        }
+
+        let e2 = err * 2
+        if e2 >= dy {
+            err += dy
+            x0 += sx
+        }
+        if e2 <= dx {
+            err += dx
+            y0 += sy
+        }
+    }
+}
+
+pub fun fillCircle(canvas: *Canvas, center: Point, radius: i64, color: Color) void {
+    if radius < 0 {
+        return;
+    }
+
+    beginDraw(canvas)
+
+    for y = (center.y - radius)..(center.y + radius + 1) {
+        for x = (center.x - radius)..(center.x + radius + 1) {
+            let dx = x - center.x
+            let dy = y - center.y
+            if dx * dx + dy * dy <= radius * radius {
+                writePixel(canvas, point(x, y), color)
+            }
+        }
+    }
+}
+
+test "gfx/fill_rect_paints_expected_pixels" {
+    let var canvas = canvas16x12(black())
+    fillRect(&canvas, rect(2, 3, 4, 2), white())
+
+    @assert(sameColor(canvasSample(canvas, point(2, 3)), white()))
+    @assert(sameColor(canvasSample(canvas, point(5, 4)), white()))
+    @assert(sameColor(canvasSample(canvas, point(1, 3)), black()))
+}
+
+test "gfx/draw_line_marks_endpoints" {
+    let var canvas = canvas16x12(black())
+    drawLine(&canvas, point(1, 1), point(6, 4), red())
+
+    @assert(sameColor(canvasSample(canvas, point(1, 1)), red()))
+    @assert(sameColor(canvasSample(canvas, point(6, 4)), red()))
+}

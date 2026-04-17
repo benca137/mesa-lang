@@ -1,0 +1,4 @@
+fun f() void {
+    for i = 0.0...10.0 {  //~ error: integer
+    }
+}

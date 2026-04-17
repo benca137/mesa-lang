@@ -1,0 +1,249 @@
+// memory__mut_method_updates_ok
+struct memory__mut_method_updates_ok__Stack { top: i64 }
+fun memory__mut_method_updates_ok__push(s: *memory__mut_method_updates_ok__Stack, val: i64) void {  //~ compile-ok
+    s.top = val;
+}
+fun memory__mut_method_updates_ok__pop(s: *memory__mut_method_updates_ok__Stack) i64 {
+    let v: i64 = s.top;
+    s.top = 0;
+    return v;
+}
+
+// memory__pointer_arithmetic_like_ok
+fun memory__pointer_arithmetic_like_ok__write_zero(p: *i64) void {  //~ compile-ok
+    *p = 0;
+}
+fun memory__pointer_arithmetic_like_ok__f() i64 {
+    let var x: i64 = 42;
+    memory__pointer_arithmetic_like_ok__write_zero(&x);
+    return x;
+}
+
+// memory__pointer_basic_ok
+fun memory__pointer_basic_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 42;
+    let p: *i64 = &x;
+    return *p;
+}
+
+// memory__pointer_mutation_ok
+fun memory__pointer_mutation_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    let p: *i64 = &x;
+    *p = 42;
+    return x;
+}
+
+// memory__pointer_to_struct_ok
+struct memory__pointer_to_struct_ok__Vec2 { x: f64, y: f64 }
+fun memory__pointer_to_struct_ok__zero(v: *memory__pointer_to_struct_ok__Vec2) void {  //~ compile-ok
+    v.x = 0.0;
+    v.y = 0.0;
+}
+fun memory__pointer_to_struct_ok__f() f64 {
+    let var v: memory__pointer_to_struct_ok__Vec2 = .{x: 3.0, y: 4.0};
+    memory__pointer_to_struct_ok__zero(&v);
+    return v.x + v.y;
+}
+
+// memory__ptr_bool_ok
+fun memory__ptr_bool_ok__f() bool {  //~ compile-ok
+    let var x: bool = false;
+    let p: *bool = &x;
+    return *p;
+}
+
+// memory__ptr_f64_ok
+fun memory__ptr_f64_ok__f() f64 {  //~ compile-ok
+    let var x: f64 = 0.0;
+    let p: *f64 = &x;
+    return *p;
+}
+
+// memory__ptr_i32_ok
+fun memory__ptr_i32_ok__f() i32 {  //~ compile-ok
+    let var x: i32 = 0;
+    let p: *i32 = &x;
+    return *p;
+}
+
+// memory__ptr_i64_ok
+fun memory__ptr_i64_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 0;
+    let p: *i64 = &x;
+    return *p;
+}
+
+// memory__ptr_read_f32_ok
+fun memory__ptr_read_f32_ok__f(p: *f32) f32 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_read_i16_ok
+fun memory__ptr_read_i16_ok__f(p: *i16) i16 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_read_i32_ok
+fun memory__ptr_read_i32_ok__f(p: *i32) i32 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_read_i8_ok
+fun memory__ptr_read_i8_ok__f(p: *i8) i8 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_read_u32_ok
+fun memory__ptr_read_u32_ok__f(p: *u32) u32 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_read_u64_ok
+fun memory__ptr_read_u64_ok__f(p: *u64) u64 {  //~ compile-ok
+    return *p;
+}
+
+// memory__ptr_write_bool_ok
+fun memory__ptr_write_bool_ok__write(p: *bool, v: bool) void {  //~ compile-ok
+    *p = v;
+}
+
+// memory__ptr_write_f64_ok
+fun memory__ptr_write_f64_ok__write(p: *f64, v: f64) void {  //~ compile-ok
+    *p = v;
+}
+
+// memory__ptr_write_i32_ok
+fun memory__ptr_write_i32_ok__write(p: *i32, v: i32) void {  //~ compile-ok
+    *p = v;
+}
+
+// memory__ptr_write_i64_ok
+fun memory__ptr_write_i64_ok__write(p: *i64, v: i64) void {  //~ compile-ok
+    *p = v;
+}
+
+// memory__struct_pointer_ok
+struct memory__struct_pointer_ok__Point { x: f64, y: f64 }
+fun memory__struct_pointer_ok__zero(p: *memory__struct_pointer_ok__Point) void {  //~ compile-ok
+    p.x = 0.0;
+    p.y = 0.0;
+}
+fun memory__struct_pointer_ok__f() f64 {
+    let var p: memory__struct_pointer_ok__Point = .{x: 9.0, y: 2.0};
+    memory__struct_pointer_ok__zero(&p);
+    return p.x + p.y;
+}
+
+// memory__swap_via_pointer_ok
+fun memory__swap_via_pointer_ok__swap(a: *i64, b: *i64) void {  //~ compile-ok
+    let tmp: i64 = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+test "memory/mut_method_updates_ok.mesa" {
+    let var s: memory__mut_method_updates_ok__Stack = .{top: 0};
+    memory__mut_method_updates_ok__push(&s, 9);
+    @assert(memory__mut_method_updates_ok__pop(&s) == 9)
+    @assert(s.top == 0)
+}
+
+test "memory/pointer_arithmetic_like_ok.mesa" {
+    @assert(memory__pointer_arithmetic_like_ok__f() == 0)
+}
+
+test "memory/pointer_basic_ok.mesa" {
+    @assert(memory__pointer_basic_ok__f() == 42)
+}
+
+test "memory/pointer_mutation_ok.mesa" {
+    @assert(memory__pointer_mutation_ok__f() == 42)
+}
+
+test "memory/pointer_to_struct_ok.mesa" {
+    @assert(memory__pointer_to_struct_ok__f() == 0.0)
+}
+
+test "memory/ptr_bool_ok.mesa" {
+    @assert(!memory__ptr_bool_ok__f())
+}
+
+test "memory/ptr_f64_ok.mesa" {
+    @assert(memory__ptr_f64_ok__f() == 0.0)
+}
+
+test "memory/ptr_i32_ok.mesa" {
+    @assert(memory__ptr_i32_ok__f() == 0)
+}
+
+test "memory/ptr_i64_ok.mesa" {
+    @assert(memory__ptr_i64_ok__f() == 0)
+}
+
+test "memory/ptr_read_f32_ok.mesa" {
+    let var x: f32 = 1.25;
+    @assert(memory__ptr_read_f32_ok__f(&x) == 1.25)
+}
+
+test "memory/ptr_read_i16_ok.mesa" {
+    let var x: i16 = 12;
+    @assert(memory__ptr_read_i16_ok__f(&x) == 12)
+}
+
+test "memory/ptr_read_i32_ok.mesa" {
+    let var x: i32 = 123;
+    @assert(memory__ptr_read_i32_ok__f(&x) == 123)
+}
+
+test "memory/ptr_read_i8_ok.mesa" {
+    let var x: i8 = 7;
+    @assert(memory__ptr_read_i8_ok__f(&x) == 7)
+}
+
+test "memory/ptr_read_u32_ok.mesa" {
+    let var x: u32 = 55;
+    @assert(memory__ptr_read_u32_ok__f(&x) == 55)
+}
+
+test "memory/ptr_read_u64_ok.mesa" {
+    let var x: u64 = 89;
+    @assert(memory__ptr_read_u64_ok__f(&x) == 89)
+}
+
+test "memory/ptr_write_bool_ok.mesa" {
+    let var x: bool = false;
+    memory__ptr_write_bool_ok__write(&x, true);
+    @assert(x)
+}
+
+test "memory/ptr_write_f64_ok.mesa" {
+    let var x: f64 = 0.0;
+    memory__ptr_write_f64_ok__write(&x, 6.5);
+    @assert(x == 6.5)
+}
+
+test "memory/ptr_write_i32_ok.mesa" {
+    let var x: i32 = 0;
+    memory__ptr_write_i32_ok__write(&x, 77);
+    @assert(x == 77)
+}
+
+test "memory/ptr_write_i64_ok.mesa" {
+    let var x: i64 = 0;
+    memory__ptr_write_i64_ok__write(&x, 88);
+    @assert(x == 88)
+}
+
+test "memory/struct_pointer_ok.mesa" {
+    @assert(memory__struct_pointer_ok__f() == 0.0)
+}
+
+test "memory/swap_via_pointer_ok.mesa" {
+    let var a: i64 = 3;
+    let var b: i64 = 8;
+    memory__swap_via_pointer_ok__swap(&a, &b);
+    @assert(a == 8)
+    @assert(b == 3)
+}

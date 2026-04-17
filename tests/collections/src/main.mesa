@@ -1,0 +1,222 @@
+// collections__array_literal_ok
+fun collections__array_literal_ok__f() void {  //~ compile-ok
+    let arr = [1, 2, 3];
+}
+
+// collections__vec_all_ok
+fun collections__vec_all_ok__all_true(v: vec[bool]) bool {  //~ compile-ok
+    for x in v : !x, return false
+    return true
+}
+
+// collections__vec_any_ok
+fun collections__vec_any_ok__any_true(v: vec[bool]) bool {  //~ compile-ok
+    for x in v : x { return true; }
+    return false;
+}
+
+// collections__vec_count_if_ok
+fun collections__vec_count_if_ok__count_gt(v: vec[i64], t: i64) i64 {  //~ compile-ok
+    let var c: i64 = 0;
+    for x in v : x > t { c += 1; }
+    return c;
+}
+
+// collections__vec_empty_ok
+fun collections__vec_empty_ok__f() vec[i64] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_f32_ok
+fun collections__vec_f32_ok__f() vec[f32] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_float_ok
+fun collections__vec_float_ok__f() vec[f64] {  //~ compile-ok
+    return vec[1.0, 2.0, 3.0];
+}
+
+// collections__vec_float_sum_ok
+fun collections__vec_float_sum_ok__fsum(v: vec[f64]) f64 {  //~ compile-ok
+    let var t: f64 = 0.0;
+    for x in v { t += x; }
+    return t;
+}
+
+// collections__vec_i16_ok
+fun collections__vec_i16_ok__f() vec[i16] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_i32_ok
+fun collections__vec_i32_ok__f() vec[i32] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_i8_ok
+fun collections__vec_i8_ok__f() vec[i8] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_index_ok
+fun collections__vec_index_ok__f(v: vec[i64]) i64 {  //~ compile-ok
+    return v[0];
+}
+
+// collections__vec_iter_ok
+fun collections__vec_iter_ok__sum(v: vec[i64]) i64 {  //~ compile-ok
+    let var t: i64 = 0;
+    for x in v { t += x; }
+    return t;
+}
+
+// collections__vec_literal_ok
+fun collections__vec_literal_ok__f() vec[i64] {  //~ compile-ok
+    return vec[1, 2, 3];
+}
+
+// collections__vec_max_ok
+fun collections__vec_max_ok__vmax(v: vec[i64]) i64 {  //~ compile-ok
+    let var m: i64 = v[0];
+    for x in v : x > m { m = x; }
+    return m;
+}
+
+// collections__vec_struct_ok
+struct collections__vec_struct_ok__Point { x: f64, y: f64 }
+fun collections__vec_struct_ok__f() vec[collections__vec_struct_ok__Point] {  //~ compile-ok
+    return vec[.{x: 0.0, y: 0.0}];
+}
+
+// collections__vec_struct_sum_ok
+struct collections__vec_struct_sum_ok__Pt { x: f64, y: f64 }
+fun collections__vec_struct_sum_ok__sum_x(pts: vec[collections__vec_struct_sum_ok__Pt]) f64 {  //~ compile-ok
+    let var t: f64 = 0.0;
+    for p in pts { t += p.x; }
+    return t;
+}
+
+// collections__vec_sum_ok
+fun collections__vec_sum_ok__sum(v: vec[i64]) i64 {  //~ compile-ok
+    let var t: i64 = 0;
+    for x in v { t += x; }
+    return t;
+}
+
+// collections__vec_u32_ok
+fun collections__vec_u32_ok__f() vec[u32] {  //~ compile-ok
+    return vec[];
+}
+
+// collections__vec_u8_ok
+fun collections__vec_u8_ok__f() vec[u8] {  //~ compile-ok
+    return vec[];
+}
+
+test "collections/array_literal_ok.mesa" {
+    let arr = [1, 2, 3]
+    @assert(arr[0] == 1)
+    @assert(arr[1] == 2)
+    @assert(arr[2] == 3)
+}
+test "collections/vec_all_ok.mesa" {
+    @assert(collections__vec_all_ok__all_true(vec[true, true, true]))
+    @assert(!collections__vec_all_ok__all_true(vec[true, false, true]))
+    @assert(collections__vec_all_ok__all_true(vec[]))
+}
+test "collections/vec_any_ok.mesa" {
+    @assert(collections__vec_any_ok__any_true(vec[false, true, false]))
+    @assert(!collections__vec_any_ok__any_true(vec[false, false, false]))
+    @assert(!collections__vec_any_ok__any_true(vec[]))
+}
+test "collections/vec_count_if_ok.mesa" {
+    @assert(collections__vec_count_if_ok__count_gt(vec[1, 4, 2, 7, 5], 3) == 3)
+    @assert(collections__vec_count_if_ok__count_gt(vec[1, 2, 3], 10) == 0)
+}
+test "collections/vec_empty_ok.mesa" {
+    let v = collections__vec_empty_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_f32_ok.mesa" {
+    let v = collections__vec_f32_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_float_ok.mesa" {
+    let v = collections__vec_float_ok__f()
+    @assert(len(v) == 3)
+    @assert(v[0] == 1.0)
+    @assert(v[1] == 2.0)
+    @assert(v[2] == 3.0)
+}
+test "collections/vec_float_sum_ok.mesa" {
+    @assert(collections__vec_float_sum_ok__fsum(vec[1.5, 2.5, 3.0]) == 7.0)
+    @assert(collections__vec_float_sum_ok__fsum(vec[]) == 0.0)
+}
+test "collections/vec_i16_ok.mesa" {
+    let v = collections__vec_i16_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_i32_ok.mesa" {
+    let v = collections__vec_i32_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_i8_ok.mesa" {
+    let v = collections__vec_i8_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_index_ok.mesa" {
+    @assert(collections__vec_index_ok__f(vec[7, 8, 9]) == 7)
+}
+test "collections/vec_iter_ok.mesa" {
+    @assert(collections__vec_iter_ok__sum(vec[1, 2, 3, 4]) == 10)
+    @assert(collections__vec_iter_ok__sum(vec[]) == 0)
+}
+test "collections/vec_literal_ok.mesa" {
+    let v = collections__vec_literal_ok__f()
+    @assert(len(v) == 3)
+    @assert(v[0] == 1)
+    @assert(v[1] == 2)
+    @assert(v[2] == 3)
+}
+test "collections/vec_max_ok.mesa" {
+    @assert(collections__vec_max_ok__vmax(vec[3, 9, 4, 1]) == 9)
+    @assert(collections__vec_max_ok__vmax(vec[-5, -1, -9]) == -1)
+}
+test "collections/vec_struct_ok.mesa" {
+    let pts = collections__vec_struct_ok__f()
+    @assert(len(pts) == 1)
+    @assert(pts[0].x == 0.0)
+    @assert(pts[0].y == 0.0)
+}
+test "collections/vec_struct_sum_ok.mesa" {
+    @assert(collections__vec_struct_sum_ok__sum_x(vec[
+        .{x: 1.5, y: 0.0},
+        .{x: 2.0, y: 3.0},
+        .{x: -0.5, y: 4.0},
+    ]) == 3.0)
+    @assert(collections__vec_struct_sum_ok__sum_x(vec[]) == 0.0)
+}
+test "collections/vec_sum_ok.mesa" {
+    @assert(collections__vec_sum_ok__sum(vec[1, 2, 3, 4]) == 10)
+    @assert(collections__vec_sum_ok__sum(vec[]) == 0)
+}
+test "collections/vec_u32_ok.mesa" {
+    let v = collections__vec_u32_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+test "collections/vec_u8_ok.mesa" {
+    let v = collections__vec_u8_ok__f()
+    @assert(len(v) == 0)
+    @assert(cap(v) == 0)
+}
+
+fun main() void {
+    println("corpus")
+}

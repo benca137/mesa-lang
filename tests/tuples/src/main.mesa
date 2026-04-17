@@ -1,0 +1,66 @@
+// tuples__named_tuple_access_ok
+fun tuples__helpers__store_pair(v: .{f64, f64}) i64 {
+    let pairs = vec[v];
+    return len(pairs);
+}
+
+// tuples__named_tuple_access_ok
+fun tuples__named_tuple_access_ok__f() i64 {  //~ compile-ok
+    let t: .{x: i64, y: i64} = .{x: 1, y: 2};
+    return t.x + t.y;
+}
+
+// tuples__unnamed_tuple_ok
+fun tuples__unnamed_tuple_ok__f() .{f64, f64} {  //~ compile-ok
+    let t: .{f64, f64} = .{1.0, 2.0};
+    return t;
+}
+
+// tuples__named_tuple_in_fn_ok
+fun tuples__named_tuple_in_fn_ok__sum_pt(p: .{x: f64, y: f64}) f64 {  //~ compile-ok
+    return p.x + p.y;
+}
+
+// tuples__tuple_coerce_int_ok
+fun tuples__tuple_coerce_int_ok__f() .{f64, f64} {  //~ compile-ok
+    let t: .{f64, f64} = .{1, 2};
+    return t;
+}
+
+// tuples__named_tuple_ok
+fun tuples__named_tuple_ok__f() .{x: f64, y: f64} {  //~ compile-ok
+    return .{x: 1.0, y: 2.0};
+}
+
+// tuples__named_tuple_return_ok
+fun tuples__named_tuple_return_ok__make() .{name: str, age: i64} {  //~ compile-ok
+    return .{name: "Alice", age: 30};
+}
+
+test "tuples/named_tuple_access_ok.mesa" {
+    @assert(tuples__named_tuple_access_ok__f() == 3)
+}
+
+test "tuples/unnamed_tuple_ok.mesa" {
+    @assert(tuples__helpers__store_pair(tuples__unnamed_tuple_ok__f()) == 1)
+}
+
+test "tuples/named_tuple_in_fn_ok.mesa" {
+    @assert(tuples__named_tuple_in_fn_ok__sum_pt(.{x: 1.5, y: 2.5}) == 4.0)
+}
+
+test "tuples/tuple_coerce_int_ok.mesa" {
+    @assert(tuples__helpers__store_pair(tuples__tuple_coerce_int_ok__f()) == 1)
+}
+
+test "tuples/named_tuple_ok.mesa" {
+    let t = tuples__named_tuple_ok__f();
+    @assert(t.x == 1.0)
+    @assert(t.y == 2.0)
+}
+
+test "tuples/named_tuple_return_ok.mesa" {
+    let person = tuples__named_tuple_return_ok__make();
+    @assert(person.name == "Alice")
+    @assert(person.age == 30)
+}

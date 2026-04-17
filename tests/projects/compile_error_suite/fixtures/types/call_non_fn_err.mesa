@@ -1,0 +1,4 @@
+fun f() void {
+    let x: i64 = 5;
+    x();  //~ error: cannot call
+}

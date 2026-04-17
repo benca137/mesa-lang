@@ -1,0 +1,2204 @@
+// operators__addr_deref_ok
+fun operators__addr_deref_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 42;
+    let p: *i64 = &x;
+    return *p;
+}
+
+// operators__addr_in_call_ok
+struct operators__addr_in_call_ok__S { x: i64 }
+fun operators__addr_in_call_ok__zero(p: *operators__addr_in_call_ok__S) void { p.x = 0; }
+fun operators__addr_in_call_ok__f() void {  //~ compile-ok
+    let var s: operators__addr_in_call_ok__S = .{x: 1};
+    operators__addr_in_call_ok__zero(&s);
+}
+
+// operators__arith_f32_add_ok
+fun operators__arith_f32_add_ok__f(a: f32, b: f32) f32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_f32_div_ok
+fun operators__arith_f32_div_ok__f(a: f32, b: f32) f32 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_f32_mul_ok
+fun operators__arith_f32_mul_ok__f(a: f32, b: f32) f32 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_f32_sub_ok
+fun operators__arith_f32_sub_ok__f(a: f32, b: f32) f32 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_f64_add_ok
+fun operators__arith_f64_add_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_f64_div_ok
+fun operators__arith_f64_div_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_f64_mul_ok
+fun operators__arith_f64_mul_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_f64_sub_ok
+fun operators__arith_f64_sub_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_i16_add_ok
+fun operators__arith_i16_add_ok__f(a: i16, b: i16) i16 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_i16_div_ok
+fun operators__arith_i16_div_ok__f(a: i16, b: i16) i16 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_i16_mod_ok
+fun operators__arith_i16_mod_ok__f(a: i16, b: i16) i16 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_i16_mul_ok
+fun operators__arith_i16_mul_ok__f(a: i16, b: i16) i16 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_i16_sub_ok
+fun operators__arith_i16_sub_ok__f(a: i16, b: i16) i16 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_i32_add_ok
+fun operators__arith_i32_add_ok__f(a: i32, b: i32) i32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_i32_div_ok
+fun operators__arith_i32_div_ok__f(a: i32, b: i32) i32 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_i32_mod_ok
+fun operators__arith_i32_mod_ok__f(a: i32, b: i32) i32 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_i32_mul_ok
+fun operators__arith_i32_mul_ok__f(a: i32, b: i32) i32 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_i32_sub_ok
+fun operators__arith_i32_sub_ok__f(a: i32, b: i32) i32 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_i64_add_ok
+fun operators__arith_i64_add_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_i64_div_ok
+fun operators__arith_i64_div_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_i64_mod_ok
+fun operators__arith_i64_mod_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_i64_mul_ok
+fun operators__arith_i64_mul_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_i64_sub_ok
+fun operators__arith_i64_sub_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_i8_add_ok
+fun operators__arith_i8_add_ok__f(a: i8, b: i8) i8 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_i8_div_ok
+fun operators__arith_i8_div_ok__f(a: i8, b: i8) i8 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_i8_mod_ok
+fun operators__arith_i8_mod_ok__f(a: i8, b: i8) i8 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_i8_mul_ok
+fun operators__arith_i8_mul_ok__f(a: i8, b: i8) i8 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_i8_sub_ok
+fun operators__arith_i8_sub_ok__f(a: i8, b: i8) i8 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_u16_add_ok
+fun operators__arith_u16_add_ok__f(a: u16, b: u16) u16 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_u16_div_ok
+fun operators__arith_u16_div_ok__f(a: u16, b: u16) u16 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_u16_mod_ok
+fun operators__arith_u16_mod_ok__f(a: u16, b: u16) u16 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_u16_mul_ok
+fun operators__arith_u16_mul_ok__f(a: u16, b: u16) u16 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_u16_sub_ok
+fun operators__arith_u16_sub_ok__f(a: u16, b: u16) u16 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_u32_add_ok
+fun operators__arith_u32_add_ok__f(a: u32, b: u32) u32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_u32_div_ok
+fun operators__arith_u32_div_ok__f(a: u32, b: u32) u32 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_u32_mod_ok
+fun operators__arith_u32_mod_ok__f(a: u32, b: u32) u32 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_u32_mul_ok
+fun operators__arith_u32_mul_ok__f(a: u32, b: u32) u32 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_u32_sub_ok
+fun operators__arith_u32_sub_ok__f(a: u32, b: u32) u32 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_u64_add_ok
+fun operators__arith_u64_add_ok__f(a: u64, b: u64) u64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_u64_div_ok
+fun operators__arith_u64_div_ok__f(a: u64, b: u64) u64 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_u64_mod_ok
+fun operators__arith_u64_mod_ok__f(a: u64, b: u64) u64 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_u64_mul_ok
+fun operators__arith_u64_mul_ok__f(a: u64, b: u64) u64 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_u64_sub_ok
+fun operators__arith_u64_sub_ok__f(a: u64, b: u64) u64 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__arith_u8_add_ok
+fun operators__arith_u8_add_ok__f(a: u8, b: u8) u8 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__arith_u8_div_ok
+fun operators__arith_u8_div_ok__f(a: u8, b: u8) u8 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__arith_u8_mod_ok
+fun operators__arith_u8_mod_ok__f(a: u8, b: u8) u8 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__arith_u8_mul_ok
+fun operators__arith_u8_mul_ok__f(a: u8, b: u8) u8 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__arith_u8_sub_ok
+fun operators__arith_u8_sub_ok__f(a: u8, b: u8) u8 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__bool_and_ok
+fun operators__bool_and_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a and b;
+}
+
+// operators__bool_eq_ok
+fun operators__bool_eq_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__bool_ne_ok
+fun operators__bool_ne_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__bool_not_ok
+fun operators__bool_not_ok__f(a: bool) bool {  //~ compile-ok
+    return !a;
+}
+
+// operators__bool_or_ok
+fun operators__bool_or_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a or b;
+}
+
+// operators__broadcast_add_ok
+fun operators__broadcast_add_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a .+ b;
+}
+
+// operators__broadcast_cmp_ok
+fun operators__broadcast_cmp_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a .== b;
+}
+
+// operators__broadcast_mul_ok
+fun operators__broadcast_mul_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a .* b;
+}
+
+// operators__cmp_bool_result_ok
+fun operators__cmp_bool_result_ok__f(a: i64, b: i64, c: i64) bool {  //~ compile-ok
+    return (a < b) and (b < c);
+}
+
+// operators__cmp_f32_eq_ok
+fun operators__cmp_f32_eq_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_f32_ge_ok
+fun operators__cmp_f32_ge_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_f32_gt_ok
+fun operators__cmp_f32_gt_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_f32_le_ok
+fun operators__cmp_f32_le_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_f32_lt_ok
+fun operators__cmp_f32_lt_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_f32_ne_ok
+fun operators__cmp_f32_ne_ok__f(a: f32, b: f32) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_f64_eq_ok
+fun operators__cmp_f64_eq_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_f64_ge_ok
+fun operators__cmp_f64_ge_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_f64_gt_ok
+fun operators__cmp_f64_gt_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_f64_le_ok
+fun operators__cmp_f64_le_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_f64_lt_ok
+fun operators__cmp_f64_lt_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_f64_ne_ok
+fun operators__cmp_f64_ne_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_i16_eq_ok
+fun operators__cmp_i16_eq_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_i16_ge_ok
+fun operators__cmp_i16_ge_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_i16_gt_ok
+fun operators__cmp_i16_gt_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_i16_le_ok
+fun operators__cmp_i16_le_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_i16_lt_ok
+fun operators__cmp_i16_lt_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_i16_ne_ok
+fun operators__cmp_i16_ne_ok__f(a: i16, b: i16) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_i32_eq_ok
+fun operators__cmp_i32_eq_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_i32_ge_ok
+fun operators__cmp_i32_ge_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_i32_gt_ok
+fun operators__cmp_i32_gt_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_i32_le_ok
+fun operators__cmp_i32_le_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_i32_lt_ok
+fun operators__cmp_i32_lt_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_i32_ne_ok
+fun operators__cmp_i32_ne_ok__f(a: i32, b: i32) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_i64_eq_ok
+fun operators__cmp_i64_eq_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_i64_ge_ok
+fun operators__cmp_i64_ge_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_i64_gt_ok
+fun operators__cmp_i64_gt_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_i64_le_ok
+fun operators__cmp_i64_le_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_i64_lt_ok
+fun operators__cmp_i64_lt_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_i64_ne_ok
+fun operators__cmp_i64_ne_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_i8_eq_ok
+fun operators__cmp_i8_eq_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_i8_ge_ok
+fun operators__cmp_i8_ge_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_i8_gt_ok
+fun operators__cmp_i8_gt_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_i8_le_ok
+fun operators__cmp_i8_le_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_i8_lt_ok
+fun operators__cmp_i8_lt_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_i8_ne_ok
+fun operators__cmp_i8_ne_ok__f(a: i8, b: i8) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_u16_eq_ok
+fun operators__cmp_u16_eq_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_u16_ge_ok
+fun operators__cmp_u16_ge_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_u16_gt_ok
+fun operators__cmp_u16_gt_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_u16_le_ok
+fun operators__cmp_u16_le_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_u16_lt_ok
+fun operators__cmp_u16_lt_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_u16_ne_ok
+fun operators__cmp_u16_ne_ok__f(a: u16, b: u16) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_u32_eq_ok
+fun operators__cmp_u32_eq_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_u32_ge_ok
+fun operators__cmp_u32_ge_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_u32_gt_ok
+fun operators__cmp_u32_gt_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_u32_le_ok
+fun operators__cmp_u32_le_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_u32_lt_ok
+fun operators__cmp_u32_lt_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_u32_ne_ok
+fun operators__cmp_u32_ne_ok__f(a: u32, b: u32) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_u64_eq_ok
+fun operators__cmp_u64_eq_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_u64_ge_ok
+fun operators__cmp_u64_ge_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_u64_gt_ok
+fun operators__cmp_u64_gt_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_u64_le_ok
+fun operators__cmp_u64_le_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_u64_lt_ok
+fun operators__cmp_u64_lt_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_u64_ne_ok
+fun operators__cmp_u64_ne_ok__f(a: u64, b: u64) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__cmp_u8_eq_ok
+fun operators__cmp_u8_eq_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__cmp_u8_ge_ok
+fun operators__cmp_u8_ge_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__cmp_u8_gt_ok
+fun operators__cmp_u8_gt_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__cmp_u8_le_ok
+fun operators__cmp_u8_le_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__cmp_u8_lt_ok
+fun operators__cmp_u8_lt_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__cmp_u8_ne_ok
+fun operators__cmp_u8_ne_ok__f(a: u8, b: u8) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__compound__eq_ok
+fun operators__compound__eq_ok__f() i64 {  //~ compile-ok
+    let var x: i64 = 10;
+    x -= 3;
+    return x;
+}
+
+// operators__equality_bool_ok
+fun operators__equality_bool_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__equality_str_ok
+fun operators__equality_str_ok__f(a: str, b: str) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__exp_float_ok
+fun operators__exp_float_ok__f(x: f64) f64 {  //~ compile-ok
+    return x ^ 2.0;
+}
+
+// operators__exp_int_ok
+fun operators__exp_int_ok__f(x: i64) i64 {  //~ compile-ok
+    return x ^ 3;
+}
+
+// operators__float_add_ok
+fun operators__float_add_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__float_cmp_eq_ok
+fun operators__float_cmp_eq_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__float_cmp_ge_ok
+fun operators__float_cmp_ge_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__float_cmp_gt_ok
+fun operators__float_cmp_gt_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__float_cmp_le_ok
+fun operators__float_cmp_le_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__float_cmp_lt_ok
+fun operators__float_cmp_lt_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__float_cmp_ne_ok
+fun operators__float_cmp_ne_ok__f(a: f64, b: f64) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__float_div_ok
+fun operators__float_div_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__float_mod_ok
+fun operators__float_mod_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__float_mul_ok
+fun operators__float_mul_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__float_sub_ok
+fun operators__float_sub_ok__f(a: f64, b: f64) f64 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__int_add_ok
+fun operators__int_add_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__int_cmp_eq_ok
+fun operators__int_cmp_eq_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a == b;
+}
+
+// operators__int_cmp_ge_ok
+fun operators__int_cmp_ge_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a >= b;
+}
+
+// operators__int_cmp_gt_ok
+fun operators__int_cmp_gt_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a > b;
+}
+
+// operators__int_cmp_le_ok
+fun operators__int_cmp_le_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a <= b;
+}
+
+// operators__int_cmp_lt_ok
+fun operators__int_cmp_lt_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a < b;
+}
+
+// operators__int_cmp_ne_ok
+fun operators__int_cmp_ne_ok__f(a: i64, b: i64) bool {  //~ compile-ok
+    return a != b;
+}
+
+// operators__int_div_ok
+fun operators__int_div_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a / b;
+}
+
+// operators__int_mod_ok
+fun operators__int_mod_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__int_mul_ok
+fun operators__int_mul_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a * b;
+}
+
+// operators__int_sub_ok
+fun operators__int_sub_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a - b;
+}
+
+// operators__logical_and_ok
+fun operators__logical_and_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a and b;
+}
+
+// operators__logical_not_ok
+fun operators__logical_not_ok__f(a: bool) bool {  //~ compile-ok
+    return !a;
+}
+
+// operators__logical_or_ok
+fun operators__logical_or_ok__f(a: bool, b: bool) bool {  //~ compile-ok
+    return a or b;
+}
+
+// operators__mod_ok
+fun operators__mod_ok__f(a: i64, b: i64) i64 {  //~ compile-ok
+    return a % b;
+}
+
+// operators__pow_f32_ok
+fun operators__pow_f32_ok__f(x: f32) f32 {  //~ compile-ok
+    return x ^ 2.0;
+}
+
+// operators__pow_int_ok
+fun operators__pow_int_ok__f(n: i64) i64 {  //~ compile-ok
+    return n ^ 10;
+}
+
+// operators__unary_minus_float_ok
+fun operators__unary_minus_float_ok__f(x: f64) f64 {  //~ compile-ok
+    return -x;
+}
+
+// operators__unary_minus_int_ok
+fun operators__unary_minus_int_ok__f(x: i64) i64 {  //~ compile-ok
+    return -x;
+}
+
+// operators__unary_not_bool_ok
+fun operators__unary_not_bool_ok__f(x: bool) bool {  //~ compile-ok
+    return !x;
+}
+
+// operators__widen_i16_f32_ok
+fun operators__widen_i16_f32_ok__f(a: i16, b: f32) f32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i16_f64_ok
+fun operators__widen_i16_f64_ok__f(a: i16, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i16_i32_add_ok
+fun operators__widen_i16_i32_add_ok__f(a: i16, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_i32_lt_ok
+fun operators__widen_i16_i32_lt_ok__f(a: i16, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_i32_mul_ok
+fun operators__widen_i16_i32_mul_ok__f(a: i16, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_i64_add_ok
+fun operators__widen_i16_i64_add_ok__f(a: i16, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_i64_lt_ok
+fun operators__widen_i16_i64_lt_ok__f(a: i16, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_i64_mul_ok
+fun operators__widen_i16_i64_mul_ok__f(a: i16, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u16_add_ok
+fun operators__widen_i16_u16_add_ok__f(a: i16, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u16_lt_ok
+fun operators__widen_i16_u16_lt_ok__f(a: i16, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u16_mul_ok
+fun operators__widen_i16_u16_mul_ok__f(a: i16, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u32_add_ok
+fun operators__widen_i16_u32_add_ok__f(a: i16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u32_lt_ok
+fun operators__widen_i16_u32_lt_ok__f(a: i16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u32_mul_ok
+fun operators__widen_i16_u32_mul_ok__f(a: i16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u64_add_ok
+fun operators__widen_i16_u64_add_ok__f(a: i16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u64_lt_ok
+fun operators__widen_i16_u64_lt_ok__f(a: i16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u64_mul_ok
+fun operators__widen_i16_u64_mul_ok__f(a: i16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u8_add_ok
+fun operators__widen_i16_u8_add_ok__f(a: i16, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u8_lt_ok
+fun operators__widen_i16_u8_lt_ok__f(a: i16, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i16_u8_mul_ok
+fun operators__widen_i16_u8_mul_ok__f(a: i16, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_f32_ok
+fun operators__widen_i32_f32_ok__f(a: i32, b: f32) f32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i32_f64_ok
+fun operators__widen_i32_f64_ok__f(a: i32, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i32_i64_add_ok
+fun operators__widen_i32_i64_add_ok__f(a: i32, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_i64_lt_ok
+fun operators__widen_i32_i64_lt_ok__f(a: i32, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_i64_mul_ok
+fun operators__widen_i32_i64_mul_ok__f(a: i32, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u16_add_ok
+fun operators__widen_i32_u16_add_ok__f(a: i32, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u16_lt_ok
+fun operators__widen_i32_u16_lt_ok__f(a: i32, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u16_mul_ok
+fun operators__widen_i32_u16_mul_ok__f(a: i32, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u32_add_ok
+fun operators__widen_i32_u32_add_ok__f(a: i32, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u32_lt_ok
+fun operators__widen_i32_u32_lt_ok__f(a: i32, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u32_mul_ok
+fun operators__widen_i32_u32_mul_ok__f(a: i32, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u64_add_ok
+fun operators__widen_i32_u64_add_ok__f(a: i32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u64_lt_ok
+fun operators__widen_i32_u64_lt_ok__f(a: i32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u64_mul_ok
+fun operators__widen_i32_u64_mul_ok__f(a: i32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u8_add_ok
+fun operators__widen_i32_u8_add_ok__f(a: i32, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u8_lt_ok
+fun operators__widen_i32_u8_lt_ok__f(a: i32, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i32_u8_mul_ok
+fun operators__widen_i32_u8_mul_ok__f(a: i32, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_f32_ok
+fun operators__widen_i64_f32_ok__f(a: i64, b: f32) f32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i64_f64_ok
+fun operators__widen_i64_f64_ok__f(a: i64, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i64_u16_add_ok
+fun operators__widen_i64_u16_add_ok__f(a: i64, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u16_lt_ok
+fun operators__widen_i64_u16_lt_ok__f(a: i64, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u16_mul_ok
+fun operators__widen_i64_u16_mul_ok__f(a: i64, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u32_add_ok
+fun operators__widen_i64_u32_add_ok__f(a: i64, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u32_lt_ok
+fun operators__widen_i64_u32_lt_ok__f(a: i64, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u32_mul_ok
+fun operators__widen_i64_u32_mul_ok__f(a: i64, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u64_add_ok
+fun operators__widen_i64_u64_add_ok__f(a: i64, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u64_lt_ok
+fun operators__widen_i64_u64_lt_ok__f(a: i64, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u64_mul_ok
+fun operators__widen_i64_u64_mul_ok__f(a: i64, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u8_add_ok
+fun operators__widen_i64_u8_add_ok__f(a: i64, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u8_lt_ok
+fun operators__widen_i64_u8_lt_ok__f(a: i64, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i64_u8_mul_ok
+fun operators__widen_i64_u8_mul_ok__f(a: i64, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_f32_ok
+fun operators__widen_i8_f32_ok__f(a: i8, b: f32) f32 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i8_f64_ok
+fun operators__widen_i8_f64_ok__f(a: i8, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_i8_i16_add_ok
+fun operators__widen_i8_i16_add_ok__f(a: i8, b: i16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i16_lt_ok
+fun operators__widen_i8_i16_lt_ok__f(a: i8, b: i16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i16_mul_ok
+fun operators__widen_i8_i16_mul_ok__f(a: i8, b: i16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i32_add_ok
+fun operators__widen_i8_i32_add_ok__f(a: i8, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i32_lt_ok
+fun operators__widen_i8_i32_lt_ok__f(a: i8, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i32_mul_ok
+fun operators__widen_i8_i32_mul_ok__f(a: i8, b: i32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i64_add_ok
+fun operators__widen_i8_i64_add_ok__f(a: i8, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i64_lt_ok
+fun operators__widen_i8_i64_lt_ok__f(a: i8, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_i64_mul_ok
+fun operators__widen_i8_i64_mul_ok__f(a: i8, b: i64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u16_add_ok
+fun operators__widen_i8_u16_add_ok__f(a: i8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u16_lt_ok
+fun operators__widen_i8_u16_lt_ok__f(a: i8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u16_mul_ok
+fun operators__widen_i8_u16_mul_ok__f(a: i8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u32_add_ok
+fun operators__widen_i8_u32_add_ok__f(a: i8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u32_lt_ok
+fun operators__widen_i8_u32_lt_ok__f(a: i8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u32_mul_ok
+fun operators__widen_i8_u32_mul_ok__f(a: i8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u64_add_ok
+fun operators__widen_i8_u64_add_ok__f(a: i8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u64_lt_ok
+fun operators__widen_i8_u64_lt_ok__f(a: i8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u64_mul_ok
+fun operators__widen_i8_u64_mul_ok__f(a: i8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u8_add_ok
+fun operators__widen_i8_u8_add_ok__f(a: i8, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u8_lt_ok
+fun operators__widen_i8_u8_lt_ok__f(a: i8, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_i8_u8_mul_ok
+fun operators__widen_i8_u8_mul_ok__f(a: i8, b: u8) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_f64_ok
+fun operators__widen_u16_f64_ok__f(a: u16, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_u16_u32_add_ok
+fun operators__widen_u16_u32_add_ok__f(a: u16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_u32_lt_ok
+fun operators__widen_u16_u32_lt_ok__f(a: u16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_u32_mul_ok
+fun operators__widen_u16_u32_mul_ok__f(a: u16, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_u64_add_ok
+fun operators__widen_u16_u64_add_ok__f(a: u16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_u64_lt_ok
+fun operators__widen_u16_u64_lt_ok__f(a: u16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u16_u64_mul_ok
+fun operators__widen_u16_u64_mul_ok__f(a: u16, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u32_f64_ok
+fun operators__widen_u32_f64_ok__f(a: u32, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_u32_u64_add_ok
+fun operators__widen_u32_u64_add_ok__f(a: u32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u32_u64_lt_ok
+fun operators__widen_u32_u64_lt_ok__f(a: u32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u32_u64_mul_ok
+fun operators__widen_u32_u64_mul_ok__f(a: u32, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u64_f64_ok
+fun operators__widen_u64_f64_ok__f(a: u64, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_u8_f64_ok
+fun operators__widen_u8_f64_ok__f(a: u8, b: f64) f64 {  //~ compile-ok
+    return a + b;
+}
+
+// operators__widen_u8_u16_add_ok
+fun operators__widen_u8_u16_add_ok__f(a: u8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u16_lt_ok
+fun operators__widen_u8_u16_lt_ok__f(a: u8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u16_mul_ok
+fun operators__widen_u8_u16_mul_ok__f(a: u8, b: u16) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u32_add_ok
+fun operators__widen_u8_u32_add_ok__f(a: u8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u32_lt_ok
+fun operators__widen_u8_u32_lt_ok__f(a: u8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u32_mul_ok
+fun operators__widen_u8_u32_mul_ok__f(a: u8, b: u32) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u64_add_ok
+fun operators__widen_u8_u64_add_ok__f(a: u8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u64_lt_ok
+fun operators__widen_u8_u64_lt_ok__f(a: u8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+// operators__widen_u8_u64_mul_ok
+fun operators__widen_u8_u64_mul_ok__f(a: u8, b: u64) bool {  //~ compile-ok
+    return (a + b) > 0;
+}
+
+test "operators/addr_deref_ok.mesa" {
+    @assert(operators__addr_deref_ok__f() == 42)
+}
+test "operators/addr_in_call_ok.mesa" {
+    let var s: operators__addr_in_call_ok__S = .{x: 1}
+    operators__addr_in_call_ok__zero(&s)
+    @assert(s.x == 0)
+}
+test "operators/arith_f32_add_ok.mesa" {
+    @assert(operators__arith_f32_add_ok__f(7.5, 2.5) == 10.0)
+}
+test "operators/arith_f32_div_ok.mesa" {
+    @assert(operators__arith_f32_div_ok__f(7.5, 2.5) == 3.0)
+}
+test "operators/arith_f32_mul_ok.mesa" {
+    @assert(operators__arith_f32_mul_ok__f(7.5, 2.5) == 18.75)
+}
+test "operators/arith_f32_sub_ok.mesa" {
+    @assert(operators__arith_f32_sub_ok__f(7.5, 2.5) == 5.0)
+}
+test "operators/arith_f64_add_ok.mesa" {
+    @assert(operators__arith_f64_add_ok__f(7.5, 2.5) == 10.0)
+}
+test "operators/arith_f64_div_ok.mesa" {
+    @assert(operators__arith_f64_div_ok__f(7.5, 2.5) == 3.0)
+}
+test "operators/arith_f64_mul_ok.mesa" {
+    @assert(operators__arith_f64_mul_ok__f(7.5, 2.5) == 18.75)
+}
+test "operators/arith_f64_sub_ok.mesa" {
+    @assert(operators__arith_f64_sub_ok__f(7.5, 2.5) == 5.0)
+}
+test "operators/arith_i16_add_ok.mesa" {
+    @assert(operators__arith_i16_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_i16_div_ok.mesa" {
+    @assert(operators__arith_i16_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_i16_mod_ok.mesa" {
+    @assert(operators__arith_i16_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_i16_mul_ok.mesa" {
+    @assert(operators__arith_i16_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_i16_sub_ok.mesa" {
+    @assert(operators__arith_i16_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_i32_add_ok.mesa" {
+    @assert(operators__arith_i32_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_i32_div_ok.mesa" {
+    @assert(operators__arith_i32_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_i32_mod_ok.mesa" {
+    @assert(operators__arith_i32_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_i32_mul_ok.mesa" {
+    @assert(operators__arith_i32_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_i32_sub_ok.mesa" {
+    @assert(operators__arith_i32_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_i64_add_ok.mesa" {
+    @assert(operators__arith_i64_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_i64_div_ok.mesa" {
+    @assert(operators__arith_i64_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_i64_mod_ok.mesa" {
+    @assert(operators__arith_i64_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_i64_mul_ok.mesa" {
+    @assert(operators__arith_i64_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_i64_sub_ok.mesa" {
+    @assert(operators__arith_i64_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_i8_add_ok.mesa" {
+    @assert(operators__arith_i8_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_i8_div_ok.mesa" {
+    @assert(operators__arith_i8_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_i8_mod_ok.mesa" {
+    @assert(operators__arith_i8_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_i8_mul_ok.mesa" {
+    @assert(operators__arith_i8_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_i8_sub_ok.mesa" {
+    @assert(operators__arith_i8_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_u16_add_ok.mesa" {
+    @assert(operators__arith_u16_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_u16_div_ok.mesa" {
+    @assert(operators__arith_u16_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_u16_mod_ok.mesa" {
+    @assert(operators__arith_u16_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_u16_mul_ok.mesa" {
+    @assert(operators__arith_u16_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_u16_sub_ok.mesa" {
+    @assert(operators__arith_u16_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_u32_add_ok.mesa" {
+    @assert(operators__arith_u32_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_u32_div_ok.mesa" {
+    @assert(operators__arith_u32_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_u32_mod_ok.mesa" {
+    @assert(operators__arith_u32_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_u32_mul_ok.mesa" {
+    @assert(operators__arith_u32_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_u32_sub_ok.mesa" {
+    @assert(operators__arith_u32_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_u64_add_ok.mesa" {
+    @assert(operators__arith_u64_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_u64_div_ok.mesa" {
+    @assert(operators__arith_u64_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_u64_mod_ok.mesa" {
+    @assert(operators__arith_u64_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_u64_mul_ok.mesa" {
+    @assert(operators__arith_u64_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_u64_sub_ok.mesa" {
+    @assert(operators__arith_u64_sub_ok__f(7, 3) == 4)
+}
+test "operators/arith_u8_add_ok.mesa" {
+    @assert(operators__arith_u8_add_ok__f(7, 3) == 10)
+}
+test "operators/arith_u8_div_ok.mesa" {
+    @assert(operators__arith_u8_div_ok__f(7, 3) == 2)
+}
+test "operators/arith_u8_mod_ok.mesa" {
+    @assert(operators__arith_u8_mod_ok__f(7, 4) == 3)
+}
+test "operators/arith_u8_mul_ok.mesa" {
+    @assert(operators__arith_u8_mul_ok__f(7, 3) == 21)
+}
+test "operators/arith_u8_sub_ok.mesa" {
+    @assert(operators__arith_u8_sub_ok__f(7, 3) == 4)
+}
+test "operators/bool_and.mesa" {
+    @assert(operators__bool_and_ok__f(true, true))
+    @assert(!operators__bool_and_ok__f(true, false))
+}
+test "operators/bool_eq.mesa" {
+    @assert(operators__bool_eq_ok__f(true, true))
+    @assert(!operators__bool_eq_ok__f(true, false))
+}
+test "operators/bool_ne_ok.mesa" {
+    @assert(operators__bool_ne_ok__f(true, false))
+    @assert(!operators__bool_ne_ok__f(true, true))
+}
+test "operators/bool_not.mesa" {
+    @assert(operators__bool_not_ok__f(true) == false)
+    @assert(operators__bool_not_ok__f(false) == true)
+}
+test "operators/bool_or.mesa" {
+    @assert(operators__bool_or_ok__f(true, false))
+    @assert(!operators__bool_or_ok__f(false, false))
+}
+test "operators/cmp_bool_result_ok.mesa" {
+    @assert(operators__cmp_bool_result_ok__f(1, 2, 3))
+    @assert(!operators__cmp_bool_result_ok__f(3, 2, 1))
+}
+test "operators/cmp_f32_eq_ok.mesa" {
+    @assert(operators__cmp_f32_eq_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f32_eq_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f32_ge_ok.mesa" {
+    @assert(operators__cmp_f32_ge_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f32_ge_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f32_gt_ok.mesa" {
+    @assert(operators__cmp_f32_gt_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f32_gt_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f32_le_ok.mesa" {
+    @assert(operators__cmp_f32_le_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f32_le_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_f32_lt_ok.mesa" {
+    @assert(operators__cmp_f32_lt_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f32_lt_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_f32_ne_ok.mesa" {
+    @assert(operators__cmp_f32_ne_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f32_ne_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_f64_eq_ok.mesa" {
+    @assert(operators__cmp_f64_eq_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f64_eq_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f64_ge_ok.mesa" {
+    @assert(operators__cmp_f64_ge_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f64_ge_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f64_gt_ok.mesa" {
+    @assert(operators__cmp_f64_gt_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f64_gt_ok__f(2.5, 4.0) == false)
+}
+test "operators/cmp_f64_le_ok.mesa" {
+    @assert(operators__cmp_f64_le_ok__f(2.5, 2.5) == true)
+    @assert(operators__cmp_f64_le_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_f64_lt_ok.mesa" {
+    @assert(operators__cmp_f64_lt_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f64_lt_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_f64_ne_ok.mesa" {
+    @assert(operators__cmp_f64_ne_ok__f(2.5, 2.5) == false)
+    @assert(operators__cmp_f64_ne_ok__f(2.5, 4.0) == true)
+}
+test "operators/cmp_i16_eq_ok.mesa" {
+    @assert(operators__cmp_i16_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_i16_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_i16_ge_ok.mesa" {
+    @assert(operators__cmp_i16_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_i16_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_i16_gt_ok.mesa" {
+    @assert(operators__cmp_i16_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i16_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_i16_le_ok.mesa" {
+    @assert(operators__cmp_i16_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_i16_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_i16_lt_ok.mesa" {
+    @assert(operators__cmp_i16_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i16_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_i16_ne_ok.mesa" {
+    @assert(operators__cmp_i16_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_i16_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_i32_eq_ok.mesa" {
+    @assert(operators__cmp_i32_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_i32_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_i32_ge_ok.mesa" {
+    @assert(operators__cmp_i32_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_i32_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_i32_gt_ok.mesa" {
+    @assert(operators__cmp_i32_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i32_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_i32_le_ok.mesa" {
+    @assert(operators__cmp_i32_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_i32_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_i32_lt_ok.mesa" {
+    @assert(operators__cmp_i32_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i32_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_i32_ne_ok.mesa" {
+    @assert(operators__cmp_i32_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_i32_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_i64_eq_ok.mesa" {
+    @assert(operators__cmp_i64_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_i64_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_i64_ge_ok.mesa" {
+    @assert(operators__cmp_i64_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_i64_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_i64_gt_ok.mesa" {
+    @assert(operators__cmp_i64_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i64_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_i64_le_ok.mesa" {
+    @assert(operators__cmp_i64_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_i64_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_i64_lt_ok.mesa" {
+    @assert(operators__cmp_i64_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i64_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_i64_ne_ok.mesa" {
+    @assert(operators__cmp_i64_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_i64_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_i8_eq_ok.mesa" {
+    @assert(operators__cmp_i8_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_i8_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_i8_ge_ok.mesa" {
+    @assert(operators__cmp_i8_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_i8_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_i8_gt_ok.mesa" {
+    @assert(operators__cmp_i8_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i8_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_i8_le_ok.mesa" {
+    @assert(operators__cmp_i8_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_i8_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_i8_lt_ok.mesa" {
+    @assert(operators__cmp_i8_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_i8_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_i8_ne_ok.mesa" {
+    @assert(operators__cmp_i8_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_i8_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_u16_eq_ok.mesa" {
+    @assert(operators__cmp_u16_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_u16_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_u16_ge_ok.mesa" {
+    @assert(operators__cmp_u16_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_u16_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_u16_gt_ok.mesa" {
+    @assert(operators__cmp_u16_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u16_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_u16_le_ok.mesa" {
+    @assert(operators__cmp_u16_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_u16_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_u16_lt_ok.mesa" {
+    @assert(operators__cmp_u16_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u16_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_u16_ne_ok.mesa" {
+    @assert(operators__cmp_u16_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_u16_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_u32_eq_ok.mesa" {
+    @assert(operators__cmp_u32_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_u32_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_u32_ge_ok.mesa" {
+    @assert(operators__cmp_u32_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_u32_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_u32_gt_ok.mesa" {
+    @assert(operators__cmp_u32_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u32_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_u32_le_ok.mesa" {
+    @assert(operators__cmp_u32_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_u32_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_u32_lt_ok.mesa" {
+    @assert(operators__cmp_u32_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u32_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_u32_ne_ok.mesa" {
+    @assert(operators__cmp_u32_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_u32_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_u64_eq_ok.mesa" {
+    @assert(operators__cmp_u64_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_u64_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_u64_ge_ok.mesa" {
+    @assert(operators__cmp_u64_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_u64_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_u64_gt_ok.mesa" {
+    @assert(operators__cmp_u64_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u64_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_u64_le_ok.mesa" {
+    @assert(operators__cmp_u64_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_u64_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_u64_lt_ok.mesa" {
+    @assert(operators__cmp_u64_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u64_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_u64_ne_ok.mesa" {
+    @assert(operators__cmp_u64_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_u64_ne_ok__f(2, 4) == true)
+}
+test "operators/cmp_u8_eq_ok.mesa" {
+    @assert(operators__cmp_u8_eq_ok__f(2, 2) == true)
+    @assert(operators__cmp_u8_eq_ok__f(2, 4) == false)
+}
+test "operators/cmp_u8_ge_ok.mesa" {
+    @assert(operators__cmp_u8_ge_ok__f(2, 2) == true)
+    @assert(operators__cmp_u8_ge_ok__f(2, 4) == false)
+}
+test "operators/cmp_u8_gt_ok.mesa" {
+    @assert(operators__cmp_u8_gt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u8_gt_ok__f(2, 4) == false)
+}
+test "operators/cmp_u8_le_ok.mesa" {
+    @assert(operators__cmp_u8_le_ok__f(2, 2) == true)
+    @assert(operators__cmp_u8_le_ok__f(2, 4) == true)
+}
+test "operators/cmp_u8_lt_ok.mesa" {
+    @assert(operators__cmp_u8_lt_ok__f(2, 2) == false)
+    @assert(operators__cmp_u8_lt_ok__f(2, 4) == true)
+}
+test "operators/cmp_u8_ne_ok.mesa" {
+    @assert(operators__cmp_u8_ne_ok__f(2, 2) == false)
+    @assert(operators__cmp_u8_ne_ok__f(2, 4) == true)
+}
+test "operators/compound_-eq_ok.mesa" {
+    @assert(operators__compound__eq_ok__f() == 7)
+}
+test "operators/equality_bool.mesa" {
+    @assert(operators__equality_bool_ok__f(true, true))
+    @assert(!operators__equality_bool_ok__f(true, false))
+}
+test "operators/equality_str_ok.mesa" {
+    @assert(operators__equality_str_ok__f("mesa", "mesa"))
+    @assert(!operators__equality_str_ok__f("mesa", "lang"))
+}
+test "operators/exp_float.mesa" {
+    @assert(operators__exp_float_ok__f(3.0) == 9.0)
+}
+test "operators/exp_int.mesa" {
+    @assert(operators__exp_int_ok__f(2) == 8)
+}
+test "operators/float_cmp_eq_ok.mesa" {
+    @assert(operators__float_cmp_eq_ok__f(2.5, 2.5) == true)
+    @assert(operators__float_cmp_eq_ok__f(2.5, 4.0) == false)
+}
+test "operators/float_cmp_ge_ok.mesa" {
+    @assert(operators__float_cmp_ge_ok__f(2.5, 2.5) == true)
+    @assert(operators__float_cmp_ge_ok__f(2.5, 4.0) == false)
+}
+test "operators/float_cmp_gt_ok.mesa" {
+    @assert(operators__float_cmp_gt_ok__f(2.5, 2.5) == false)
+    @assert(operators__float_cmp_gt_ok__f(2.5, 4.0) == false)
+}
+test "operators/float_cmp_le_ok.mesa" {
+    @assert(operators__float_cmp_le_ok__f(2.5, 2.5) == true)
+    @assert(operators__float_cmp_le_ok__f(2.5, 4.0) == true)
+}
+test "operators/float_cmp_lt_ok.mesa" {
+    @assert(operators__float_cmp_lt_ok__f(2.5, 2.5) == false)
+    @assert(operators__float_cmp_lt_ok__f(2.5, 4.0) == true)
+}
+test "operators/float_cmp_ne_ok.mesa" {
+    @assert(operators__float_cmp_ne_ok__f(2.5, 2.5) == false)
+    @assert(operators__float_cmp_ne_ok__f(2.5, 4.0) == true)
+}
+test "operators/int_cmp_eq_ok.mesa" {
+    @assert(operators__int_cmp_eq_ok__f(2, 2) == true)
+    @assert(operators__int_cmp_eq_ok__f(2, 4) == false)
+}
+test "operators/int_cmp_ge_ok.mesa" {
+    @assert(operators__int_cmp_ge_ok__f(2, 2) == true)
+    @assert(operators__int_cmp_ge_ok__f(2, 4) == false)
+}
+test "operators/int_cmp_gt_ok.mesa" {
+    @assert(operators__int_cmp_gt_ok__f(2, 2) == false)
+    @assert(operators__int_cmp_gt_ok__f(2, 4) == false)
+}
+test "operators/int_cmp_le_ok.mesa" {
+    @assert(operators__int_cmp_le_ok__f(2, 2) == true)
+    @assert(operators__int_cmp_le_ok__f(2, 4) == true)
+}
+test "operators/int_cmp_lt_ok.mesa" {
+    @assert(operators__int_cmp_lt_ok__f(2, 2) == false)
+    @assert(operators__int_cmp_lt_ok__f(2, 4) == true)
+}
+test "operators/int_cmp_ne_ok.mesa" {
+    @assert(operators__int_cmp_ne_ok__f(2, 2) == false)
+    @assert(operators__int_cmp_ne_ok__f(2, 4) == true)
+}
+test "operators/logical_and.mesa" {
+    @assert(operators__logical_and_ok__f(true, true))
+    @assert(!operators__logical_and_ok__f(true, false))
+}
+test "operators/logical_not.mesa" {
+    @assert(operators__logical_not_ok__f(true) == false)
+    @assert(operators__logical_not_ok__f(false) == true)
+}
+test "operators/logical_or.mesa" {
+    @assert(operators__logical_or_ok__f(true, false))
+    @assert(!operators__logical_or_ok__f(false, false))
+}
+test "operators/pow_f32.mesa" {
+    @assert(operators__pow_f32_ok__f(2.0) == 4.0)
+}
+test "operators/pow_int.mesa" {
+    @assert(operators__pow_int_ok__f(2) == 1024)
+}
+test "operators/unary_minus_float_ok.mesa" {
+    @assert(operators__unary_minus_float_ok__f(2.5) == -2.5)
+    @assert(operators__unary_minus_float_ok__f(-2.5) == 2.5)
+}
+test "operators/unary_minus_int_ok.mesa" {
+    @assert(operators__unary_minus_int_ok__f(5) == -5)
+    @assert(operators__unary_minus_int_ok__f(-5) == 5)
+}
+test "operators/unary_not_bool.mesa" {
+    @assert(operators__unary_not_bool_ok__f(true) == false)
+    @assert(operators__unary_not_bool_ok__f(false) == true)
+}
+test "operators/widen_i16_i32_add_ok.mesa" {
+    @assert(operators__widen_i16_i32_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_i32_add_ok__f(-2, 1))
+}
+test "operators/widen_i16_i32_lt_ok.mesa" {
+    @assert(operators__widen_i16_i32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_i32_lt_ok__f(-2, 1))
+}
+test "operators/widen_i16_i32_mul_ok.mesa" {
+    @assert(operators__widen_i16_i32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_i32_mul_ok__f(-2, 1))
+}
+test "operators/widen_i16_i64_add_ok.mesa" {
+    @assert(operators__widen_i16_i64_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_i64_add_ok__f(-2, 1))
+}
+test "operators/widen_i16_i64_lt_ok.mesa" {
+    @assert(operators__widen_i16_i64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_i64_lt_ok__f(-2, 1))
+}
+test "operators/widen_i16_i64_mul_ok.mesa" {
+    @assert(operators__widen_i16_i64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_i64_mul_ok__f(-2, 1))
+}
+test "operators/widen_i16_u16_add_ok.mesa" {
+    @assert(operators__widen_i16_u16_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_u16_add_ok__f(-2, 1))
+}
+test "operators/widen_i16_u16_lt_ok.mesa" {
+    @assert(operators__widen_i16_u16_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_u16_lt_ok__f(-2, 1))
+}
+test "operators/widen_i16_u16_mul_ok.mesa" {
+    @assert(operators__widen_i16_u16_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_u16_mul_ok__f(-2, 1))
+}
+test "operators/widen_i16_u32_add_ok.mesa" {
+    @assert(operators__widen_i16_u32_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_u32_add_ok__f(0, 0))
+}
+test "operators/widen_i16_u32_lt_ok.mesa" {
+    @assert(operators__widen_i16_u32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_u32_lt_ok__f(0, 0))
+}
+test "operators/widen_i16_u32_mul_ok.mesa" {
+    @assert(operators__widen_i16_u32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_u32_mul_ok__f(0, 0))
+}
+test "operators/widen_i16_u64_add_ok.mesa" {
+    @assert(operators__widen_i16_u64_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_u64_add_ok__f(0, 0))
+}
+test "operators/widen_i16_u64_lt_ok.mesa" {
+    @assert(operators__widen_i16_u64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_i16_u64_mul_ok.mesa" {
+    @assert(operators__widen_i16_u64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_i16_u8_add_ok.mesa" {
+    @assert(operators__widen_i16_u8_add_ok__f(2, 3))
+    @assert(!operators__widen_i16_u8_add_ok__f(-2, 1))
+}
+test "operators/widen_i16_u8_lt_ok.mesa" {
+    @assert(operators__widen_i16_u8_lt_ok__f(2, 3))
+    @assert(!operators__widen_i16_u8_lt_ok__f(-2, 1))
+}
+test "operators/widen_i16_u8_mul_ok.mesa" {
+    @assert(operators__widen_i16_u8_mul_ok__f(2, 3))
+    @assert(!operators__widen_i16_u8_mul_ok__f(-2, 1))
+}
+test "operators/widen_i32_i64_add_ok.mesa" {
+    @assert(operators__widen_i32_i64_add_ok__f(2, 3))
+    @assert(!operators__widen_i32_i64_add_ok__f(-2, 1))
+}
+test "operators/widen_i32_i64_lt_ok.mesa" {
+    @assert(operators__widen_i32_i64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i32_i64_lt_ok__f(-2, 1))
+}
+test "operators/widen_i32_i64_mul_ok.mesa" {
+    @assert(operators__widen_i32_i64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i32_i64_mul_ok__f(-2, 1))
+}
+test "operators/widen_i32_u16_add_ok.mesa" {
+    @assert(operators__widen_i32_u16_add_ok__f(2, 3))
+    @assert(!operators__widen_i32_u16_add_ok__f(-2, 1))
+}
+test "operators/widen_i32_u16_lt_ok.mesa" {
+    @assert(operators__widen_i32_u16_lt_ok__f(2, 3))
+    @assert(!operators__widen_i32_u16_lt_ok__f(-2, 1))
+}
+test "operators/widen_i32_u16_mul_ok.mesa" {
+    @assert(operators__widen_i32_u16_mul_ok__f(2, 3))
+    @assert(!operators__widen_i32_u16_mul_ok__f(-2, 1))
+}
+test "operators/widen_i32_u32_add_ok.mesa" {
+    @assert(operators__widen_i32_u32_add_ok__f(2, 3))
+    @assert(!operators__widen_i32_u32_add_ok__f(0, 0))
+}
+test "operators/widen_i32_u32_lt_ok.mesa" {
+    @assert(operators__widen_i32_u32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i32_u32_lt_ok__f(0, 0))
+}
+test "operators/widen_i32_u32_mul_ok.mesa" {
+    @assert(operators__widen_i32_u32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i32_u32_mul_ok__f(0, 0))
+}
+test "operators/widen_i32_u64_add_ok.mesa" {
+    @assert(operators__widen_i32_u64_add_ok__f(2, 3))
+    @assert(!operators__widen_i32_u64_add_ok__f(0, 0))
+}
+test "operators/widen_i32_u64_lt_ok.mesa" {
+    @assert(operators__widen_i32_u64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i32_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_i32_u64_mul_ok.mesa" {
+    @assert(operators__widen_i32_u64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i32_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_i32_u8_add_ok.mesa" {
+    @assert(operators__widen_i32_u8_add_ok__f(2, 3))
+    @assert(!operators__widen_i32_u8_add_ok__f(-2, 1))
+}
+test "operators/widen_i32_u8_lt_ok.mesa" {
+    @assert(operators__widen_i32_u8_lt_ok__f(2, 3))
+    @assert(!operators__widen_i32_u8_lt_ok__f(-2, 1))
+}
+test "operators/widen_i32_u8_mul_ok.mesa" {
+    @assert(operators__widen_i32_u8_mul_ok__f(2, 3))
+    @assert(!operators__widen_i32_u8_mul_ok__f(-2, 1))
+}
+test "operators/widen_i64_u16_add_ok.mesa" {
+    @assert(operators__widen_i64_u16_add_ok__f(2, 3))
+    @assert(!operators__widen_i64_u16_add_ok__f(-2, 1))
+}
+test "operators/widen_i64_u16_lt_ok.mesa" {
+    @assert(operators__widen_i64_u16_lt_ok__f(2, 3))
+    @assert(!operators__widen_i64_u16_lt_ok__f(-2, 1))
+}
+test "operators/widen_i64_u16_mul_ok.mesa" {
+    @assert(operators__widen_i64_u16_mul_ok__f(2, 3))
+    @assert(!operators__widen_i64_u16_mul_ok__f(-2, 1))
+}
+test "operators/widen_i64_u32_add_ok.mesa" {
+    @assert(operators__widen_i64_u32_add_ok__f(2, 3))
+    @assert(!operators__widen_i64_u32_add_ok__f(-2, 1))
+}
+test "operators/widen_i64_u32_lt_ok.mesa" {
+    @assert(operators__widen_i64_u32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i64_u32_lt_ok__f(-2, 1))
+}
+test "operators/widen_i64_u32_mul_ok.mesa" {
+    @assert(operators__widen_i64_u32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i64_u32_mul_ok__f(-2, 1))
+}
+test "operators/widen_i64_u64_add_ok.mesa" {
+    @assert(operators__widen_i64_u64_add_ok__f(2, 3))
+    @assert(!operators__widen_i64_u64_add_ok__f(0, 0))
+}
+test "operators/widen_i64_u64_lt_ok.mesa" {
+    @assert(operators__widen_i64_u64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i64_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_i64_u64_mul_ok.mesa" {
+    @assert(operators__widen_i64_u64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i64_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_i64_u8_add_ok.mesa" {
+    @assert(operators__widen_i64_u8_add_ok__f(2, 3))
+    @assert(!operators__widen_i64_u8_add_ok__f(-2, 1))
+}
+test "operators/widen_i64_u8_lt_ok.mesa" {
+    @assert(operators__widen_i64_u8_lt_ok__f(2, 3))
+    @assert(!operators__widen_i64_u8_lt_ok__f(-2, 1))
+}
+test "operators/widen_i64_u8_mul_ok.mesa" {
+    @assert(operators__widen_i64_u8_mul_ok__f(2, 3))
+    @assert(!operators__widen_i64_u8_mul_ok__f(-2, 1))
+}
+test "operators/widen_i8_i16_add_ok.mesa" {
+    @assert(operators__widen_i8_i16_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_i16_add_ok__f(-2, 1))
+}
+test "operators/widen_i8_i16_lt_ok.mesa" {
+    @assert(operators__widen_i8_i16_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_i16_lt_ok__f(-2, 1))
+}
+test "operators/widen_i8_i16_mul_ok.mesa" {
+    @assert(operators__widen_i8_i16_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_i16_mul_ok__f(-2, 1))
+}
+test "operators/widen_i8_i32_add_ok.mesa" {
+    @assert(operators__widen_i8_i32_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_i32_add_ok__f(-2, 1))
+}
+test "operators/widen_i8_i32_lt_ok.mesa" {
+    @assert(operators__widen_i8_i32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_i32_lt_ok__f(-2, 1))
+}
+test "operators/widen_i8_i32_mul_ok.mesa" {
+    @assert(operators__widen_i8_i32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_i32_mul_ok__f(-2, 1))
+}
+test "operators/widen_i8_i64_add_ok.mesa" {
+    @assert(operators__widen_i8_i64_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_i64_add_ok__f(-2, 1))
+}
+test "operators/widen_i8_i64_lt_ok.mesa" {
+    @assert(operators__widen_i8_i64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_i64_lt_ok__f(-2, 1))
+}
+test "operators/widen_i8_i64_mul_ok.mesa" {
+    @assert(operators__widen_i8_i64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_i64_mul_ok__f(-2, 1))
+}
+test "operators/widen_i8_u16_add_ok.mesa" {
+    @assert(operators__widen_i8_u16_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_u16_add_ok__f(-2, 1))
+}
+test "operators/widen_i8_u16_lt_ok.mesa" {
+    @assert(operators__widen_i8_u16_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_u16_lt_ok__f(-2, 1))
+}
+test "operators/widen_i8_u16_mul_ok.mesa" {
+    @assert(operators__widen_i8_u16_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_u16_mul_ok__f(-2, 1))
+}
+test "operators/widen_i8_u32_add_ok.mesa" {
+    @assert(operators__widen_i8_u32_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_u32_add_ok__f(0, 0))
+}
+test "operators/widen_i8_u32_lt_ok.mesa" {
+    @assert(operators__widen_i8_u32_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_u32_lt_ok__f(0, 0))
+}
+test "operators/widen_i8_u32_mul_ok.mesa" {
+    @assert(operators__widen_i8_u32_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_u32_mul_ok__f(0, 0))
+}
+test "operators/widen_i8_u64_add_ok.mesa" {
+    @assert(operators__widen_i8_u64_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_u64_add_ok__f(0, 0))
+}
+test "operators/widen_i8_u64_lt_ok.mesa" {
+    @assert(operators__widen_i8_u64_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_i8_u64_mul_ok.mesa" {
+    @assert(operators__widen_i8_u64_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_i8_u8_add_ok.mesa" {
+    @assert(operators__widen_i8_u8_add_ok__f(2, 3))
+    @assert(!operators__widen_i8_u8_add_ok__f(-2, 1))
+}
+test "operators/widen_i8_u8_lt_ok.mesa" {
+    @assert(operators__widen_i8_u8_lt_ok__f(2, 3))
+    @assert(!operators__widen_i8_u8_lt_ok__f(-2, 1))
+}
+test "operators/widen_i8_u8_mul_ok.mesa" {
+    @assert(operators__widen_i8_u8_mul_ok__f(2, 3))
+    @assert(!operators__widen_i8_u8_mul_ok__f(-2, 1))
+}
+test "operators/widen_u16_u32_add_ok.mesa" {
+    @assert(operators__widen_u16_u32_add_ok__f(1, 1))
+    @assert(!operators__widen_u16_u32_add_ok__f(0, 0))
+}
+test "operators/widen_u16_u32_lt_ok.mesa" {
+    @assert(operators__widen_u16_u32_lt_ok__f(1, 1))
+    @assert(!operators__widen_u16_u32_lt_ok__f(0, 0))
+}
+test "operators/widen_u16_u32_mul_ok.mesa" {
+    @assert(operators__widen_u16_u32_mul_ok__f(1, 1))
+    @assert(!operators__widen_u16_u32_mul_ok__f(0, 0))
+}
+test "operators/widen_u16_u64_add_ok.mesa" {
+    @assert(operators__widen_u16_u64_add_ok__f(1, 1))
+    @assert(!operators__widen_u16_u64_add_ok__f(0, 0))
+}
+test "operators/widen_u16_u64_lt_ok.mesa" {
+    @assert(operators__widen_u16_u64_lt_ok__f(1, 1))
+    @assert(!operators__widen_u16_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_u16_u64_mul_ok.mesa" {
+    @assert(operators__widen_u16_u64_mul_ok__f(1, 1))
+    @assert(!operators__widen_u16_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_u32_u64_add_ok.mesa" {
+    @assert(operators__widen_u32_u64_add_ok__f(1, 1))
+    @assert(!operators__widen_u32_u64_add_ok__f(0, 0))
+}
+test "operators/widen_u32_u64_lt_ok.mesa" {
+    @assert(operators__widen_u32_u64_lt_ok__f(1, 1))
+    @assert(!operators__widen_u32_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_u32_u64_mul_ok.mesa" {
+    @assert(operators__widen_u32_u64_mul_ok__f(1, 1))
+    @assert(!operators__widen_u32_u64_mul_ok__f(0, 0))
+}
+test "operators/widen_u8_u16_add_ok.mesa" {
+    @assert(operators__widen_u8_u16_add_ok__f(1, 1))
+    @assert(!operators__widen_u8_u16_add_ok__f(0, 0))
+}
+test "operators/widen_u8_u16_lt_ok.mesa" {
+    @assert(operators__widen_u8_u16_lt_ok__f(1, 1))
+    @assert(!operators__widen_u8_u16_lt_ok__f(0, 0))
+}
+test "operators/widen_u8_u16_mul_ok.mesa" {
+    @assert(operators__widen_u8_u16_mul_ok__f(1, 1))
+    @assert(!operators__widen_u8_u16_mul_ok__f(0, 0))
+}
+test "operators/widen_u8_u32_add_ok.mesa" {
+    @assert(operators__widen_u8_u32_add_ok__f(1, 1))
+    @assert(!operators__widen_u8_u32_add_ok__f(0, 0))
+}
+test "operators/widen_u8_u32_lt_ok.mesa" {
+    @assert(operators__widen_u8_u32_lt_ok__f(1, 1))
+    @assert(!operators__widen_u8_u32_lt_ok__f(0, 0))
+}
+test "operators/widen_u8_u32_mul_ok.mesa" {
+    @assert(operators__widen_u8_u32_mul_ok__f(1, 1))
+    @assert(!operators__widen_u8_u32_mul_ok__f(0, 0))
+}
+test "operators/widen_u8_u64_add_ok.mesa" {
+    @assert(operators__widen_u8_u64_add_ok__f(1, 1))
+    @assert(!operators__widen_u8_u64_add_ok__f(0, 0))
+}
+test "operators/widen_u8_u64_lt_ok.mesa" {
+    @assert(operators__widen_u8_u64_lt_ok__f(1, 1))
+    @assert(!operators__widen_u8_u64_lt_ok__f(0, 0))
+}
+test "operators/widen_u8_u64_mul_ok.mesa" {
+    @assert(operators__widen_u8_u64_mul_ok__f(1, 1))
+    @assert(!operators__widen_u8_u64_mul_ok__f(0, 0))
+}
+test "operators/broadcast_add_ok.mesa" {
+    @assert(operators__broadcast_add_ok__f(7.5, 2.5) == 10.0)
+}
+test "operators/broadcast_cmp_ok.mesa" {
+    @assert(operators__broadcast_cmp_ok__f(2.5, 2.5))
+    @assert(!operators__broadcast_cmp_ok__f(2.5, 4.0))
+}
+test "operators/broadcast_mul_ok.mesa" {
+    @assert(operators__broadcast_mul_ok__f(7.5, 2.5) == 18.75)
+}
+test "operators/float_add_ok.mesa" {
+    @assert(operators__float_add_ok__f(7.5, 2.5) == 10.0)
+}
+test "operators/float_div_ok.mesa" {
+    @assert(operators__float_div_ok__f(7.5, 2.5) == 3.0)
+}
+test "operators/float_mod_ok.mesa" {
+    @assert(operators__float_mod_ok__f(7.5, 2.0) == 1.5)
+}
+test "operators/float_mul_ok.mesa" {
+    @assert(operators__float_mul_ok__f(7.5, 2.5) == 18.75)
+}
+test "operators/float_sub_ok.mesa" {
+    @assert(operators__float_sub_ok__f(7.5, 2.5) == 5.0)
+}
+test "operators/int_add_ok.mesa" {
+    @assert(operators__int_add_ok__f(7, 3) == 10)
+}
+test "operators/int_div_ok.mesa" {
+    @assert(operators__int_div_ok__f(7, 3) == 2)
+}
+test "operators/int_mod_ok.mesa" {
+    @assert(operators__int_mod_ok__f(7, 4) == 3)
+}
+test "operators/int_mul_ok.mesa" {
+    @assert(operators__int_mul_ok__f(7, 3) == 21)
+}
+test "operators/int_sub_ok.mesa" {
+    @assert(operators__int_sub_ok__f(7, 3) == 4)
+}
+test "operators/mod_ok.mesa" {
+    @assert(operators__mod_ok__f(7, 4) == 3)
+}
+test "operators/widen_i16_f32_ok.mesa" {
+    @assert(operators__widen_i16_f32_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i16_f32_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i16_f64_ok.mesa" {
+    @assert(operators__widen_i16_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i16_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i32_f32_ok.mesa" {
+    @assert(operators__widen_i32_f32_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i32_f32_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i32_f64_ok.mesa" {
+    @assert(operators__widen_i32_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i32_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i64_f32_ok.mesa" {
+    @assert(operators__widen_i64_f32_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i64_f32_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i64_f64_ok.mesa" {
+    @assert(operators__widen_i64_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i64_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i8_f32_ok.mesa" {
+    @assert(operators__widen_i8_f32_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i8_f32_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_i8_f64_ok.mesa" {
+    @assert(operators__widen_i8_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_i8_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_u16_f64_ok.mesa" {
+    @assert(operators__widen_u16_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_u16_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_u32_f64_ok.mesa" {
+    @assert(operators__widen_u32_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_u32_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_u64_f64_ok.mesa" {
+    @assert(operators__widen_u64_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_u64_f64_ok__f(0, 0.0) == 0.0)
+}
+test "operators/widen_u8_f64_ok.mesa" {
+    @assert(operators__widen_u8_f64_ok__f(2, 3.5) == 5.5)
+    @assert(operators__widen_u8_f64_ok__f(0, 0.0) == 0.0)
+}
+
+fun main() void {
+    println("corpus")
+}

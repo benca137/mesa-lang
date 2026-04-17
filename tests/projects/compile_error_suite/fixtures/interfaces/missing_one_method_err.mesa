@@ -1,0 +1,8 @@
+interface AB {
+    fun a(self: @this) i64;
+    fun b(self: @this) i64;
+}
+struct S { x: i64 }
+def AB for S {
+    fun a(self: S) i64 { return self.x; }
+}  //~ error: missing method

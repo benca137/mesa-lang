@@ -1,0 +1,88 @@
+// Example for allocator lifetimes and `with` expressions.
+//
+// Current supported semantics:
+// - `with alloc : cleanup { ... }` is an expression
+// - a `handle` attached to `with` runs before cleanup
+// - allocator-backed values created in the block cannot escape it
+pkg Testing
+
+error BatchError { NegativeInput, EmptyBatch }
+
+struct Row {
+    idx: int,
+    raw: int,
+    scaled: int,
+}
+
+struct BatchSummary {
+    ok: bool,
+    kept: int,
+    sum: int,
+    note: str,
+}
+
+fun ensure_non_empty(values: vec[int]) BatchError!void {
+    if values.len == 0, return .EmptyBatch
+}
+
+fun scale_checked(x: int) BatchError!int {
+    if x < 0, return .NegativeInput
+    return x * 10
+}
+
+fun summarize_batch(values: vec[int]) BatchSummary {
+    let arena = ArenaAllocator(4096)
+    let dbg   = DebugAllocator(arena)
+
+    let summary: BatchSummary = with dbg : .free {
+        let filtered = vec[x for x in values : x != 0]
+        try ensure_non_empty(filtered)
+
+        let y: ?float = none 
+        if y |a| {
+            println(a)
+        }
+
+        let var kept: int = 0
+        let var sum: int = 0
+
+        for x in filtered {
+            let scaled = try scale_checked(x)
+            let row: *Row = .{idx: kept, raw: x, scaled: scaled}
+            sum += row.scaled
+            kept += 1
+        }
+
+        // These should be rejected by the lifetime rule:
+        // let leaked_rows = filtered
+        // leaked_rows
+
+        let msg = "ok"
+        .{ok: true, kept: kept, sum: sum, note: msg} // should this error this msg is backed by dbg?
+    } handle |e| {
+        // Cleanup happens after this handle block, so diagnostics can still
+        // observe the failed attempt before `.free` runs.
+        dbg.print()
+        match e {
+            .NegativeInput => .{ok: false, kept: 0, sum: 0, note: "negative input"},
+            .EmptyBatch => .{ok: false, kept: 0, sum: 0, note: "empty batch"},
+        }
+    }
+
+    return summary
+}
+
+fun main() void {
+    let good = summarize_batch(vec[3, 0, 5, 7])
+    println(good.ok)
+    println(good.kept)
+    println(good.sum)
+
+    let bad = summarize_batch(vec[4, -1, 9])
+    println(bad.ok)
+    println(bad.note)
+
+    let empty = summarize_batch(vec[0, 0, 0])
+    println(empty.ok)
+    println(empty.note)
+}

@@ -1,0 +1,5 @@
+union Color { Red, Green }
+union Size { Small, Large }
+fun f() Color {
+    return .Small;  //~ error:
+}

@@ -1,0 +1,105 @@
+error Problem { bad }
+
+struct Counter {
+    n: i64,
+
+    pub fun init(n: i64) @this {
+        .{ n: n }
+    }
+
+    fun inc(self: *Counter) void {
+        self.n += 1
+    }
+
+    fun get(self: Counter) i64 {
+        self.n
+    }
+}
+
+interface Shape {
+    fun area(self: @this) f64
+}
+
+struct Square {
+    side: f64,
+}
+
+struct Pair {
+    first: i64,
+    second: i64,
+}
+
+def Shape for Square {
+    fun area(self: Square) f64 {
+        self.side * self.side
+    }
+}
+
+fun parseValue(ok: bool) Problem!i64 {
+    if ok {
+        return 7
+    }
+    return .bad
+}
+
+fun maybeValue(ok: bool) ?i64 {
+    if ok {
+        return 9
+    }
+    return none
+}
+
+test "literals arithmetic and if expressions work" {
+    let total = 3 + 4 * 5
+    let best = if total > 20 { total } else { 0 }
+    @assert(total == 23)
+    @assert(best == 23)
+    @assert(true and !false)
+}
+
+test "loops work" {
+    let var sum = 0
+    for i = 0...10 {
+        sum += i
+    }
+    @assert(sum == 55)
+
+    let var count = 3
+    while count > 0 {
+        count -= 1
+    }
+    @assert(count == 0)
+}
+
+test "struct constructors and methods work" {
+    let var counter = Counter.init(2)
+    counter.inc()
+    counter.inc()
+    @assert(counter.get() == 4)
+}
+
+test "optionals and error unions work" {
+    @assert((maybeValue(true) orelse 0) == 9)
+    @assert((maybeValue(false) orelse 0) == 0)
+    @assert((parseValue(true) catch { _ => -1 }) == 7)
+    @assert((parseValue(false) catch { _ => -1 }) == -1)
+}
+
+test "vec struct and match work" {
+    let values = vec[1, 2, 3]
+    let pair: Pair = .{ first: 4, second: 5 }
+    let label = match values.len {
+        3 => { "ok" },
+        _ => { "bad" },
+    }
+    @assert(values[0] == 1)
+    @assert(pair.first == 4)
+    @assert(pair.second == 5)
+    @assert(label == "ok")
+}
+
+test "interfaces dispatch correctly" {
+    let square: Square = .{ side: 3.0 }
+    let shape: any Shape = square
+    @assert(shape.area() == 9.0)
+}

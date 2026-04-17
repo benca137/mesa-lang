@@ -1,0 +1,473 @@
+fun functions__abs_ok__abs_i(x: i64) i64 {
+    return if x < 0 { -x } else { x };
+}
+fun functions__abs_ok__abs_f(x: f64) f64 {
+    return if x < 0.0 { -x } else { x };
+}
+
+fun functions__apply_closure_ok__apply(f: fun(i64) i64, x: i64) i64 { return f(x); }
+fun functions__apply_closure_ok__double(x: i64) i64 { return x * 2; }
+fun functions__apply_closure_ok__f() i64 { return functions__apply_closure_ok__apply(functions__apply_closure_ok__double, 5); }
+
+fun functions__between_ok__between(x: i64, lo: i64, hi: i64) bool { return x >= lo and x <= hi; }
+
+fun functions__closure_capture_float_ok__f(s: f64) fun(f64) f64 {
+    return fun(x: f64) f64 { return x * s; };
+}
+
+fun functions__closure_capture_int_ok__f(n: i64) fun(i64) i64 {
+    return fun(x: i64) i64 { return x + n; };
+}
+
+fun functions__closure_captures_ok__f(n: i64) fun(i64) i64 {
+    return fun(x: i64) i64 { return x + n; };
+}
+
+fun functions__closure_no_capture_ok__f() fun(i64) i64 {
+    return fun(x: i64) i64 { return x * x; };
+}
+
+fun functions__closure_ok__make_adder(n: i64) fun(i64) i64 {
+    return fun(x: i64) i64 { return x + n; };
+}
+
+fun functions__curried_ok__add(a: i64) fun(i64) i64 {
+    return fun(b: i64) i64 { return a + b; };
+}
+
+fun functions__fn_as_value_ok__double(x: i64) i64 { return x * 2; }
+fun functions__fn_as_value_ok__apply(f: fun(i64) i64, x: i64) i64 { return f(x); }
+fun functions__fn_as_value_ok__f() i64 { return functions__fn_as_value_ok__apply(functions__fn_as_value_ok__double, 5); }
+
+fun functions__fn_param_fn_ok__transform(v: vec[i64], f: fun(i64) i64) i64 {
+    let var sum: i64 = 0;
+    for x in v { sum += f(x); }
+    return sum;
+}
+fun functions__fn_param_fn_ok__triple(x: i64) i64 { return x * 3; }
+
+fun functions__fn_param_optional_ok__f(x: ?i64, fallback: i64) i64 {
+    return x orelse fallback;
+}
+fun functions__fn_param_optional_ok__some(x: i64) ?i64 { return x; }
+
+fun functions__fn_param_predicate_ok__filter_count(v: vec[i64], pred: fun(i64) bool) i64 {
+    let var c: i64 = 0;
+    for x in v : pred(x) { c += 1; }
+    return c;
+}
+fun functions__fn_param_predicate_ok__is_even(x: i64) bool { return x % 2 == 0; }
+
+fun functions__fn_param_transform_ok__map_sum(v: vec[i64], f: fun(i64) i64) i64 {
+    let var s: i64 = 0;
+    for x in v { s += f(x); }
+    return s;
+}
+fun functions__fn_param_transform_ok__square(x: i64) i64 { return x * x; }
+
+fun functions__fn_return_optional_none_ok__find(v: vec[i64], n: i64) ?i64 {
+    for i = 0...10 {
+        if v[i] == n { return i; }
+    }
+    return none;
+}
+
+fun functions__fn_returns_fn_ok__make_multiplier(n: i64) fun(i64) i64 {
+    return fun(x: i64) i64 { return x * n; };
+}
+
+fun functions__higher_order_ok__apply(f: fun(i64) i64, x: i64) i64 { return f(x); }
+fun functions__higher_order_ok__inc(x: i64) i64 { return x + 1; }
+
+fun functions__identity_i16_ok__identity(x: i16) i16 { return x; }
+fun functions__identity_i32_ok__identity(x: i32) i32 { return x; }
+fun functions__identity_i8_ok__identity(x: i8) i8 { return x; }
+fun functions__identity_u16_ok__identity(x: u16) u16 { return x; }
+fun functions__identity_u32_ok__identity(x: u32) u32 { return x; }
+fun functions__identity_u64_ok__identity(x: u64) u64 { return x; }
+fun functions__identity_u8_ok__identity(x: u8) u8 { return x; }
+
+fun functions__inline_call_ok__double(x: i64) i64 { return x * 2; }
+fun functions__inline_call_ok__f() i64 {
+    return functions__inline_call_ok__double(functions__inline_call_ok__double(functions__inline_call_ok__double(1)));
+}
+
+inline fun functions__inline_fn_ok__fast(x: i64) i64 { return x * 2; }
+
+fun functions__max_of_three_ok__max3(a: i64, b: i64, c: i64) i64 {
+    let m: i64 = if a > b { a } else { b };
+    return if m > c { m } else { c };
+}
+
+fun functions__min_of_three_ok__min3(a: f64, b: f64, c: f64) f64 {
+    let m: f64 = if a < b { a } else { b };
+    return if m < c { m } else { c };
+}
+
+fun functions__multiple_params_ok__add3(a: i64, b: i64, c: i64) i64 { return a + b + c; }
+
+fun functions__multiple_returns_ok__f(x: i64) i64 {
+    if x < 0 { return -1; }
+    if x == 0 { return 0; }
+    return 1;
+}
+
+fun functions__multireturn_paths_ok__grade(score: i64) str {
+    if score >= 90 { return "A"; }
+    if score >= 80 { return "B"; }
+    if score >= 70 { return "C"; }
+    if score >= 60 { return "D"; }
+    return "F";
+}
+
+fun functions__mutual_recursion_bool_ok__even(n: i64) bool {
+    if n == 0 { return true; }
+    return functions__mutual_recursion_bool_ok__odd(n - 1);
+}
+fun functions__mutual_recursion_bool_ok__odd(n: i64) bool {
+    if n == 0 { return false; }
+    return functions__mutual_recursion_bool_ok__even(n - 1);
+}
+
+fun functions__mutual_recursion_ok__is_even(n: i64) bool {
+    if n == 0 { return true; }
+    return functions__mutual_recursion_ok__is_odd(n - 1);
+}
+fun functions__mutual_recursion_ok__is_odd(n: i64) bool {
+    if n == 0 { return false; }
+    return functions__mutual_recursion_ok__is_even(n - 1);
+}
+
+fun functions__no_params_ok__answer() i64 { return 42; }
+
+fun functions__optional_param_ok__greet(name: str, greeting: ?str) str {
+    let g: str = greeting orelse "Hello";
+    return g;
+}
+fun functions__optional_param_ok__some(x: str) ?str { return x; }
+
+fun functions__pipeline_ok__double(x: i64) i64 { return x * 2; }
+fun functions__pipeline_ok__inc(x: i64) i64 { return x + 1; }
+fun functions__pipeline_ok__square(x: i64) i64 { return x * x; }
+fun functions__pipeline_ok__f(x: i64) i64 {
+    return functions__pipeline_ok__square(functions__pipeline_ok__inc(functions__pipeline_ok__double(x)));
+}
+
+fun functions__predicate_ok__is_positive(x: i64) bool { return x > 0; }
+fun functions__predicate_ok__is_even(x: i64) bool { return x % 2 == 0; }
+fun functions__predicate_ok__f(x: i64) bool {
+    return functions__predicate_ok__is_positive(x) and functions__predicate_ok__is_even(x);
+}
+
+fun functions__recursive_ok__factorial(n: i64) i64 {
+    if n <= 1 { return 1; }
+    return n * functions__recursive_ok__factorial(n - 1);
+}
+
+fun functions__return_bool_ok__f() bool {
+    let x: bool = false;
+    return x;
+}
+
+fun functions__return_f32_ok__f() f32 {
+    let x: f32 = 0.0;
+    return x;
+}
+
+fun functions__return_f64_ok__f() f64 {
+    let x: f64 = 0.0;
+    return x;
+}
+
+fun functions__return_i32_ok__f() i32 {
+    let x: i32 = 0;
+    return x;
+}
+
+fun functions__return_i64_ok__f() i64 {
+    let x: i64 = 0;
+    return x;
+}
+
+fun functions__return_optional_ok__safe_div(a: f64, b: f64) ?f64 {
+    if b == 0.0 { return none; }
+    return a / b;
+}
+
+fun functions__return_str_ok__f() str {
+    let x: str = "ok";
+    return x;
+}
+
+struct functions__return_struct_ok__Point { x: f64, y: f64 }
+fun functions__return_struct_ok__make_point(x: f64, y: f64) functions__return_struct_ok__Point {
+    return .{x: x, y: y};
+}
+
+fun functions__sign_ok__sign(x: f64) f64 {
+    if x > 0.0 { return 1.0; }
+    if x < 0.0 { return -1.0; }
+    return 0.0;
+}
+
+fun functions__tail_call_ok__countdown(n: i64) i64 {
+    if n <= 0 { return 0; }
+    return functions__tail_call_ok__countdown(n - 1);
+}
+
+fun functions__variadic_like_ok__sum2(a: i64, b: i64) i64 { return a + b; }
+fun functions__variadic_like_ok__sum3(a: i64, b: i64, c: i64) i64 { return a + b + c; }
+fun functions__variadic_like_ok__f() i64 {
+    return functions__variadic_like_ok__sum2(1, 2) + functions__variadic_like_ok__sum3(1, 2, 3);
+}
+
+fun functions__void_no_explicit_return_ok__f() void {
+    let x: i64 = 1;
+}
+fun functions__void_no_explicit_return_ok__done() i64 {
+    functions__void_no_explicit_return_ok__f();
+    return 1;
+}
+
+test "functions/abs_ok.mesa" {
+    @assert(functions__abs_ok__abs_i(-5) == 5)
+    @assert(functions__abs_ok__abs_i(7) == 7)
+    @assert(functions__abs_ok__abs_f(-1.25) == 1.25)
+}
+
+test "functions/apply_closure_ok.mesa" {
+    @assert(functions__apply_closure_ok__f() == 10)
+}
+
+test "functions/between_ok.mesa" {
+    @assert(functions__between_ok__between(5, 1, 10))
+    @assert(!functions__between_ok__between(-1, 1, 10))
+}
+
+test "functions/closure_capture_float_ok.mesa" {
+    let scale = functions__closure_capture_float_ok__f(2.5)
+    @assert(scale(4.0) == 10.0)
+}
+
+test "functions/closure_capture_int_ok.mesa" {
+    let add = functions__closure_capture_int_ok__f(7)
+    @assert(add(5) == 12)
+}
+
+test "functions/closure_captures_ok.mesa" {
+    let add = functions__closure_captures_ok__f(9)
+    @assert(add(1) == 10)
+}
+
+test "functions/closure_no_capture_ok.mesa" {
+    let sq = functions__closure_no_capture_ok__f()
+    @assert(sq(6) == 36)
+}
+
+test "functions/closure_ok.mesa" {
+    let add = functions__closure_ok__make_adder(3)
+    @assert(add(8) == 11)
+}
+
+test "functions/curried_ok.mesa" {
+    let add3 = functions__curried_ok__add(3)
+    @assert(add3(4) == 7)
+}
+
+test "functions/fn_as_value_ok.mesa" {
+    @assert(functions__fn_as_value_ok__f() == 10)
+}
+
+test "functions/fn_param_fn_ok.mesa" {
+    @assert(functions__fn_param_fn_ok__transform(vec[1, 2, 3], functions__fn_param_fn_ok__triple) == 18)
+}
+
+test "functions/fn_param_optional_ok.mesa" {
+    @assert(functions__fn_param_optional_ok__f(functions__fn_param_optional_ok__some(5), 9) == 5)
+    @assert(functions__fn_param_optional_ok__f(none, 9) == 9)
+}
+
+test "functions/fn_param_predicate_ok.mesa" {
+    @assert(functions__fn_param_predicate_ok__filter_count(vec[1, 2, 3, 4, 5, 6], functions__fn_param_predicate_ok__is_even) == 3)
+}
+
+test "functions/fn_param_transform_ok.mesa" {
+    @assert(functions__fn_param_transform_ok__map_sum(vec[1, 2, 3], functions__fn_param_transform_ok__square) == 14)
+}
+
+test "functions/fn_return_optional_none_ok.mesa" {
+    let values = vec[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    let found = functions__fn_return_optional_none_ok__find(values, 5)
+    let missing = functions__fn_return_optional_none_ok__find(values, 99)
+    if found |idx| { @assert(idx == 5) } else { @assert(false) }
+    if missing |idx| { @assert(false) } else { @assert(true) }
+}
+
+test "functions/fn_returns_fn_ok.mesa" {
+    let mul = functions__fn_returns_fn_ok__make_multiplier(4)
+    @assert(mul(6) == 24)
+}
+
+test "functions/higher_order_ok.mesa" {
+    @assert(functions__higher_order_ok__apply(functions__higher_order_ok__inc, 9) == 10)
+}
+
+test "functions/identity_i16_ok.mesa" {
+    let x: i16 = 12
+    @assert(functions__identity_i16_ok__identity(x) == 12)
+}
+
+test "functions/identity_i32_ok.mesa" {
+    let x: i32 = 44
+    @assert(functions__identity_i32_ok__identity(x) == 44)
+}
+
+test "functions/identity_i8_ok.mesa" {
+    let x: i8 = 7
+    @assert(functions__identity_i8_ok__identity(x) == 7)
+}
+
+test "functions/identity_u16_ok.mesa" {
+    let x: u16 = 12
+    @assert(functions__identity_u16_ok__identity(x) == 12)
+}
+
+test "functions/identity_u32_ok.mesa" {
+    let x: u32 = 44
+    @assert(functions__identity_u32_ok__identity(x) == 44)
+}
+
+test "functions/identity_u64_ok.mesa" {
+    let x: u64 = 99
+    @assert(functions__identity_u64_ok__identity(x) == 99)
+}
+
+test "functions/identity_u8_ok.mesa" {
+    let x: u8 = 7
+    @assert(functions__identity_u8_ok__identity(x) == 7)
+}
+
+test "functions/inline_call_ok.mesa" {
+    @assert(functions__inline_call_ok__f() == 8)
+}
+
+test "functions/inline_fn_ok.mesa" {
+    @assert(functions__inline_fn_ok__fast(6) == 12)
+}
+
+test "functions/max_of_three_ok.mesa" {
+    @assert(functions__max_of_three_ok__max3(4, 9, 2) == 9)
+}
+
+test "functions/min_of_three_ok.mesa" {
+    @assert(functions__min_of_three_ok__min3(4.0, -1.0, 2.0) == -1.0)
+}
+
+test "functions/multiple_params_ok.mesa" {
+    @assert(functions__multiple_params_ok__add3(1, 2, 3) == 6)
+}
+
+test "functions/multiple_returns_ok.mesa" {
+    @assert(functions__multiple_returns_ok__f(-1) == -1)
+    @assert(functions__multiple_returns_ok__f(0) == 0)
+    @assert(functions__multiple_returns_ok__f(5) == 1)
+}
+
+test "functions/multireturn_paths_ok.mesa" {
+    @assert(functions__multireturn_paths_ok__grade(95) == "A")
+    @assert(functions__multireturn_paths_ok__grade(83) == "B")
+    @assert(functions__multireturn_paths_ok__grade(75) == "C")
+    @assert(functions__multireturn_paths_ok__grade(61) == "D")
+    @assert(functions__multireturn_paths_ok__grade(10) == "F")
+}
+
+test "functions/mutual_recursion_bool_ok.mesa" {
+    @assert(functions__mutual_recursion_bool_ok__even(8))
+    @assert(!functions__mutual_recursion_bool_ok__odd(8))
+}
+
+test "functions/mutual_recursion_ok.mesa" {
+    @assert(functions__mutual_recursion_ok__is_even(10))
+    @assert(functions__mutual_recursion_ok__is_odd(9))
+}
+
+test "functions/no_params_ok.mesa" {
+    @assert(functions__no_params_ok__answer() == 42)
+}
+
+test "functions/optional_param_ok.mesa" {
+    @assert(functions__optional_param_ok__greet("Ada", none) == "Hello")
+    @assert(functions__optional_param_ok__greet("Ada", functions__optional_param_ok__some("Hi")) == "Hi")
+}
+
+test "functions/pipeline_ok.mesa" {
+    @assert(functions__pipeline_ok__f(4) == 81)
+}
+
+test "functions/predicate_ok.mesa" {
+    @assert(functions__predicate_ok__f(4))
+    @assert(!functions__predicate_ok__f(3))
+}
+
+test "functions/recursive_ok.mesa" {
+    @assert(functions__recursive_ok__factorial(5) == 120)
+}
+
+test "functions/return_bool_ok.mesa" {
+    @assert(!functions__return_bool_ok__f())
+}
+
+test "functions/return_f32_ok.mesa" {
+    @assert(functions__return_f32_ok__f() == 0.0)
+}
+
+test "functions/return_f64_ok.mesa" {
+    @assert(functions__return_f64_ok__f() == 0.0)
+}
+
+test "functions/return_i32_ok.mesa" {
+    @assert(functions__return_i32_ok__f() == 0)
+}
+
+test "functions/return_i64_ok.mesa" {
+    @assert(functions__return_i64_ok__f() == 0)
+}
+
+test "functions/return_optional_ok.mesa" {
+    let ok = functions__return_optional_ok__safe_div(8.0, 2.0)
+    let bad = functions__return_optional_ok__safe_div(8.0, 0.0)
+    if ok |v| { @assert(v == 4.0) } else { @assert(false) }
+    if bad |v| { @assert(false) } else { @assert(true) }
+}
+
+test "functions/return_str_ok.mesa" {
+    @assert(functions__return_str_ok__f() == "ok")
+}
+
+test "functions/return_struct_ok.mesa" {
+    let p = functions__return_struct_ok__make_point(1.5, -2.0)
+    @assert(p.x == 1.5)
+    @assert(p.y == -2.0)
+}
+
+test "functions/sign_ok.mesa" {
+    @assert(functions__sign_ok__sign(3.0) == 1.0)
+    @assert(functions__sign_ok__sign(-3.0) == -1.0)
+    @assert(functions__sign_ok__sign(0.0) == 0.0)
+}
+
+test "functions/tail_call_ok.mesa" {
+    @assert(functions__tail_call_ok__countdown(5) == 0)
+}
+
+test "functions/variadic_like_ok.mesa" {
+    @assert(functions__variadic_like_ok__f() == 9)
+}
+
+test "functions/void_no_explicit_return_ok.mesa" {
+    @assert(functions__void_no_explicit_return_ok__done() == 1)
+}
+
+fun main() void {
+    println("corpus")
+}

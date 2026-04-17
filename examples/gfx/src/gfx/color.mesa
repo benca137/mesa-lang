@@ -1,0 +1,77 @@
+pkg gfx
+
+pub fun rgba(r: i64, g: i64, b: i64, a: i64) Color {
+    return .{
+        r: clampI64(r, 0, 255),
+        g: clampI64(g, 0, 255),
+        b: clampI64(b, 0, 255),
+        a: clampI64(a, 0, 255),
+    }
+}
+
+pub fun rgb(r: i64, g: i64, b: i64) Color {
+    return rgba(r, g, b, 255)
+}
+
+pub fun transparent() Color {
+    return rgba(0, 0, 0, 0)
+}
+
+pub fun black() Color {
+    return rgb(0, 0, 0)
+}
+
+pub fun white() Color {
+    return rgb(255, 255, 255)
+}
+
+pub fun red() Color {
+    return rgb(255, 70, 70)
+}
+
+pub fun green() Color {
+    return rgb(80, 220, 120)
+}
+
+pub fun blue() Color {
+    return rgb(90, 150, 255)
+}
+
+pub fun sameColor(a: Color, b: Color) bool {
+    a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a
+}
+
+pub fun packColor(color: Color) i64 {
+    return color.r + color.g * 256 + color.b * 65536 + color.a * 16777216
+}
+
+pub fun unpackColor(packed: i64) Color {
+    return rgba(
+        packed % 256,
+        (packed / 256) % 256,
+        (packed / 65536) % 256,
+        (packed / 16777216) % 256,
+    )
+}
+
+pub fun luma(color: Color) i64 {
+    (color.r * 30 + color.g * 59 + color.b * 11) / 100
+}
+
+pub fun mixOver(dst: Color, src: Color) Color {
+    if src.a <= 0 {
+        return dst
+    }
+    if src.a >= 255 {
+        return rgba(src.r, src.g, src.b, 255)
+    }
+
+    let inv = 255 - src.a
+    let out_a = src.a + (dst.a * inv) / 255
+    return rgba(
+        (src.r * src.a + dst.r * inv) / 255,
+        (src.g * src.a + dst.g * inv) / 255,
+        (src.b * src.a + dst.b * inv) / 255,
+        out_a,
+    )
+}

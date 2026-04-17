@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mesa Gfx Viewer</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #101a2d;
+      --panel-2: #17233b;
+      --text: #e7eefc;
+      --muted: #9fb2d9;
+      --accent: #8cc8ff;
+      --warm: #ffbf73;
+      --border: #294061;
+      --shadow: rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Iosevka Etoile", "IBM Plex Sans", "Avenir Next", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(140, 200, 255, 0.16), transparent 28rem),
+        radial-gradient(circle at bottom right, rgba(255, 150, 120, 0.12), transparent 30rem),
+        linear-gradient(180deg, #09101c, var(--bg));
+    }
+
+    .shell {
+      width: min(1120px, calc(100vw - 2rem));
+      margin: 2rem auto;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(16, 26, 45, 0.94), rgba(11, 18, 32, 0.94));
+      box-shadow: 0 18px 50px var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 3vw, 2.4rem);
+      letter-spacing: 0.03em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 1rem 0 1.25rem;
+    }
+
+    button,
+    .file-label {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+      background: linear-gradient(180deg, #1a2943, #122038);
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    button:hover,
+    .file-label:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #213454, #162844);
+    }
+
+    .primary {
+      border-color: rgba(255, 191, 115, 0.5);
+      background: linear-gradient(180deg, #3a2a18, #2b1f12);
+      color: #ffe6c5;
+    }
+
+    .primary:hover {
+      border-color: var(--warm);
+      background: linear-gradient(180deg, #48321b, #322313);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .viewer-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr 320px;
+    }
+
+    .stage,
+    .info {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(23, 35, 59, 0.95), rgba(16, 26, 45, 0.95));
+      overflow: hidden;
+    }
+
+    .stage {
+      min-height: 460px;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      gap: 1rem;
+      background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.025) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.025) 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    }
+
+    .stage.live-focused {
+      border-color: rgba(140, 200, 255, 0.75);
+      box-shadow: inset 0 0 0 1px rgba(140, 200, 255, 0.35);
+    }
+
+    .stage-shell {
+      display: grid;
+      gap: 0.9rem;
+      justify-items: center;
+    }
+
+    .focus-chip {
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.03em;
+    }
+
+    .focus-chip.ready {
+      color: #dff2ff;
+      border-color: rgba(140, 200, 255, 0.45);
+      background: rgba(140, 200, 255, 0.12);
+    }
+
+    .pad-controls {
+      display: grid;
+      gap: 0.65rem;
+      justify-items: center;
+    }
+
+    .pad-controls button {
+      min-width: 7rem;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 72vh;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #000;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+    }
+
+    .info {
+      padding: 1rem;
+      display: grid;
+      gap: 0.9rem;
+      align-content: start;
+    }
+
+    .stat {
+      padding: 0.85rem 0.95rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .status {
+      color: var(--muted);
+      white-space: pre-wrap;
+      font-size: 0.95rem;
+    }
+
+    code {
+      font-family: "Iosevka", "SFMono-Regular", monospace;
+      font-size: 0.92em;
+      color: #d9e7ff;
+    }
+
+    @media (max-width: 900px) {
+      .viewer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div>
+        <h1>Mesa Gfx Viewer</h1>
+        <p>Live viewer for the Mesa `gfx` example. It can poll the swapchain stream or fall back to a static PPM snapshot.</p>
+      </div>
+      <p><code>targets/gfx-stream.txt</code></p>
+    </div>
+
+    <div class="controls">
+      <button id="connect-live" class="primary" type="button">Connect Live Buffer</button>
+      <button id="pause-live" type="button">Pause Polling</button>
+      <button id="reload-default" type="button">Reload Static PPM</button>
+      <label class="file-label" for="ppm-file">Open Local PPM</label>
+      <input id="ppm-file" type="file" accept=".ppm,.pnm,text/plain">
+    </div>
+
+    <div class="viewer-grid">
+      <section class="stage">
+        <div class="stage-shell">
+          <div id="focus-chip" class="focus-chip">Click here to arm keyboard input</div>
+          <canvas id="canvas" width="16" height="12"></canvas>
+          <div class="pad-controls">
+            <button id="press-up" type="button">Hold Up</button>
+            <button id="press-down" type="button">Hold Down</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="info">
+        <div class="stat">
+          <strong>Source</strong>
+          <div id="source-name">Waiting for image…</div>
+        </div>
+        <div class="stat">
+          <strong>Dimensions</strong>
+          <div id="dimensions">-</div>
+        </div>
+        <div class="stat">
+          <strong>Frame</strong>
+          <div id="frame-value">-</div>
+        </div>
+        <div class="stat">
+          <strong>Transport</strong>
+          <div id="transport-value">live rgba swapchain</div>
+        </div>
+        <div class="stat">
+          <strong>Input</strong>
+          <div id="input-value">W / ArrowUp = up, S / ArrowDown = down</div>
+        </div>
+        <div class="stat">
+          <strong>Keyboard</strong>
+          <div id="keyboard-value">No key events yet</div>
+        </div>
+        <div class="stat">
+          <strong>Scale</strong>
+          <div id="scale-value">Auto</div>
+        </div>
+        <div class="stat">
+          <strong>Status</strong>
+          <div id="status" class="status">Start the viewer server, then run the Mesa demo to stream frames into this page.</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const stage = document.querySelector(".stage");
+    const focusChip = document.getElementById("focus-chip");
+    const sourceName = document.getElementById("source-name");
+    const dimensions = document.getElementById("dimensions");
+    const frameValue = document.getElementById("frame-value");
+    const transportValue = document.getElementById("transport-value");
+    const inputValue = document.getElementById("input-value");
+    const keyboardValue = document.getElementById("keyboard-value");
+    const scaleValue = document.getElementById("scale-value");
+    const status = document.getElementById("status");
+    const fileInput = document.getElementById("ppm-file");
+    const reloadButton = document.getElementById("reload-default");
+    const connectLiveButton = document.getElementById("connect-live");
+    const pauseLiveButton = document.getElementById("pause-live");
+    const pressUpButton = document.getElementById("press-up");
+    const pressDownButton = document.getElementById("press-down");
+
+    const LIVE_STATE_URL = "./targets/gfx-stream.txt";
+    const LIVE_BUFFERS = ["./targets/gfx-front.rgba", "./targets/gfx-back.rgba"];
+    const INPUT_URL = "./input";
+    let liveTimer = null;
+    let lastFrame = -1;
+    const inputState = { up: false, down: false };
+    let inputFlushTimer = null;
+    let keyboardArmed = false;
+
+    function setStatus(text) {
+      status.textContent = text;
+    }
+
+    function parseP3(text) {
+      const stripped = text.replace(/#[^\n\r]*/g, " ");
+      const tokens = stripped.trim().split(/\s+/);
+      if (tokens.length < 4 || tokens[0] !== "P3") {
+        throw new Error("Only plain-text P3 PPM files are supported.");
+      }
+
+      const width = Number(tokens[1]);
+      const height = Number(tokens[2]);
+      const max = Number(tokens[3]);
+      if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+        throw new Error("Invalid PPM dimensions.");
+      }
+      if (max !== 255) {
+        throw new Error("This viewer currently expects max channel value 255.");
+      }
+
+      const expected = width * height * 3;
+      const values = tokens.slice(4).map(Number);
+      if (values.length < expected) {
+        throw new Error(`PPM pixel data is incomplete. Expected ${expected} channels, got ${values.length}.`);
+      }
+
+      const image = new ImageData(width, height);
+      for (let i = 0; i < width * height; i++) {
+        image.data[i * 4 + 0] = values[i * 3 + 0];
+        image.data[i * 4 + 1] = values[i * 3 + 1];
+        image.data[i * 4 + 2] = values[i * 3 + 2];
+        image.data[i * 4 + 3] = 255;
+      }
+      return image;
+    }
+
+    function parseStreamState(text) {
+      const tokens = text.trim().split(/\s+/);
+      if (tokens.length < 8 || tokens[0] !== "MESA_RGBA_STREAM_V1") {
+        throw new Error("Stream state file is missing or malformed.");
+      }
+
+      const width = Number(tokens[1]);
+      const height = Number(tokens[2]);
+      const active = Number(tokens[3]);
+      const frame = Number(tokens[4]);
+      const drawCalls = Number(tokens[5]);
+      const touchedPixels = Number(tokens[6]);
+      const clippedWrites = Number(tokens[7]);
+
+      if (![width, height, active, frame, drawCalls, touchedPixels, clippedWrites].every(Number.isFinite)) {
+        throw new Error("Stream state contains non-numeric data.");
+      }
+
+      return { width, height, active, frame, drawCalls, touchedPixels, clippedWrites };
+    }
+
+    function render(image, label, frame = null, transport = "static ppm") {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.putImageData(image, 0, 0);
+      sourceName.textContent = label;
+      dimensions.textContent = `${image.width} × ${image.height}`;
+      frameValue.textContent = frame == null ? "-" : String(frame);
+      transportValue.textContent = transport;
+
+      const fitWidth = Math.floor((window.innerWidth < 900 ? window.innerWidth - 100 : window.innerWidth - 490) / image.width);
+      const fitHeight = Math.floor((window.innerHeight - 220) / image.height);
+      const scale = Math.max(1, Math.min(fitWidth, fitHeight, 20));
+      canvas.style.width = `${image.width * scale}px`;
+      canvas.style.height = `${image.height * scale}px`;
+      scaleValue.textContent = `${scale}×`;
+    }
+
+    function renderRgba(buffer, width, height, label, frame) {
+      const expectedBytes = width * height * 4;
+      if (buffer.byteLength < expectedBytes) {
+        throw new Error(`RGBA stream is incomplete. Expected ${expectedBytes} bytes, got ${buffer.byteLength}.`);
+      }
+
+      const bytes = new Uint8ClampedArray(buffer.slice(0, expectedBytes));
+      const image = new ImageData(bytes, width, height);
+      render(image, label, frame, "live rgba swapchain");
+    }
+
+    function stopLivePolling() {
+      if (liveTimer !== null) {
+        clearInterval(liveTimer);
+        liveTimer = null;
+      }
+    }
+
+    function renderInputState() {
+      const active = [];
+      if (inputState.up) active.push("up");
+      if (inputState.down) active.push("down");
+      inputValue.textContent = active.length > 0 ? active.join(" + ") : "idle";
+    }
+
+    function renderKeyboardState(message = null) {
+      const focused = document.hasFocus();
+      keyboardArmed = focused;
+      stage.classList.toggle("live-focused", focused);
+      focusChip.classList.toggle("ready", focused);
+      focusChip.textContent = focused ? "Keyboard armed: page focus is active" : "Click here to arm keyboard input";
+      if (message) {
+        keyboardValue.textContent = message;
+      } else if (!focused) {
+        keyboardValue.textContent = "Page is not focused";
+      }
+    }
+
+    async function flushInputState() {
+      const body = `${inputState.up ? 1 : 0} ${inputState.down ? 1 : 0}\n`;
+      try {
+        await fetch(INPUT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body,
+        });
+      } catch (error) {
+        setStatus(`Input post failed: ${error.message}`);
+      }
+    }
+
+    function queueInputFlush() {
+      renderInputState();
+      if (inputFlushTimer !== null) {
+        clearTimeout(inputFlushTimer);
+      }
+      inputFlushTimer = window.setTimeout(() => {
+        inputFlushTimer = null;
+        flushInputState();
+      }, 10);
+    }
+
+    function updateInputKey(event, pressed) {
+      let changed = false;
+      let label = null;
+      if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
+        if (inputState.up !== pressed) {
+          inputState.up = pressed;
+          changed = true;
+        }
+        label = `${event.key} ${pressed ? "down" : "up"}`;
+      }
+      if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") {
+        if (inputState.down !== pressed) {
+          inputState.down = pressed;
+          changed = true;
+        }
+        label = `${event.key} ${pressed ? "down" : "up"}`;
+      }
+      if (label) {
+        renderKeyboardState(`Last key: ${label}`);
+      }
+      if (changed) {
+        event.preventDefault();
+        queueInputFlush();
+      }
+    }
+
+    function setVirtualInput(direction, pressed) {
+      if (inputState[direction] === pressed) {
+        return;
+      }
+      inputState[direction] = pressed;
+      renderKeyboardState(`Pointer control: ${direction} ${pressed ? "down" : "up"}`);
+      queueInputFlush();
+    }
+
+    function bindHoldButton(button, direction) {
+      const start = (event) => {
+        event.preventDefault();
+        button.focus();
+        setVirtualInput(direction, true);
+      };
+      const stop = (event) => {
+        event.preventDefault();
+        setVirtualInput(direction, false);
+      };
+      button.addEventListener("mousedown", start);
+      button.addEventListener("mouseup", stop);
+      button.addEventListener("mouseleave", stop);
+      button.addEventListener("touchstart", start, { passive: false });
+      button.addEventListener("touchend", stop, { passive: false });
+      button.addEventListener("touchcancel", stop, { passive: false });
+    }
+
+    async function loadDefault() {
+      stopLivePolling();
+      setStatus("Loading ./targets/gfx-demo.ppm …");
+      try {
+        const response = await fetch("./targets/gfx-demo.ppm", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const text = await response.text();
+        render(parseP3(text), "targets/gfx-demo.ppm");
+        setStatus("Loaded the current static PPM snapshot.");
+      } catch (error) {
+        setStatus(
+          "Could not fetch ./targets/gfx-demo.ppm.\n\n" +
+          "Serve the directory first:\n" +
+          "  python3 serve_viewer.py\n\n" +
+          `Details: ${error.message}`
+        );
+      }
+    }
+
+    async function loadLiveFrame(force = false) {
+      try {
+        const stamp = Date.now();
+        const stateResponse = await fetch(`${LIVE_STATE_URL}?t=${stamp}`, { cache: "no-store" });
+        if (!stateResponse.ok) {
+          throw new Error(`state HTTP ${stateResponse.status}`);
+        }
+
+        const liveState = parseStreamState(await stateResponse.text());
+        if (!force && liveState.frame === lastFrame) {
+          return;
+        }
+
+        const bufferUrl = `${LIVE_BUFFERS[liveState.active]}?frame=${liveState.frame}`;
+        const bufferResponse = await fetch(bufferUrl, { cache: "no-store" });
+        if (!bufferResponse.ok) {
+          throw new Error(`buffer HTTP ${bufferResponse.status}`);
+        }
+
+        const payload = await bufferResponse.arrayBuffer();
+        renderRgba(payload, liveState.width, liveState.height, bufferUrl.replace("./", ""), liveState.frame);
+        lastFrame = liveState.frame;
+        setStatus(
+          `Live frame ${liveState.frame} loaded.\n` +
+          `draw_calls=${liveState.drawCalls}\n` +
+          `touched_pixels=${liveState.touchedPixels}\n` +
+          `clipped_writes=${liveState.clippedWrites}`
+        );
+      } catch (error) {
+        setStatus(
+          "Live stream is not ready yet.\n\n" +
+          "In another shell, run:\n" +
+          "  python3.14 ../../mesa.py run\n\n" +
+          `Details: ${error.message}`
+        );
+      }
+    }
+
+    function startLivePolling() {
+      stopLivePolling();
+      setStatus("Connecting to the live RGBA swapchain …");
+      flushInputState();
+      loadLiveFrame(true);
+      liveTimer = window.setInterval(() => {
+        loadLiveFrame(false);
+      }, 100);
+    }
+
+    fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        return;
+      }
+      stopLivePolling();
+      setStatus(`Reading ${file.name} …`);
+      try {
+        const text = await file.text();
+        render(parseP3(text), file.name);
+        setStatus("Loaded local PPM file.");
+      } catch (error) {
+        setStatus(`Failed to parse ${file.name}: ${error.message}`);
+      }
+    });
+
+    reloadButton.addEventListener("click", loadDefault);
+    connectLiveButton.addEventListener("click", startLivePolling);
+    pauseLiveButton.addEventListener("click", () => {
+      stopLivePolling();
+      setStatus("Live polling paused. Click “Connect Live Buffer” to resume.");
+    });
+    stage.addEventListener("mousedown", () => renderKeyboardState());
+    stage.addEventListener("click", () => renderKeyboardState());
+    window.addEventListener("keydown", (event) => updateInputKey(event, true));
+    window.addEventListener("keyup", (event) => updateInputKey(event, false));
+    window.addEventListener("blur", () => {
+      inputState.up = false;
+      inputState.down = false;
+      renderKeyboardState("Page lost focus");
+      queueInputFlush();
+    });
+    window.addEventListener("focus", () => renderKeyboardState("Page focused"));
+    bindHoldButton(pressUpButton, "up");
+    bindHoldButton(pressDownButton, "down");
+
+    renderInputState();
+    renderKeyboardState();
+    startLivePolling();
+  </script>
+</body>
+</html>

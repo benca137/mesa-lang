@@ -1,0 +1,74 @@
+pkg gfx
+
+pub struct Point {
+    x: i64,
+    y: i64,
+}
+
+pub struct Rect {
+    x: i64,
+    y: i64,
+    w: i64,
+    h: i64,
+}
+
+pub struct Color {
+    r: i64,
+    g: i64,
+    b: i64,
+    a: i64,
+}
+
+pub struct Canvas {
+    width: i64,
+    height: i64,
+    pixels: vec[i64],
+    touched_pixels: i64,
+    clipped_writes: i64,
+    draw_calls: i64,
+}
+
+pub struct Sprite {
+    width: i64,
+    height: i64,
+    pixels: vec[i64],
+}
+
+pub struct ViewerInput {
+    up: bool,
+    down: bool,
+}
+
+pub fun point(x: i64, y: i64) Point {
+    return .{x: x, y: y}
+}
+
+pub fun rect(x: i64, y: i64, w: i64, h: i64) Rect {
+    return .{x: x, y: y, w: w, h: h}
+}
+
+pub fun size(w: i64, h: i64) Point {
+    return .{x: w, y: h}
+}
+
+pub fun minI64(a: i64, b: i64) i64 {
+    return if a < b { a } else { b }
+}
+
+pub fun maxI64(a: i64, b: i64) i64 {
+    return if a > b { a } else { b }
+}
+
+pub fun absI64(n: i64) i64 {
+    return if n < 0 { -n } else { n }
+}
+
+pub fun clampI64(v: i64, lo: i64, hi: i64) i64 {
+    if v < lo {
+        lo
+    } else if v > hi {
+        hi
+    } else {
+        v
+    }
+}

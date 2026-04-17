@@ -1,0 +1,785 @@
+test "inline compile reports type errors" {
+    let result = @test.compile("fun broken() void {\n    println(missing)\n}\n")
+    @assert(!result.ok)
+    @assert(result.errors.len == 1)
+    @assert(result.errors[0].code == "undefined-name")
+    @assert(result.errors[0].line == 2)
+    @assert(result.errors[0].col == 13)
+}
+
+test "inline compile reports parse errors" {
+    let result = @test.compile("fun broken( void {\n}\n")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+    @assert(result.errors[0].message != "")
+}
+
+test "compile errors/control_flow/break_outside_loop_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/break_outside_loop_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/continue_outside_loop_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/continue_outside_loop_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/if_branch_type_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/if_branch_type_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/if_non_bool_cond_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/if_non_bool_cond_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/if_type_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/if_type_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/if_unwrap_non_optional_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/if_unwrap_non_optional_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/match_arms_type_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/match_arms_type_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/match_bool_missing_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/match_bool_missing_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/match_int_no_wildcard_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/match_int_no_wildcard_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/return_missing_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/return_missing_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/return_value_from_void_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/return_value_from_void_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/return_wrong_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/return_wrong_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/control_flow/while_non_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/control_flow/while_non_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/duplicate_definition_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/duplicate_definition_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/error_set_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/error_set_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/esc_requires_with_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/esc_requires_with_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/esc_unsupported_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/esc_unsupported_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/field_access_hint_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/field_access_hint_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+    @assert(result.errors[0].hint != "")
+}
+
+test "compile errors/diagnostics/try_cleanup_with_handle_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/try_cleanup_with_handle_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/undefined_name_suggestion_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/undefined_name_suggestion_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/unknown_type_suggestion_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/unknown_type_suggestion_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/diagnostics/with_region_escape_err.mesa" {
+    let result = @test.compileFile("../fixtures/diagnostics/with_region_escape_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/edge_cases/self_ref_without_method_err.mesa" {
+    let result = @test.compileFile("../fixtures/edge_cases/self_ref_without_method_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/call_undefined_fn_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/call_undefined_fn_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/call_with_extra_args_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/call_with_extra_args_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/call_with_no_args_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/call_with_no_args_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/call_wrong_count_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/call_wrong_count_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/call_wrong_type_fn_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/call_wrong_type_fn_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/fn_wrong_param_count_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/fn_wrong_param_count_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/fn_wrong_param_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/fn_wrong_param_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_bool_as_f64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_bool_as_f64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_bool_as_i32_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_bool_as_i32_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_bool_as_i64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_bool_as_i64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_bool_as_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_bool_as_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_f64_as_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_f64_as_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_f64_as_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_f64_as_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_i64_as_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_i64_as_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_i64_as_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_i64_as_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_str_as_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_str_as_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_str_as_f64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_str_as_f64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/return_str_as_i64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/return_str_as_i64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_arg_count_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_arg_count_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_arg_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_arg_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_bool_as_i64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_bool_as_i64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_bool_as_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_bool_as_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_f64_as_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_f64_as_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_f64_as_i64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_f64_as_i64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_i64_as_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_i64_as_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_i64_as_f64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_i64_as_f64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_i64_as_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_i64_as_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/functions/wrong_return_str_as_i64_err.mesa" {
+    let result = @test.compileFile("../fixtures/functions/wrong_return_str_as_i64_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/interfaces/missing_all_methods_err.mesa" {
+    let result = @test.compileFile("../fixtures/interfaces/missing_all_methods_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/interfaces/missing_method_err.mesa" {
+    let result = @test.compileFile("../fixtures/interfaces/missing_method_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/interfaces/missing_one_method_err.mesa" {
+    let result = @test.compileFile("../fixtures/interfaces/missing_one_method_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/loops/for_range_non_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/loops/for_range_non_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/memory/deref_non_pointer_err.mesa" {
+    let result = @test.compileFile("../fixtures/memory/deref_non_pointer_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/add_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/add_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/add_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/add_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_add_with_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_add_with_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_add_with_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_add_with_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_div_with_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_div_with_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_div_with_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_div_with_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_mul_with_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_mul_with_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_mul_with_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_mul_with_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_sub_with_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_sub_with_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/arith_sub_with_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/arith_sub_with_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/cmp_bool_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/cmp_bool_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/cmp_gt_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/cmp_gt_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/cmp_gte_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/cmp_gte_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/cmp_lt_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/cmp_lt_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/cmp_lte_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/cmp_lte_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/logical_and_non_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/logical_and_non_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/operators/mod_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/operators/mod_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/none_type_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/none_type_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/orelse_bool_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/orelse_bool_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/orelse_default_type_mismatch_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/orelse_default_type_mismatch_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/orelse_float_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/orelse_float_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/orelse_int_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/orelse_int_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/type_err_bool_orelse_0_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/type_err_bool_orelse_0_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/type_err_f64_orelse_true_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/type_err_f64_orelse_true_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/type_err_i64_orelse_hello_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/type_err_i64_orelse_hello_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/optionals/type_err_i64_orelse_true_err.mesa" {
+    let result = @test.compileFile("../fixtures/optionals/type_err_i64_orelse_true_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_2var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_2var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_3var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_3var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_4var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_4var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_5var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_5var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_6var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_6var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/match_union_7var_miss_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/match_union_7var_miss_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/non_exhaustive_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/non_exhaustive_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/patterns/non_exhaustive_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/patterns/non_exhaustive_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/private_import_err.mesa" {
+    let result = @test.compileFile("../fixtures/private_import_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+    @assert(result.errors[0].code == "private-member")
+}
+
+test "compile errors/regression/compound_assign_immutable_err.mesa" {
+    let result = @test.compileFile("../fixtures/regression/compound_assign_immutable_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/regression/orelse_bool_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/regression/orelse_bool_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/regression/orelse_int_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/regression/orelse_int_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/structs/field_on_non_struct_err.mesa" {
+    let result = @test.compileFile("../fixtures/structs/field_on_non_struct_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/structs/self_wrong_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/structs/self_wrong_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/structs/struct_field_unknown_err.mesa" {
+    let result = @test.compileFile("../fixtures/structs/struct_field_unknown_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/structs/struct_init_wrong_field_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/structs/struct_init_wrong_field_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/structs/struct_self_in_static_err.mesa" {
+    let result = @test.compileFile("../fixtures/structs/struct_self_in_static_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/assign_different_struct_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/assign_different_struct_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/assign_float_to_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/assign_float_to_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/assign_numeric_to_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/assign_numeric_to_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/assign_str_to_numeric_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/assign_str_to_numeric_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/assign_struct_wrong_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/assign_struct_wrong_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/bool_assign_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/bool_assign_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/bool_assign_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/bool_assign_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/bool_plus_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/bool_plus_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/bool_times_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/bool_times_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/call_non_fn_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/call_non_fn_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/float_assign_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/float_assign_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/int_assign_i16_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/int_assign_i16_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/int_assign_i32_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/int_assign_i32_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/int_assign_i64_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/int_assign_i64_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/int_assign_i8_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/int_assign_i8_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/let_immutable_pluseq_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/let_immutable_pluseq_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/let_immutable_reassign_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/let_immutable_reassign_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/return_wrong_union_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/return_wrong_union_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/str_assign_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/str_assign_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/str_assign_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/str_assign_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/str_plus_str_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/str_plus_str_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/unary_minus_bool_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/unary_minus_bool_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/unary_not_float_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/unary_not_float_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/unary_not_int_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/unary_not_int_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/wrong_type_in_if_cond_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/wrong_type_in_if_cond_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/types/wrong_type_in_while_cond_err.mesa" {
+    let result = @test.compileFile("../fixtures/types/wrong_type_in_while_cond_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/unions/missing_one_variant_err.mesa" {
+    let result = @test.compileFile("../fixtures/unions/missing_one_variant_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/unions/union_non_exhaustive_err.mesa" {
+    let result = @test.compileFile("../fixtures/unions/union_non_exhaustive_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
+test "compile errors/unions/union_wrong_payload_type_err.mesa" {
+    let result = @test.compileFile("../fixtures/unions/union_wrong_payload_type_err.mesa")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}

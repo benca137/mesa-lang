@@ -1,0 +1,9 @@
+pkg helpers
+
+pub fun visible() i64 {
+    1
+}
+
+fun hidden() i64 {
+    2
+}

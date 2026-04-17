@@ -1,0 +1,6 @@
+interface Greet {
+    fun greet(self: @this) str;
+}
+struct Person { name: str }
+def Greet for Person {
+}  //~ error: missing method
