@@ -24,6 +24,10 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+RUNTIME_DIR = os.path.join(REPO_ROOT, "runtime")
+GC_RUNTIME_SOURCE = os.path.join(RUNTIME_DIR, "mesa_gc_runtime.c")
+
 from src.frontend  import build_frontend_state_for_path
 from src.analysis  import analyse
 from src.ccodegen  import CCodegen
@@ -121,11 +125,14 @@ def _find_cc():
             pass
     return None
 
-def _compile_c_to_object(c_path, obj_path, verbose=False):
+def _compile_c_to_object(c_path, obj_path, verbose=False, include_dirs=None):
     cc = _find_cc()
     if not cc:
         return False
-    cmd = [cc, "-c", c_path, "-o", obj_path, "-O2", "-std=c99"]
+    cmd = [cc]
+    for include_dir in include_dirs or []:
+        cmd.extend(["-I", include_dir])
+    cmd.extend(["-c", c_path, "-o", obj_path, "-O2", "-std=c99"])
     if verbose:
         print(dim(f"  → {' '.join(cmd)}"), file=sys.stderr)
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -147,6 +154,18 @@ def _link_objects_to_binary(obj_paths, out_path, verbose=False):
         return True
     print(red(f"linker error:\n{r.stderr}"), file=sys.stderr)
     return False
+
+
+def _compile_gc_runtime(tmpdir, verbose=False):
+    runtime_obj = os.path.join(tmpdir, "mesa_gc_runtime.o")
+    if not _compile_c_to_object(
+        GC_RUNTIME_SOURCE,
+        runtime_obj,
+        verbose=verbose,
+        include_dirs=[RUNTIME_DIR],
+    ):
+        return None
+    return runtime_obj
 
 
 # ══════════════════════════════════════════════════════════════
@@ -371,6 +390,12 @@ def compile_file(
         header_path = os.path.join(tmpdir, "mesa_shared.h")
         runtime_path = os.path.join(tmpdir, "mesa_runtime_state.c")
         object_paths = []
+        include_dirs = [RUNTIME_DIR]
+
+        gc_runtime_obj = _compile_gc_runtime(tmpdir, verbose=verbose)
+        if gc_runtime_obj is None:
+            return 1
+        object_paths.append(gc_runtime_obj)
 
         header_cg = CCodegen(env, layout)
         header_cg.emit_support_header(prog)
@@ -381,7 +406,7 @@ def compile_file(
         runtime_cg.emit_runtime_state_source(os.path.basename(header_path))
         open(runtime_path, "w").write(runtime_cg.output())
         runtime_obj = os.path.join(tmpdir, "mesa_runtime_state.o")
-        if not _compile_c_to_object(runtime_path, runtime_obj, verbose=verbose):
+        if not _compile_c_to_object(runtime_path, runtime_obj, verbose=verbose, include_dirs=include_dirs):
             return 1
         object_paths.append(runtime_obj)
 
@@ -392,7 +417,7 @@ def compile_file(
             unit_cg = CCodegen(env, layout)
             unit_cg.emit_unit_source(unit_program, os.path.basename(header_path), pending_mono=pending_mono)
             open(unit_c_path, "w").write(unit_cg.output())
-            if not _compile_c_to_object(unit_c_path, unit_obj_path, verbose=verbose):
+            if not _compile_c_to_object(unit_c_path, unit_obj_path, verbose=verbose, include_dirs=include_dirs):
                 return 1
             object_paths.append(unit_obj_path)
 
@@ -499,6 +524,12 @@ def compile_tests(
         runtime_path = os.path.join(tmpdir, "mesa_runtime_state.c")
         runner_path = os.path.join(tmpdir, "mesa_tests_runner.c")
         object_paths = []
+        include_dirs = [RUNTIME_DIR]
+
+        gc_runtime_obj = _compile_gc_runtime(tmpdir, verbose=verbose)
+        if gc_runtime_obj is None:
+            return 1
+        object_paths.append(gc_runtime_obj)
 
         header_cg = CCodegen(env, layout)
         header_cg.emit_support_header(test_program)
@@ -509,7 +540,7 @@ def compile_tests(
         runtime_cg.emit_runtime_state_source(os.path.basename(header_path))
         open(runtime_path, "w").write(runtime_cg.output())
         runtime_obj = os.path.join(tmpdir, "mesa_runtime_state.o")
-        if not _compile_c_to_object(runtime_path, runtime_obj, verbose=verbose):
+        if not _compile_c_to_object(runtime_path, runtime_obj, verbose=verbose, include_dirs=include_dirs):
             return 1
         object_paths.append(runtime_obj)
 
@@ -520,13 +551,13 @@ def compile_tests(
             unit_cg = CCodegen(env, layout)
             unit_cg.emit_unit_source(unit_program, os.path.basename(header_path), pending_mono=pending_mono)
             open(unit_c_path, "w").write(unit_cg.output())
-            if not _compile_c_to_object(unit_c_path, unit_obj_path, verbose=verbose):
+            if not _compile_c_to_object(unit_c_path, unit_obj_path, verbose=verbose, include_dirs=include_dirs):
                 return 1
             object_paths.append(unit_obj_path)
 
         open(runner_path, "w").write(_emit_test_runner_source(os.path.basename(header_path), tests))
         runner_obj = os.path.join(tmpdir, "mesa_tests_runner.o")
-        if not _compile_c_to_object(runner_path, runner_obj, verbose=verbose):
+        if not _compile_c_to_object(runner_path, runner_obj, verbose=verbose, include_dirs=include_dirs):
             return 1
         object_paths.append(runner_obj)
 

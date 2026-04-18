@@ -431,3 +431,30 @@ fun main() void {
     assert "_mesa_allocctx_alloc_mesa__std__mem__ArenaAllocator" in proc.stdout
     assert "mesa_allocctx_push(&arena, _mesa_allocctx_alloc_mesa__std__mem__ArenaAllocator);" in proc.stdout
     assert "mesa_allocctx_pop();" in proc.stdout
+
+
+def test_cli_emit_c_uses_linked_gc_runtime(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[2]
+    main = tmp_path / "main.mesa"
+    _write(main, """
+struct Node {
+    val: i64,
+}
+
+fun main() void {
+    let p: *Node = .{ val: 1 }
+    println(p.val)
+}
+""")
+
+    proc = subprocess.run(
+        [sys.executable, str(repo_root / "mesa.py"), str(main), "--emit-c"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert '#include "mesa_gc_runtime.h"' in proc.stdout
+    assert "mesa_gc_alloc(" in proc.stdout
+    assert "typedef struct Mesa_GC_Obj {" not in proc.stdout
+    assert "static void mesa_gc_collect(void)" not in proc.stdout
