@@ -24,10 +24,6 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
-RUNTIME_DIR = os.path.join(REPO_ROOT, "runtime")
-GC_RUNTIME_SOURCE = os.path.join(RUNTIME_DIR, "mesa_gc_runtime.c")
-
 from src.frontend  import build_frontend_state_for_path
 from src.analysis  import analyse
 from src.ccodegen  import CCodegen
@@ -41,7 +37,11 @@ from src.buildsys  import (
     load_build_plan,
     render_build_plan,
 )
-from src.stdlib import resolve_package_root_path
+from src.stdlib import resolve_package_root_path, runtime_root_dir
+
+
+RUNTIME_DIR = runtime_root_dir()
+GC_RUNTIME_SOURCE = os.path.join(RUNTIME_DIR, "mesa_gc_runtime.c")
 
 
 # ══════════════════════════════════════════════════════════════
