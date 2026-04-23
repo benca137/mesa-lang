@@ -207,17 +207,51 @@ class Parser:
 
     def _parse_attrs(self) -> List[Attribute]:
         attrs = []
-        while self._check(TK.HASH_LBRACKET):
-            self._advance()   # eat #[
-            name = self._expect_ident()
-            value = None
-            if self._eat(TK.EQ):
-                value = self._parse_expr()
-            elif self._eat(TK.LPAREN):
-                value = self._parse_expr()
-                self._expect(TK.RPAREN)
-            self._expect(TK.RBRACKET)
-            attrs.append(Attribute(name=name, value=value))
+        while True:
+            if self._check(TK.HASH_LBRACKET):
+                self._advance()   # eat #[
+                name = self._expect_ident()
+                value = None
+                if self._eat(TK.EQ):
+                    value = self._parse_expr()
+                elif self._eat(TK.LPAREN):
+                    value = self._parse_expr()
+                    self._expect(TK.RPAREN)
+                self._expect(TK.RBRACKET)
+                attrs.append(Attribute(name=name, value=value))
+                continue
+            if self._check(TK.AT):
+                at_tok = self._advance()
+                if self._cur.kind != TK.IDENT and not self._cur.kind.name.startswith("KW_"):
+                    raise ParseError("expected IDENT", self._cur)
+                name_tok = self._advance()
+                value = Ident(
+                    f"@{name_tok.lexeme}",
+                    line=name_tok.line,
+                    col=name_tok.col,
+                    span=self._span_from_tokens(at_tok, name_tok),
+                )
+                if self._eat(TK.LPAREN):
+                    args: List[Arg] = []
+                    while not self._check(TK.RPAREN, TK.EOF):
+                        if args:
+                            self._expect(TK.COMMA)
+                        arg_name = None
+                        if self._check(TK.IDENT) and self._peek(1).kind == TK.EQ:
+                            arg_name = self._advance().lexeme
+                            self._advance()
+                        args.append(Arg(arg_name, self._parse_expr()))
+                    end_tok = self._expect(TK.RPAREN)
+                    value = CallExpr(
+                        callee=value,
+                        args=args,
+                        line=at_tok.line,
+                        col=at_tok.col,
+                        span=self._span_from_tokens(at_tok, end_tok),
+                    )
+                attrs.append(Attribute(name=name_tok.lexeme, value=value))
+                continue
+            break
         return attrs
 
     # ── visibility ───────────────────────────────────────────
@@ -370,14 +404,29 @@ class Parser:
 
         # function modifiers
         is_inline = bool(self._eat(TK.KW_INLINE))
-        is_extern = bool(self._eat(TK.KW_EXTERN))
+        if self._check(TK.KW_EXTERN):
+            raise ParseError("`extern` is no longer a declaration keyword; use @extern(...)", self._cur)
 
         match self._cur.kind:
             case TK.KW_FUN:
                 decl = self._parse_fun(vis, attrs)
                 decl.is_inline = is_inline
-                decl.is_extern = is_extern
                 return decl
+            case TK.KW_OPAQUE:
+                start_tok = self._advance()
+                if self._check(TK.KW_FROM):
+                    decl = self._parse_pkg_export(opaque=True)
+                    decl.span = self._span_from_tokens(start_tok, self._prev)
+                    return decl
+                self._expect(TK.KW_TYPE)
+                name_tok = self._expect_ident_tok()
+                self._eat_newlines()
+                return OpaqueTypeDecl(
+                    vis=vis,
+                    attrs=attrs,
+                    name=name_tok.lexeme,
+                    span=self._span_from_tokens(start_tok, name_tok),
+                )
             case TK.KW_TEST:
                 return self._parse_test_decl()
             case TK.KW_STRUCT:
@@ -441,6 +490,7 @@ class Parser:
         d = FunDecl(vis=vis, attrs=attrs, name=name,
                        params=params, ret=ret, body=body,
                        handle_block=handle)
+        d.is_extern = any(attr.name == "extern" for attr in attrs)
         if handle and handle.body.span is not None:
             d.span = self._span_from_token_and_end(start_tok, handle.body.span.end)
         elif body and body.span is not None:
@@ -489,10 +539,12 @@ class Parser:
             self._eat_newlines()
             if self._check(TK.RBRACE, TK.EOF):
                 break
-            if self._check(TK.KW_FUN, TK.KW_PUB, TK.KW_INLINE, TK.KW_EXTERN):
+            if self._check(TK.HASH_LBRACKET, TK.AT, TK.KW_FUN, TK.KW_PUB, TK.KW_INLINE, TK.KW_EXTERN):
                 m_attrs = self._parse_attrs()
                 m_vis   = self._parse_vis()
                 m_inline = bool(self._eat(TK.KW_INLINE))
+                if self._check(TK.KW_EXTERN):
+                    raise ParseError("`extern` is no longer a declaration keyword; use @extern(...)", self._cur)
                 m = self._parse_fun(m_vis, m_attrs)
                 m.is_inline = m_inline
                 methods.append(m)
@@ -794,6 +846,32 @@ class Parser:
                 end_tok = self._prev
                 return TyAnyInterface(iface_name=iface_name, span=self._span_from_tokens(start_tok, end_tok))
             case TK.LBRACKET:
+                if (
+                    self._peek(1).kind == TK.DOT
+                    and self._peek(2).kind == TK.IDENT
+                    and self._peek(3).kind == TK.RBRACKET
+                    and self._peek(4).kind == TK.KW_FUN
+                ):
+                    start_tok = self._advance()
+                    self._expect(TK.DOT)
+                    abi_tok = self._expect_ident_tok()
+                    self._expect(TK.RBRACKET)
+                    self._expect(TK.KW_FUN)
+                    self._expect(TK.LPAREN)
+                    params = []
+                    while not self._check(TK.RPAREN, TK.EOF):
+                        if params:
+                            self._expect(TK.COMMA)
+                        params.append(self._parse_type())
+                    self._expect(TK.RPAREN)
+                    ret = self._parse_type()
+                    end = self._type_span(ret).end if self._type_span(ret) else self._token_end_pos(abi_tok)
+                    return TyFun(
+                        params=params,
+                        ret=ret,
+                        abi=f".{abi_tok.lexeme}",
+                        span=self._span_from_token_and_end(start_tok, end),
+                    )
                 start_tok = self._advance()
                 if self._eat(TK.RBRACKET):
                     inner = self._parse_type()
@@ -854,7 +932,7 @@ class Parser:
                 self._expect(TK.RPAREN)
                 ret = self._parse_type()
                 end = self._type_span(ret).end if self._type_span(ret) else self._token_end_pos(start_tok)
-                return TyFun(params=params, ret=ret, span=self._span_from_token_and_end(start_tok, end))
+                return TyFun(params=params, ret=ret, abi=None, span=self._span_from_token_and_end(start_tok, end))
             case TK.AT:
                 start_tok = self._advance()
                 ident_tok = self._expect_ident_tok()

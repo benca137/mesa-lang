@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 from src.frontend import build_frontend_state_for_path
+from src.types import format_type_for_user
 
 
 def _write(path: Path, text: str) -> None:
@@ -431,3 +432,55 @@ fun main() void {
     assert "_mesa_allocctx_alloc_mesa__std__mem__ArenaAllocator" in proc.stdout
     assert "mesa_allocctx_push(&arena, _mesa_allocctx_alloc_mesa__std__mem__ArenaAllocator);" in proc.stdout
     assert "mesa_allocctx_pop();" in proc.stdout
+
+
+def test_ffi_callback_alias_preserves_c_abi_in_rendered_type(tmp_path: Path):
+    root = tmp_path / "ffi_app"
+    _write(root / "main.mesa", """
+import ffi
+import libc
+
+@extern(libc)
+opaque type FILE
+
+@extern(libc)
+fun fopen(path: *ffi.c_char, mode: *ffi.c_char) *FILE
+
+type CompareFn = [.c]fun(*ffi.c_void, *ffi.c_void) ffi.c_int
+
+fun main() void {
+}
+""")
+
+    state = build_frontend_state_for_path(
+        str(root / "main.mesa"),
+        foreign_namespaces=["libc"],
+    )
+
+    assert state.parse_succeeded
+    assert state.typecheck_succeeded, [d.message for d in state.diags.all_errors()]
+    compare_fn = state.env.lookup_type("CompareFn")
+    assert compare_fn is not None
+    assert format_type_for_user(compare_fn) == "[.c]fun(*void, *void) i32"
+
+
+def test_ffi_callback_types_distinguish_plain_and_c_abi_functions(tmp_path: Path):
+    root = tmp_path / "ffi_app"
+    _write(root / "main.mesa", """
+import ffi
+
+type PlainCompareFn = fun(*ffi.c_void, *ffi.c_void) ffi.c_int
+type CompareFn = [.c]fun(*ffi.c_void, *ffi.c_void) ffi.c_int
+
+fun takesPlain(cmp: PlainCompareFn) void {
+}
+
+fun demo(cmp: CompareFn) void {
+    takesPlain(cmp)
+}
+""")
+
+    state = build_frontend_state_for_path(str(root / "main.mesa"))
+    errors = state.diags.all_errors()
+    assert errors
+    assert any("expected fun(*void, *void) i32, got [.c]fun(*void, *void) i32" in d.message for d in errors)

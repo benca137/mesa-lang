@@ -121,6 +121,7 @@ class TyFun:
     """fun(T, U) V — function type"""
     params: List["TypeExpr"]
     ret:    "TypeExpr"
+    abi:    Optional[str] = None
     span: Optional[SourceSpan] = None
 
 @dataclass
@@ -595,6 +596,13 @@ class FunDecl:
     span:         Optional[SourceSpan] = None
 
 @dataclass
+class OpaqueTypeDecl:
+    vis:     Visibility
+    attrs:   List[Attribute]
+    name:    str
+    span:    Optional[SourceSpan] = None
+
+@dataclass
 class HandleBlock:
     """handle |e| { ... } — error handler attached to a function or with expr."""
     binding: str
@@ -733,7 +741,7 @@ class TestDecl:
     span: Optional[SourceSpan] = None
 
 Decl = Union[
-    FunDecl, StructDecl, UnionDecl, InterfaceDecl, DefDecl,
+    FunDecl, OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, DefDecl,
     TypeAlias, UnitAlias, ErrorDecl, LetStmt,
     PkgDecl, ImportDecl, FromImportDecl, FromExportDecl,
     PkgExportDecl, PkgExportAllDecl, TestDecl,

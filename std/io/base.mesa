@@ -1,7 +1,7 @@
 pkg io
 
-extern fun stdout_write(text: str) void
-extern fun stderr_write(text: str) void
+fun stdout_write(text: str) void
+fun stderr_write(text: str) void
 
 pub interface Writer {
     fun write(self: @this, text: str) void
