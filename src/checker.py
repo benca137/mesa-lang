@@ -1402,8 +1402,11 @@ class BodyChecker:
                     "break outside loop" if not stmt.label
                     else f"no loop with label '{stmt.label}'"
                 )
-            elif stmt.value is not None and loop.loop_type:
-                self._check_expr(stmt.value, loop.loop_type)
+            elif stmt.value is not None:
+                if loop.loop_type:
+                    stmt._break_value_type = self._check_expr(stmt.value, loop.loop_type)
+                else:
+                    stmt._break_value_type = self._synth_expr(stmt.value)
 
         elif isinstance(stmt, ContinueStmt):
             loop = self.env.find_loop(stmt.label)
@@ -1497,6 +1500,131 @@ class BodyChecker:
         self.env.push_loop(label=w.label)
         self._check_block(w.body)
         self.env.pop_loop()
+
+    def _block_loop_expr_stmt(self, block: Block) -> Optional[Stmt]:
+        if block.tail is not None or len(block.stmts) != 1:
+            return None
+        stmt = block.stmts[0]
+        if isinstance(stmt, WhileStmt):
+            return stmt
+        return None
+
+    def _check_loop_expr(self, stmt: Stmt, expected: Optional[Type]) -> Type:
+        if not isinstance(stmt, WhileStmt):
+            self.diags.error("only while loops can be used as expressions right now")
+            return T_ERR
+
+        payload_expected = expected.inner if isinstance(expected, TOptional) else None
+        if payload_expected is None and expected is not None and not isinstance(expected, TVoid):
+            payload_expected = expected
+
+        self._check_expr(stmt.cond, T_BOOL)
+        self.env.push_loop(label=stmt.label, loop_type=payload_expected)
+        self._check_block(stmt.body)
+        self.env.pop_loop()
+
+        payload_type = payload_expected
+        if payload_type is None:
+            payload_type = self._infer_loop_break_type(stmt.body, stmt.label)
+            if payload_type is None:
+                self.diags.error(
+                    "cannot infer while-expression result type",
+                    hint="add an expected optional type like '?i64', or use at least one 'break value'",
+                )
+                return T_ERR
+
+        result = TOptional(payload_type)
+        stmt._resolved_type = result
+        return result
+
+    def _infer_loop_break_type(self, block: Block, label: Optional[str]) -> Optional[Type]:
+        break_types: List[Type] = []
+
+        def visit_expr(expr: Optional[Expr], nested_loops: int):
+            if expr is None:
+                return
+            if isinstance(expr, IfExpr):
+                visit_block(expr.then_block, nested_loops)
+                visit_block(expr.else_block, nested_loops)
+                return
+            if isinstance(expr, MatchExpr):
+                for arm in expr.arms:
+                    visit_block(arm.body, nested_loops)
+                return
+            if isinstance(expr, BlockExpr):
+                visit_block(expr.block, nested_loops)
+                return
+            if isinstance(expr, WithExpr):
+                visit_block(expr.body, nested_loops)
+                if expr.handle is not None:
+                    visit_block(expr.handle.body, nested_loops)
+                return
+            if isinstance(expr, WhileUnwrap):
+                visit_block(expr.body, nested_loops + 1)
+                return
+
+        def visit_stmt(stmt: Stmt, nested_loops: int):
+            if isinstance(stmt, BreakStmt):
+                if stmt.value is not None and self._break_targets_loop(stmt.label, label, nested_loops):
+                    break_ty = getattr(stmt, "_break_value_type", None)
+                    if isinstance(break_ty, Type):
+                        break_types.append(break_ty)
+                return
+            if isinstance(stmt, WhileStmt):
+                visit_block(stmt.body, nested_loops + 1)
+                return
+            if isinstance(stmt, ForRangeStmt):
+                visit_expr(stmt.start, nested_loops)
+                visit_expr(stmt.end, nested_loops)
+                visit_expr(stmt.filter, nested_loops)
+                visit_block(stmt.body, nested_loops + 1)
+                return
+            if isinstance(stmt, ForIterStmt):
+                visit_expr(stmt.iter, nested_loops)
+                visit_expr(stmt.filter, nested_loops)
+                visit_block(stmt.body, nested_loops + 1)
+                return
+            if isinstance(stmt, DeferStmt):
+                visit_block(stmt.body, nested_loops)
+                return
+            if isinstance(stmt, LetStmt):
+                visit_expr(stmt.init, nested_loops)
+                return
+            if isinstance(stmt, AssignStmt):
+                visit_expr(stmt.value, nested_loops)
+                return
+            if isinstance(stmt, ReturnStmt):
+                visit_expr(stmt.value, nested_loops)
+                return
+            if isinstance(stmt, ExprStmt):
+                visit_expr(stmt.expr, nested_loops)
+                return
+
+        def visit_block(inner: Optional[Block], nested_loops: int):
+            if inner is None:
+                return
+            for inner_stmt in inner.stmts:
+                visit_stmt(inner_stmt, nested_loops)
+            visit_expr(inner.tail, nested_loops)
+
+        visit_block(block, 0)
+        if not break_types:
+            return None
+        result = break_types[0]
+        for break_ty in break_types[1:]:
+            result = unify(result, break_ty)
+            if result.is_error():
+                self.diags.error(
+                    f"while-expression break values have incompatible types: {break_types[0]} and {break_ty}",
+                    hint="make all 'break value' expressions in the loop produce the same type",
+                )
+                return T_ERR
+        return result
+
+    def _break_targets_loop(self, break_label: Optional[str], loop_label: Optional[str], nested_loops: int) -> bool:
+        if break_label is not None:
+            return break_label == loop_label
+        return nested_loops == 0
 
     def _check_with_expr(self, expr: WithExpr,
                          expected: Optional[Type]) -> Type:
@@ -1758,6 +1886,11 @@ class BodyChecker:
 
         # Block — tail expression checked against expected
         if isinstance(expr, BlockExpr):
+            loop_stmt = self._block_loop_expr_stmt(expr.block)
+            if loop_stmt is not None:
+                actual = self._check_loop_expr(loop_stmt, expected)
+                expr._resolved_type = actual
+                return self._coerce_or_error(actual, expected, expr)
             ty = self._check_block(expr.block, expected=expected)
             expr._resolved_type = ty or T_VOID
             return expr._resolved_type
@@ -2155,6 +2288,11 @@ class BodyChecker:
             return self._check_match(expr, None)
 
         if isinstance(expr, BlockExpr):
+            loop_stmt = self._block_loop_expr_stmt(expr.block)
+            if loop_stmt is not None:
+                ty = self._check_loop_expr(loop_stmt, None)
+                expr._resolved_type = ty
+                return ty
             ty = self._check_block(expr.block)
             expr._resolved_type = ty or T_VOID
             return expr._resolved_type
