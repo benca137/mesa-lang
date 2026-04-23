@@ -29,6 +29,10 @@ def std_root_dir() -> str:
     return os.path.join(compiler_root(), "std")
 
 
+def runtime_root_dir() -> str:
+    return os.path.join(compiler_root(), "runtime")
+
+
 def is_std_source_path(path: str | None) -> bool:
     if not path:
         return False

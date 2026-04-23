@@ -145,6 +145,7 @@ PYINSTALLER_CONFIG_DIR="$CONFIG_DIR" \
   --specpath "$SPEC_DIR" \
   --paths "$ROOT" \
   --add-data "$ROOT/std:std" \
+  --add-data "$ROOT/runtime:runtime" \
   --collect-submodules src \
   "$ROOT/mesa.py"
 

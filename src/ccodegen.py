@@ -32,7 +32,6 @@ from src.ast import *
 from src.types import *
 from src.env import Environment
 from src.analysis import LayoutPass
-from src.gc_runtime import emit_gc_runtime_state, emit_gc_support
 
 _ACTIVE_ENV: Optional[Environment] = None
 
@@ -696,7 +695,6 @@ class CCodegen:
     def emit_runtime_state_source(self, header_name: str):
         self.w.line(f'#include "{header_name}"')
         self.w.line()
-        emit_gc_runtime_state(self.w)
         self.w.line("void mesa__std__io__stdout_write(mesa_str text) {")
         self.w.line("    mesa_stdout_write(text);")
         self.w.line("}")
@@ -790,6 +788,7 @@ class CCodegen:
         w.line("#include <errno.h>")
         w.line("#include <sys/mman.h>")
         w.line("#include <unistd.h>")
+        w.line('#include "mesa_gc_runtime.h"')
         w.line()
         # Mesa runtime types
         w.line("/* ── Mesa runtime types ─────────────────────────── */")
@@ -862,7 +861,6 @@ class CCodegen:
         w.line("    return a.len == b.len && (a.len == 0 || memcmp(a.data, b.data, (size_t)a.len) == 0);")
         w.line("}")
         w.line()
-        emit_gc_support(w, extern_runtime_state=extern_runtime_state)
 
     def _emit_type_decls(self, program: Program):
         w = self.w
