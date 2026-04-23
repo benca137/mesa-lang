@@ -17,6 +17,7 @@ from src.ast import (
     Program,
     StringLit,
     TupleLit,
+    VariantLit,
     TyNamed,
     TyPointer,
     TyPrimitive,
@@ -33,15 +34,23 @@ class PackageRootSpec:
 
 
 @dataclass
+class LibrarySpec:
+    name: str
+    abi: Optional[str] = None
+
+
+@dataclass
 class ExecutableTarget:
     name: str
     entry: str
     imports: List[int] = field(default_factory=list)
+    library_imports: List[int] = field(default_factory=list)
 
 
 @dataclass
 class BuildPlan:
     packages: List[PackageRootSpec] = field(default_factory=list)
+    libraries: List[LibrarySpec] = field(default_factory=list)
     executables: List[ExecutableTarget] = field(default_factory=list)
     default_executable: Optional[int] = None
 
@@ -70,6 +79,11 @@ class _PackageHandle:
 @dataclass
 class _EntryHandle:
     path: str
+
+
+@dataclass
+class _LibraryHandle:
+    index: int
 
 
 @dataclass
@@ -184,7 +198,7 @@ def infer_package_name(root: str) -> str:
 def interpret_build_program(program: Program) -> BuildPlan:
     build_fn = _extract_build_fn(program)
     plan = BuildPlan()
-    env: Dict[str, Union[_BuildHandle, _PackageHandle, _EntryHandle, _ExecutableHandle]] = {
+    env: Dict[str, Union[_BuildHandle, _PackageHandle, _EntryHandle, _LibraryHandle, _ExecutableHandle]] = {
         build_fn.params[0].name: _BuildHandle()
     }
 
@@ -193,6 +207,8 @@ def interpret_build_program(program: Program) -> BuildPlan:
             if expr.name not in env:
                 raise BuildPlanError(f"unknown build binding '{expr.name}'")
             return env[expr.name]
+        if isinstance(expr, VariantLit):
+            return f".{expr.name}"
         if isinstance(expr, StringLit):
             return expr.raw
         if isinstance(expr, TupleLit):
@@ -237,6 +253,16 @@ def interpret_build_program(program: Program) -> BuildPlan:
                 pkg = PackageRootSpec(root=_eval_string(root_expr), name=pkg_name)
                 plan.packages.append(pkg)
                 return _PackageHandle(len(plan.packages) - 1)
+            if method == "linkLibrary":
+                if len(args) != 1:
+                    raise BuildPlanError("Build.linkLibrary expects the library name as its first argument")
+                lib_name = _eval_string(args[0])
+                abi_expr = named.get("abi")
+                abi = eval_expr(abi_expr) if abi_expr is not None else None
+                if abi is not None and not isinstance(abi, str):
+                    raise BuildPlanError("Build.linkLibrary `abi` must be a variant like `.c`")
+                plan.libraries.append(LibrarySpec(name=lib_name, abi=abi))
+                return _LibraryHandle(len(plan.libraries) - 1)
             if method == "createEntry":
                 if len(args) != 1:
                     raise BuildPlanError("Build.createEntry expects one string path argument")
@@ -259,15 +285,26 @@ def interpret_build_program(program: Program) -> BuildPlan:
                     raise BuildPlanError("Build.addExecutable `entry` must be a string path or entry handle")
                 imports_expr = named.get("imports")
                 import_handles: List[int] = []
+                library_handles: List[int] = []
                 if imports_expr is not None:
-                    import_items = _eval_handle_struct(imports_expr, item_kind="package handle")
+                    import_items = _eval_handle_struct(imports_expr, item_kind="import handle")
                     for item_expr in import_items:
                         item = eval_expr(item_expr)
-                        if not isinstance(item, _PackageHandle):
-                            raise BuildPlanError("Build.addExecutable `imports` must contain package handles")
-                        if item.index not in import_handles:
-                            import_handles.append(item.index)
-                exe = ExecutableTarget(name=exe_name, entry=entry_path, imports=import_handles)
+                        if isinstance(item, _PackageHandle):
+                            if item.index not in import_handles:
+                                import_handles.append(item.index)
+                            continue
+                        if isinstance(item, _LibraryHandle):
+                            if item.index not in library_handles:
+                                library_handles.append(item.index)
+                            continue
+                        raise BuildPlanError("Build.addExecutable `imports` must contain package or library handles")
+                exe = ExecutableTarget(
+                    name=exe_name,
+                    entry=entry_path,
+                    imports=import_handles,
+                    library_imports=library_handles,
+                )
                 plan.executables.append(exe)
                 return _ExecutableHandle(len(plan.executables) - 1)
             if method == "install":
@@ -298,6 +335,16 @@ def interpret_build_program(program: Program) -> BuildPlan:
                 exe = plan.executables[receiver.index]
                 if handle.index not in exe.imports:
                     exe.imports.append(handle.index)
+                return None
+            if method == "linkLibrary":
+                if len(args) != 1:
+                    raise BuildPlanError("Executable.linkLibrary expects one library handle")
+                handle = eval_expr(args[0])
+                if not isinstance(handle, _LibraryHandle):
+                    raise BuildPlanError("Executable.linkLibrary expects a library handle")
+                exe = plan.executables[receiver.index]
+                if handle.index not in exe.library_imports:
+                    exe.library_imports.append(handle.index)
                 return None
             raise BuildPlanError(f"unknown Executable method '{method}'")
 
@@ -349,6 +396,7 @@ def render_build_plan(plan: BuildPlan) -> str:
     lines.append("pub fun build(b: *build.Build) void {")
     used_names: set[str] = {"b"}
     package_vars: List[str] = []
+    library_vars: List[str] = []
     for i, pkg in enumerate(plan.packages):
         label = pkg.name or os.path.basename(os.path.normpath(pkg.root)) or f"pkg{i + 1}"
         var = suggest_binding_name(label, used_names, fallback=f"pkg{i + 1}")
@@ -357,6 +405,13 @@ def render_build_plan(plan: BuildPlan) -> str:
             lines.append(f'    let {var} = b.addPackage("{pkg.name}", root = "{pkg.root}")')
         else:
             lines.append(f'    let {var} = b.createPackage(.{{ root: "{pkg.root}" }})')
+    for i, lib in enumerate(plan.libraries):
+        var = suggest_binding_name(lib.name, used_names, fallback=f"lib{i + 1}")
+        library_vars.append(var)
+        extras = [f'"{lib.name}"']
+        if lib.abi is not None:
+            extras.append(f"abi = {lib.abi}")
+        lines.append(f"    let {var} = b.linkLibrary({', '.join(extras)})")
     entry_vars: List[str] = []
     exe_vars: List[str] = []
     for i, exe in enumerate(plan.executables):
@@ -366,8 +421,10 @@ def render_build_plan(plan: BuildPlan) -> str:
         exe_vars.append(exe_var)
         lines.append(f'    let {entry_var} = b.createEntry("{exe.entry}")')
         extras: List[str] = [f'entry = {entry_var}']
-        if exe.imports:
-            imports = ", ".join(package_vars[pkg_index] for pkg_index in exe.imports)
+        import_names = [package_vars[pkg_index] for pkg_index in exe.imports]
+        import_names.extend(library_vars[lib_index] for lib_index in exe.library_imports)
+        if import_names:
+            imports = ", ".join(import_names)
             extras.append(f"imports = .{{ {imports} }}")
         joined = ", ".join(extras)
         lines.append(f'    let {exe_var} = b.addExecutable("{exe.name}", {joined})')

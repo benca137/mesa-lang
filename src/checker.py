@@ -100,12 +100,51 @@ def _c_function_name(pkg_path: Optional[str], name: str, receiver: Optional[str]
 def _qualified_name(expr: Expr) -> Optional[str]:
     if isinstance(expr, Ident):
         return expr.name
+    if isinstance(expr, VariantLit):
+        return f".{expr.name}"
     if isinstance(expr, FieldExpr):
         left = _qualified_name(expr.obj)
         if left is None:
             return None
         return f"{left}.{expr.field}"
     return None
+
+
+def _decl_attr(decl, name: str) -> Optional[Attribute]:
+    for attr in getattr(decl, "attrs", []) or []:
+        if attr.name == name:
+            return attr
+    return None
+
+
+def _directive_call(attr: Optional[Attribute], expected: str) -> Optional[CallExpr]:
+    if attr is None or not isinstance(attr.value, CallExpr):
+        return None
+    callee_name = _qualified_name(attr.value.callee)
+    if callee_name != f"@{expected}":
+        return None
+    return attr.value
+
+
+def _extern_binding(decl) -> tuple[Optional[str], Optional[str]]:
+    call = _directive_call(_decl_attr(decl, "extern"), "extern")
+    if call is None:
+        return None, None
+    lib_name = None
+    link_name = None
+    if call.args:
+        lib_name = _qualified_name(call.args[0].value)
+    for arg in call.args[1:]:
+        if arg.name == "name" and isinstance(arg.value, StringLit):
+            link_name = arg.value.raw
+    return lib_name, link_name
+
+
+def _layout_tag(decl) -> Optional[str]:
+    call = _directive_call(_decl_attr(decl, "layout"), "layout")
+    if call is None or not call.args:
+        return None
+    return _qualified_name(call.args[0].value)
 
 
 def effective_return_type(f: FunDecl, env: Environment) -> Type:
@@ -138,6 +177,13 @@ def lower_type(ty: TypeExpr, env: Environment,
             # Self in interface signatures is valid — returns a type variable
             # that will be resolved when the interface is implemented
             return TVar(name="Self")
+        if "." in ty.name:
+            head, leaf = ty.name.split(".", 1)
+            ns_sym = env.lookup(head)
+            if ns_sym is not None and isinstance(ns_sym.type_, TNamespace):
+                ns_ty = env.lookup_namespace_type(ns_sym.type_.name, leaf)
+                if ns_ty is not None:
+                    return ns_ty
         return env.lookup_type_or_error(ty.name, line, col, span=span)
 
     if isinstance(ty, TyAnyInterface):
@@ -221,7 +267,7 @@ def lower_type(ty: TypeExpr, env: Environment,
     if isinstance(ty, TyFun):
         params = [lower_type(p, env, line, col) for p in ty.params]
         ret    = lower_type(ty.ret, env, line, col)
-        return TFun(params, ret)
+        return TFun(params, ret, abi=ty.abi)
 
     if isinstance(ty, TyGeneric):
         # Generic instantiation — substitute concrete type args into the base type
@@ -303,7 +349,7 @@ class DeclarationPass:
 
     def run(self, program: Program):
         self._register_builtins()
-        type_like = (StructDecl, UnionDecl, InterfaceDecl, TypeAlias, UnitAlias, ErrorDecl)
+        type_like = (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, TypeAlias, UnitAlias, ErrorDecl)
         function_like = (FunDecl, DefDecl, LetStmt)
         pkg_order: List[Optional[str]] = []
         pkg_groups: Dict[Optional[str], List[Decl]] = {}
@@ -394,7 +440,8 @@ class DeclarationPass:
         self.env.register_namespace_type("@test", "CompileResult", test_result_ty, c_name="mesa_test_compile_result")
 
     def _register_decl(self, decl: Decl):
-        if isinstance(decl, StructDecl):    self._register_struct(decl)
+        if isinstance(decl, OpaqueTypeDecl): self._register_opaque_type(decl)
+        elif isinstance(decl, StructDecl):    self._register_struct(decl)
         elif isinstance(decl, UnionDecl):   self._register_union(decl)
         elif isinstance(decl, InterfaceDecl): self._register_interface(decl)
         elif isinstance(decl, TypeAlias):   self._register_alias(decl)
@@ -423,7 +470,7 @@ class DeclarationPass:
                     self.env.register_namespace_hidden(pkg_path, decl.name, "function", is_value=True)
                 elif isinstance(decl, LetStmt):
                     self.env.register_namespace_hidden(pkg_path, decl.name, "value", is_value=True)
-                elif isinstance(decl, (StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
+                elif isinstance(decl, (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
                     self.env.register_namespace_hidden(pkg_path, decl.name, "type", is_value=True, is_type=True)
                 return
             self._register_pkg_exports(pkg_path, decl, export_names)
@@ -434,11 +481,11 @@ class DeclarationPass:
                 self.env.register_namespace_hidden(pkg_path, decl.name, "function", is_value=True)
             elif isinstance(decl, LetStmt):
                 self.env.register_namespace_hidden(pkg_path, decl.name, "value", is_value=True)
-            elif isinstance(decl, (StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
+            elif isinstance(decl, (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
                 self.env.register_namespace_hidden(pkg_path, decl.name, "type", is_value=True, is_type=True)
             return
         self.env.register_namespace(pkg_path)
-        if isinstance(decl, (StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
+        if isinstance(decl, (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
             ty = self.env.lookup_type(getattr(decl, "name", ""))
             if ty is not None:
                 c_name = self.env.lookup_c_type_name(decl.name)
@@ -476,7 +523,7 @@ class DeclarationPass:
         return ty
 
     def _register_pkg_exports(self, pkg_path: str, decl: Decl, export_names: List[Tuple[str, bool]]):
-        if isinstance(decl, (StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
+        if isinstance(decl, (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
             base_ty = self.env.lookup_type(getattr(decl, "name", ""))
             if base_ty is None:
                 return
@@ -497,6 +544,20 @@ class DeclarationPass:
                 return
             for public_name, _opaque in export_names:
                 self.env.register_namespace_value(pkg_path, public_name, sym.type_, c_name=sym.c_name)
+
+    def _register_opaque_type(self, decl: OpaqueTypeDecl):
+        pkg_path = getattr(decl, "_pkg_path", None)
+        _lib_name, link_name = _extern_binding(decl)
+        c_name = _c_type_name(pkg_path, decl.name)
+        opaque_ty = TStruct(
+            name=decl.name,
+            fields={},
+            methods={},
+            opaque=True,
+        )
+        setattr(decl, "_foreign_name", link_name or decl.name)
+        setattr(decl, "_c_name", c_name)
+        self.env.register_type(decl.name, opaque_ty, pkg_path=pkg_path, c_name=c_name)
 
     def _register_struct(self, s: StructDecl):
         # First pass: register opaque struct so methods can reference it
@@ -630,20 +691,22 @@ class DeclarationPass:
         name   = f"{receiver}.{f.name}" if receiver else f.name
         pkg_path = getattr(f, "_pkg_path", None)
         c_name = _c_function_name(pkg_path, f.name, receiver)
-        link_name = None
+        lib_name, link_name = _extern_binding(f)
         if getattr(f, "is_extern", False):
-            for attr in getattr(f, "attrs", []) or []:
-                if attr.name not in {"link_name", "cname"}:
-                    continue
-                if isinstance(attr.value, StringLit):
-                    link_name = attr.value.raw
-                else:
-                    self._error_at(
-                        f,
-                        f"attribute '{attr.name}' on extern function '{f.name}' requires a string literal",
-                        hint='use #[link_name = "symbol_name"]',
-                    )
-                break
+            if lib_name is None:
+                self._error_at(
+                    f,
+                    f"extern function '{f.name}' requires a foreign library namespace",
+                    hint='use @extern(libc) or @extern(libc, name = "...")',
+                )
+            elif self.env.lookup(lib_name) is None:
+                self._error_at(
+                    f,
+                    f"unknown extern library namespace '{lib_name}'",
+                    hint=f"import {lib_name} and link it from build.mesa",
+                )
+            if link_name is None and not receiver:
+                link_name = f.name
         setattr(f, "_c_name", c_name)
         setattr(f, "_link_name", link_name)
         self.env.define(Symbol(name, fun_ty, False,
@@ -1078,12 +1141,30 @@ class BodyChecker:
         self._current_source_file = getattr(decl, "_source_file", None)
         self._allow_internal_stdlib_intrinsics = is_std_source_path(self._current_source_file)
         if isinstance(decl, FunDecl):
+            if _decl_attr(decl, "layout") is not None:
+                self._error_at(decl, "@layout(...) is only valid on struct declarations")
             self._check_fun(decl, receiver=None)
+        elif isinstance(decl, OpaqueTypeDecl):
+            if _decl_attr(decl, "extern") is None:
+                self._error_at(decl, "opaque type declarations currently require @extern(...)", hint="use @extern(libc) opaque type FILE")
+            else:
+                lib_name, _link_name = _extern_binding(decl)
+                if lib_name is None:
+                    self._error_at(decl, f"opaque type '{decl.name}' requires a foreign library namespace", hint="use @extern(libc) opaque type FILE")
+                elif self.env.lookup(lib_name) is None:
+                    self._error_at(decl, f"unknown extern library namespace '{lib_name}'", hint=f"import {lib_name} and link it from build.mesa")
         elif isinstance(decl, StructDecl):
+            layout_tag = _layout_tag(decl)
+            if layout_tag is not None and layout_tag != ".c":
+                self._error_at(decl, f"unsupported layout tag '{layout_tag}'", hint="use @layout(.c)")
+            if _decl_attr(decl, "extern") is not None:
+                self._error_at(decl, "@extern(...) is not valid on struct declarations", hint="use @layout(.c) for foreign-compatible layout")
             self.env.set_current_struct(decl.name)
             for m in decl.methods:
                 self._check_fun(m, receiver=decl.name)
             self.env.set_current_struct(None)
+        elif _decl_attr(decl, "layout") is not None:
+            self._error_at(decl, "@layout(...) is only valid on struct declarations")
         elif isinstance(decl, DefDecl):
             self.env.set_current_struct(decl.for_type)
             self._check_def(decl)
@@ -3632,6 +3713,7 @@ def type_check(
     program: Program,
     *,
     package_roots: Optional[List[Tuple[str, Optional[str]]]] = None,
+    foreign_namespaces: Optional[List[str]] = None,
     local_root: Optional[str] = None,
     source_path: Optional[str] = None,
 ) -> Tuple[Environment, DiagnosticBag]:
@@ -3642,6 +3724,7 @@ def type_check(
     diags = DiagnosticBag()
     env   = Environment(diags)
     env._package_roots = list(package_roots or [])
+    env._foreign_namespaces = list(foreign_namespaces or [])
     env._local_root = local_root
     env._source_path = source_path
 

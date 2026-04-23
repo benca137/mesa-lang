@@ -278,6 +278,7 @@ def compile_file(
     timings,
     *,
     package_roots=None,
+    foreign_namespaces=None,
     local_root=None,
 ):
     try:
@@ -302,6 +303,7 @@ def compile_file(
         state = build_frontend_state_for_path(
             source_path,
             package_roots=package_roots,
+            foreign_namespaces=foreign_namespaces,
             local_root=local_root,
         )
     except Exception as e:
@@ -442,6 +444,7 @@ def compile_tests(
     timings,
     *,
     package_roots=None,
+    foreign_namespaces=None,
     local_root=None,
 ):
     try:
@@ -467,6 +470,7 @@ def compile_tests(
         state = build_frontend_state_for_path(
             source_path,
             package_roots=package_roots,
+            foreign_namespaces=foreign_namespaces,
             local_root=local_root,
         )
     except Exception as e:
@@ -635,6 +639,7 @@ def _compile_default_target(cwd: str, output_path, run_binary_flag, verbose, tim
     for pkg_index in target.imports:
         pkg = plan.packages[pkg_index]
         package_roots.append((resolve_package_root_path(pkg.root, cwd=cwd), pkg.name))
+    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in target.library_imports]
     entry_path = os.path.join(cwd, target.entry)
     target_output = output_path or os.path.join("targets", target.name)
     return compile_file(
@@ -646,6 +651,7 @@ def _compile_default_target(cwd: str, output_path, run_binary_flag, verbose, tim
         verbose=verbose,
         timings=timings,
         package_roots=package_roots,
+        foreign_namespaces=foreign_namespaces,
         local_root=os.path.dirname(entry_path),
     )
 
@@ -663,6 +669,7 @@ def _test_default_target(cwd: str, output_path, verbose, timings) -> int:
     for pkg_index in target.imports:
         pkg = plan.packages[pkg_index]
         package_roots.append((resolve_package_root_path(pkg.root, cwd=cwd), pkg.name))
+    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in target.library_imports]
     entry_path = os.path.join(cwd, target.entry)
     target_output = output_path or os.path.join("targets", f"{target.name}-tests")
     return compile_tests(
@@ -671,6 +678,7 @@ def _test_default_target(cwd: str, output_path, verbose, timings) -> int:
         verbose=verbose,
         timings=timings,
         package_roots=package_roots,
+        foreign_namespaces=foreign_namespaces,
         local_root=os.path.dirname(entry_path),
     )
 

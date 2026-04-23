@@ -257,16 +257,19 @@ class TTuple(Type):
 class TFun(Type):
     params: List[Type]
     ret:    Type
+    abi:    Optional[str] = None
     # generic info — None for concrete functions
     type_params: List[str] = field(default_factory=list)
     where:       List[str] = field(default_factory=list)
 
     def __repr__(self):
         ps = ", ".join(repr(p) for p in self.params)
+        if self.abi is not None:
+            return f"[{self.abi}]fun({ps}) {self.ret}"
         return f"fun({ps}) {self.ret}"
     def __eq__(self, o):
-        return isinstance(o, TFun) and self.params == o.params and self.ret == o.ret
-    def __hash__(self): return hash(('fun', tuple(self.params), self.ret))
+        return isinstance(o, TFun) and self.params == o.params and self.ret == o.ret and self.abi == o.abi
+    def __hash__(self): return hash(('fun', tuple(self.params), self.ret, self.abi))
     def contains_error(self):
         return any(p.contains_error() for p in self.params) or self.ret.contains_error()
 
@@ -282,6 +285,7 @@ class TStruct(Type):
     type_params: List[str] = field(default_factory=list)
     # generic substitution — filled when instantiated
     type_args:   Dict[str, Type] = field(default_factory=dict)
+    opaque:      bool = False
 
     def __repr__(self):
         if self.type_args:
@@ -823,10 +827,11 @@ def unify(a: Type, b: Type) -> Type:
 
     if isinstance(a, TFun):
         if len(a.params) != len(b.params): return T_ERR
+        if a.abi != b.abi: return T_ERR
         params = [unify(p, q) for p, q in zip(a.params, b.params)]
         ret    = unify(a.ret, b.ret)
         if any(p.is_error() for p in params) or ret.is_error(): return T_ERR
-        return TFun(params, ret)
+        return TFun(params, ret, abi=a.abi)
 
     if a == b: return a
     return T_ERR
@@ -922,6 +927,8 @@ def format_type_for_user(ty: Type) -> str:
         return ".{" + ", ".join(parts) + "}"
     if isinstance(ty, TFun):
         params = ", ".join(format_type_for_user(p) for p in ty.params)
+        if ty.abi is not None:
+            return f"[{ty.abi}]fun({params}) {format_type_for_user(ty.ret)}"
         return f"fun({params}) {format_type_for_user(ty.ret)}"
     if isinstance(ty, TStruct):
         if ty.type_args:

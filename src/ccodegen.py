@@ -870,7 +870,7 @@ class CCodegen:
         # so vec/slice/optional helpers can legally reference them.
         for decl in program.decls:
             self.env.set_current_pkg(getattr(decl, "_pkg_path", None))
-            if isinstance(decl, StructDecl):
+            if isinstance(decl, (StructDecl, OpaqueTypeDecl)):
                 c_name = self._c_decl_name(decl, decl.name)
                 w.line(f"typedef struct {c_name} {c_name};")
             elif isinstance(decl, UnionDecl):
@@ -901,7 +901,11 @@ class CCodegen:
                 if isinstance(alias_ty, (TErrorSet, TErrorSetUnion)):
                     continue
                 alias_c = self._c_decl_name(decl, decl.name)
-                target_c = c_typeexpr(decl.type_)
+                if isinstance(alias_ty, TFun):
+                    params_c = ", ".join(c_type(param) for param in alias_ty.params) or "void"
+                    w.line(f"typedef {c_type(alias_ty.ret)} (*{alias_c})({params_c});")
+                    continue
+                target_c = c_type(alias_ty) if alias_ty is not None else c_typeexpr(decl.type_)
                 if target_c == alias_c and alias_ty is not None:
                     target_c = c_type(alias_ty)
                 if target_c != alias_c:
@@ -918,6 +922,8 @@ class CCodegen:
         self.env.set_current_pkg(None)
 
     def _type_requires_complete_definition(self, ty: Type) -> bool:
+        if isinstance(ty, TStruct) and getattr(ty, "opaque", False):
+            return False
         return isinstance(ty, (TStruct, TUnion, TTuple))
 
     def _defer_optional_type(self, inner_ty: str, mangle: str):

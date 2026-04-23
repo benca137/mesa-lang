@@ -483,6 +483,7 @@ def _load_package_graph(
     source_override: Optional[str] = None,
     *,
     package_roots: Optional[List[PackageRoot]] = None,
+    foreign_namespaces: Optional[List[str]] = None,
     local_root: Optional[str] = None,
 ) -> Tuple[FrontendState, List[Tuple[str, FrontendState]], Optional[str]]:
     root_state = _parse_frontend_state_for_path(source_path, source_override=source_override)
@@ -587,6 +588,7 @@ def _load_package_graph(
             if (
                 not mod_path
                 or mod_path in _BUILTIN_PACKAGES
+                or mod_path in set(foreign_namespaces or [])
                 or mod_path == root_pkg_name
                 or mod_path == current_pkg_name
             ):
@@ -694,6 +696,7 @@ def build_frontend_state_for_path(
     source_override: Optional[str] = None,
     *,
     package_roots: Optional[List[PackageRoot]] = None,
+    foreign_namespaces: Optional[List[str]] = None,
     local_root: Optional[str] = None,
 ) -> FrontendState:
     try:
@@ -701,6 +704,7 @@ def build_frontend_state_for_path(
             source_path,
             source_override=source_override,
             package_roots=package_roots,
+            foreign_namespaces=foreign_namespaces,
             local_root=local_root,
         )
     except FileNotFoundError:
@@ -742,6 +746,7 @@ def build_frontend_state_for_path(
     root_state.env, root_state.diags = type_check(
         root_state.program,
         package_roots=_normalize_package_roots(package_roots, include_std=True),
+        foreign_namespaces=foreign_namespaces,
         local_root=local_root,
         source_path=os.path.abspath(source_path),
     )

@@ -1,16 +1,18 @@
 pkg gfx
 
-#[link_name = "_fopen"]
-extern fun c_fopen(path: *u8, mode: *u8) *void
+import libc
 
-#[link_name = "_fwrite"]
-extern fun c_fwrite(ptr: *u8, size: i64, count: i64, file: *void) i64
+@extern(libc, name = "_fopen")
+fun c_fopen(path: *u8, mode: *u8) *void
 
-#[link_name = "_fclose"]
-extern fun c_fclose(file: *void) i32
+@extern(libc, name = "_fwrite")
+fun c_fwrite(ptr: *u8, size: i64, count: i64, file: *void) i64
 
-#[link_name = "_fputc"]
-extern fun c_fputc(ch: i32, file: *void) i32
+@extern(libc, name = "_fclose")
+fun c_fclose(file: *void) i32
+
+@extern(libc, name = "_fputc")
+fun c_fputc(ch: i32, file: *void) i32
 
 pub fun writePpm(canvas: Canvas, path: str) void {
     let file = c_fopen(path.data, "wb".data)

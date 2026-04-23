@@ -49,6 +49,16 @@ def test_build_document_meta_parse_error_collects_diagnostic():
     assert "expected IDENT" in meta.diagnostics[0].message
 
 
+def test_build_document_meta_rejects_legacy_extern_keyword_syntax():
+    meta = build_document_meta("""
+extern fun fopen(path: *i8, mode: *i8) *void
+""".strip())
+
+    assert not meta.parse_succeeded
+    assert meta.diagnostics
+    assert "no longer a declaration keyword" in meta.diagnostics[0].message
+
+
 def test_build_document_meta_type_error_collects_diagnostic():
     meta = build_document_meta("""
 fun bad() void {

@@ -6,6 +6,7 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 
 
 STD_BARE_IMPORTS: dict[str, str] = {
+    "ffi": "std.ffi",
     "mem": "std.mem",
     "io": "std.io",
 }

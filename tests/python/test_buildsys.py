@@ -310,3 +310,43 @@ pub fun build(b: *build.Build) void {
     meta = build_document_meta((tmp_path / "build.mesa").read_text(), source_path=str(tmp_path / "build.mesa"))
     assert meta.parse_succeeded
     assert not meta.diagnostics, [d.message for d in meta.diagnostics]
+
+
+def test_build_supports_foreign_library_imports_and_new_ffi_syntax(tmp_path: Path):
+    _write(tmp_path / "build.mesa", """
+pub fun build(b: *build.Build) void {
+    let std = b.addPackage("std", root = "@std")
+    let libc = b.linkLibrary("libc", abi = .c)
+    let entry = b.createEntry("src/main.mesa")
+    let app = b.addExecutable("app", entry = entry, imports = .{ std, libc })
+    b.install(app)
+}
+""")
+    _write(tmp_path / "src" / "main.mesa", """
+import ffi
+import libc
+
+@extern(libc)
+opaque type FILE
+
+@extern(libc)
+fun fopen(path: *ffi.c_char, mode: *ffi.c_char) *FILE
+
+@extern(libc)
+fun fclose(file: *FILE) ffi.c_int
+
+@layout(.c)
+struct Timespec {
+    tv_sec: ffi.time_t,
+    tv_nsec: ffi.c_long,
+}
+
+type CompareFn = [.c]fun(*ffi.c_void, *ffi.c_void) ffi.c_int
+
+fun main() void {
+}
+""")
+
+    proc = _mesa(tmp_path, "build")
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "targets" / "app").is_file()

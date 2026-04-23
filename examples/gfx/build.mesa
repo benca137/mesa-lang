@@ -1,12 +1,13 @@
 pub fun build(b: *build.Build) void {
     let std = b.addPackage("std", root = "@std")
     let gfx = b.addPackage("gfx", root = "src/gfx")
+    let libc = b.linkLibrary("libc", abi = .c)
     let entry = b.createEntry("src/main.mesa")
 
     let app = b.addExecutable(
         "gfx-demo",
         entry = entry,
-        imports = .{ std, gfx }
+        imports = .{ std, gfx, libc }
     )
 
     b.install(app)
