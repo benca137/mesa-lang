@@ -324,6 +324,7 @@ class TInterface(Type):
     methods:     Dict[str, TFun]
     parents:     List[str]
     defaults:    set = field(default_factory=set)  # method names with default bodies
+    method_visibility: Dict[str, Any] = field(default_factory=dict)
 
     def __repr__(self): return self.name
     def __eq__(self, o): return isinstance(o, TInterface) and self.name == o.name

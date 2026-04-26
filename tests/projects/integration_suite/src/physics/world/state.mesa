@@ -1,4 +1,4 @@
-pkg physics
+pkg physics.world
 
 from math import Vec2
 

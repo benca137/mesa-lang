@@ -522,7 +522,7 @@ test "edge_cases/single_elem_vec_ok.mesa" {
 
 test "edge_cases/string_with_escapes_ok.mesa" {
     let s = "hello\nworld"
-    @assert(len(s) == 12)
+    @assert(len(s) == 11)
 }
 
 test "edge_cases/struct_in_optional_ok.mesa" {

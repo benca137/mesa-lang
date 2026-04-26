@@ -14,6 +14,12 @@ test "inline compile reports parse errors" {
     @assert(result.errors[0].message != "")
 }
 
+test "inline compile reports interface method visibility mismatch" {
+    let result = @test.compile("interface I { pub fun f(self: @this) i64; }\nstruct S {}\ndef I for S { fun f(self: S) i64 { return 1; } }\n")
+    @assert(!result.ok)
+    @assert(result.errors.len > 0)
+}
+
 test "compile errors/control_flow/break_outside_loop_err.mesa" {
     let result = @test.compileFile("../fixtures/control_flow/break_outside_loop_err.mesa")
     @assert(!result.ok)

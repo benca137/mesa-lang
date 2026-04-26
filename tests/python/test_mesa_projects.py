@@ -9,17 +9,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PROJECTS = (
     ("projects/language_suite", 6),
     ("projects/integration_suite", 7),
-    ("projects/compile_error_suite", 130),
+    ("projects/compile_error_suite", 131),
     ("collections", 20),
     ("complex", 56),
     ("control_flow", 44),
     ("edge_cases", 85),
     ("functions", 50),
     ("generics", 17),
-    ("interfaces", 22),
+    ("interfaces", 23),
     ("loops", 35),
     ("memory", 21),
-    ("operators", 251),
+    ("operators", 253),
     ("optionals", 54),
     ("patterns", 22),
     ("regression", 16),
@@ -34,7 +34,7 @@ def test_mesa_native_projects_pass() -> None:
     for rel_path, passed_count in PROJECTS:
         project = REPO_ROOT / "tests" / rel_path
         proc = subprocess.run(
-            [sys.executable, str(REPO_ROOT / "mesa.py"), "test"],
+            [sys.executable, str(REPO_ROOT / "src" / "mesa.py"), "test"],
             cwd=project,
             capture_output=True,
             text=True,

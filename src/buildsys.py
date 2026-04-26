@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import os
 from typing import Dict, List, Optional, Union
 
-from src.ast import (
+from src.syntax.ast import (
     ArrayLit,
     Block,
     CallExpr,
@@ -44,6 +44,16 @@ class ExecutableTarget:
     name: str
     entry: str
     imports: List[int] = field(default_factory=list)
+    library_targets: List[int] = field(default_factory=list)
+    library_imports: List[int] = field(default_factory=list)
+
+
+@dataclass
+class PackageLibraryTarget:
+    name: str
+    package: int
+    imports: List[int] = field(default_factory=list)
+    library_targets: List[int] = field(default_factory=list)
     library_imports: List[int] = field(default_factory=list)
 
 
@@ -51,6 +61,7 @@ class ExecutableTarget:
 class BuildPlan:
     packages: List[PackageRootSpec] = field(default_factory=list)
     libraries: List[LibrarySpec] = field(default_factory=list)
+    package_libraries: List[PackageLibraryTarget] = field(default_factory=list)
     executables: List[ExecutableTarget] = field(default_factory=list)
     default_executable: Optional[int] = None
 
@@ -83,6 +94,11 @@ class _EntryHandle:
 
 @dataclass
 class _LibraryHandle:
+    index: int
+
+
+@dataclass
+class _PackageLibraryHandle:
     index: int
 
 
@@ -198,9 +214,33 @@ def infer_package_name(root: str) -> str:
 def interpret_build_program(program: Program) -> BuildPlan:
     build_fn = _extract_build_fn(program)
     plan = BuildPlan()
-    env: Dict[str, Union[_BuildHandle, _PackageHandle, _EntryHandle, _LibraryHandle, _ExecutableHandle]] = {
+    env: Dict[str, Union[_BuildHandle, _PackageHandle, _EntryHandle, _LibraryHandle, _PackageLibraryHandle, _ExecutableHandle]] = {
         build_fn.params[0].name: _BuildHandle()
     }
+
+    def eval_import_handles(expr: Optional[Expr]) -> tuple[List[int], List[int], List[int]]:
+        package_handles: List[int] = []
+        package_library_handles: List[int] = []
+        foreign_library_handles: List[int] = []
+        if expr is None:
+            return package_handles, package_library_handles, foreign_library_handles
+        import_items = _eval_handle_struct(expr, item_kind="import handle")
+        for item_expr in import_items:
+            item = eval_expr(item_expr)
+            if isinstance(item, _PackageHandle):
+                if item.index not in package_handles:
+                    package_handles.append(item.index)
+                continue
+            if isinstance(item, _PackageLibraryHandle):
+                if item.index not in package_library_handles:
+                    package_library_handles.append(item.index)
+                continue
+            if isinstance(item, _LibraryHandle):
+                if item.index not in foreign_library_handles:
+                    foreign_library_handles.append(item.index)
+                continue
+            raise BuildPlanError("build target `imports` must contain package, library target, or foreign library handles")
+        return package_handles, package_library_handles, foreign_library_handles
 
     def eval_expr(expr: Expr):
         if isinstance(expr, Ident):
@@ -263,6 +303,37 @@ def interpret_build_program(program: Program) -> BuildPlan:
                     raise BuildPlanError("Build.linkLibrary `abi` must be a variant like `.c`")
                 plan.libraries.append(LibrarySpec(name=lib_name, abi=abi))
                 return _LibraryHandle(len(plan.libraries) - 1)
+            if method == "addLibrary":
+                if len(args) != 1:
+                    raise BuildPlanError("Build.addLibrary expects the library name as its first argument")
+                lib_name = _eval_string(args[0])
+                if is_reserved_std_bare_name(lib_name):
+                    raise BuildPlanError(
+                        f"library target name '{lib_name}' is reserved for the standard library; "
+                        f"use a qualified name like 'myapp.{lib_name}'"
+                    )
+                root_expr = named.get("root") or named.get("source")
+                if root_expr is None:
+                    raise BuildPlanError("Build.addLibrary requires `root = \"...\"`")
+                package_name_expr = named.get("package") or named.get("name")
+                package_name = _eval_string(package_name_expr) if package_name_expr is not None else lib_name
+                if is_reserved_std_bare_name(package_name):
+                    raise BuildPlanError(
+                        f"library package name '{package_name}' is reserved for the standard library; "
+                        f"use a qualified name like 'myapp.{package_name}'"
+                    )
+                pkg = PackageRootSpec(root=_eval_string(root_expr), name=package_name)
+                plan.packages.append(pkg)
+                imports, package_libraries, foreign_libraries = eval_import_handles(named.get("imports"))
+                target = PackageLibraryTarget(
+                    name=lib_name,
+                    package=len(plan.packages) - 1,
+                    imports=imports,
+                    library_targets=package_libraries,
+                    library_imports=foreign_libraries,
+                )
+                plan.package_libraries.append(target)
+                return _PackageLibraryHandle(len(plan.package_libraries) - 1)
             if method == "createEntry":
                 if len(args) != 1:
                     raise BuildPlanError("Build.createEntry expects one string path argument")
@@ -283,26 +354,12 @@ def interpret_build_program(program: Program) -> BuildPlan:
                     entry_path = entry_value
                 else:
                     raise BuildPlanError("Build.addExecutable `entry` must be a string path or entry handle")
-                imports_expr = named.get("imports")
-                import_handles: List[int] = []
-                library_handles: List[int] = []
-                if imports_expr is not None:
-                    import_items = _eval_handle_struct(imports_expr, item_kind="import handle")
-                    for item_expr in import_items:
-                        item = eval_expr(item_expr)
-                        if isinstance(item, _PackageHandle):
-                            if item.index not in import_handles:
-                                import_handles.append(item.index)
-                            continue
-                        if isinstance(item, _LibraryHandle):
-                            if item.index not in library_handles:
-                                library_handles.append(item.index)
-                            continue
-                        raise BuildPlanError("Build.addExecutable `imports` must contain package or library handles")
+                import_handles, package_library_handles, library_handles = eval_import_handles(named.get("imports"))
                 exe = ExecutableTarget(
                     name=exe_name,
                     entry=entry_path,
                     imports=import_handles,
+                    library_targets=package_library_handles,
                     library_imports=library_handles,
                 )
                 plan.executables.append(exe)
@@ -336,6 +393,16 @@ def interpret_build_program(program: Program) -> BuildPlan:
                 if handle.index not in exe.imports:
                     exe.imports.append(handle.index)
                 return None
+            if method == "addLibrary":
+                if len(args) != 1:
+                    raise BuildPlanError("Executable.addLibrary expects one library target handle")
+                handle = eval_expr(args[0])
+                if not isinstance(handle, _PackageLibraryHandle):
+                    raise BuildPlanError("Executable.addLibrary expects a library target handle")
+                exe = plan.executables[receiver.index]
+                if handle.index not in exe.library_targets:
+                    exe.library_targets.append(handle.index)
+                return None
             if method == "linkLibrary":
                 if len(args) != 1:
                     raise BuildPlanError("Executable.linkLibrary expects one library handle")
@@ -366,6 +433,16 @@ def interpret_build_program(program: Program) -> BuildPlan:
         exec_stmt(stmt)
     if body.tail is not None:
         eval_expr(body.tail)
+
+    target_names: set[str] = set()
+    for lib in plan.package_libraries:
+        if lib.name in target_names:
+            raise BuildPlanError(f"duplicate build target name '{lib.name}'")
+        target_names.add(lib.name)
+    for exe in plan.executables:
+        if exe.name in target_names:
+            raise BuildPlanError(f"duplicate build target name '{exe.name}'")
+        target_names.add(exe.name)
 
     if not plan.executables:
         raise BuildPlanError("build.mesa must declare at least one executable target")
@@ -413,6 +490,21 @@ def render_build_plan(plan: BuildPlan) -> str:
             extras.append(f"abi = {lib.abi}")
         lines.append(f"    let {var} = b.linkLibrary({', '.join(extras)})")
     entry_vars: List[str] = []
+    package_library_vars: List[str] = []
+    for i, lib in enumerate(plan.package_libraries):
+        lib_var = suggest_binding_name(lib.name, used_names, fallback=f"lib{i + 1}")
+        package_library_vars.append(lib_var)
+        pkg = plan.packages[lib.package]
+        extras = [f'root = "{pkg.root}"']
+        if pkg.name and pkg.name != lib.name:
+            extras.append(f'package = "{pkg.name}"')
+        import_names = [package_vars[pkg_index] for pkg_index in lib.imports]
+        import_names.extend(package_library_vars[lib_index] for lib_index in lib.library_targets)
+        import_names.extend(library_vars[lib_index] for lib_index in lib.library_imports)
+        if import_names:
+            extras.append(f"imports = .{{ {', '.join(import_names)} }}")
+        lines.append(f'    let {lib_var} = b.addLibrary("{lib.name}", {", ".join(extras)})')
+
     exe_vars: List[str] = []
     for i, exe in enumerate(plan.executables):
         exe_var = suggest_binding_name(exe.name, used_names, fallback="exe")
@@ -422,6 +514,7 @@ def render_build_plan(plan: BuildPlan) -> str:
         lines.append(f'    let {entry_var} = b.createEntry("{exe.entry}")')
         extras: List[str] = [f'entry = {entry_var}']
         import_names = [package_vars[pkg_index] for pkg_index in exe.imports]
+        import_names.extend(package_library_vars[lib_index] for lib_index in exe.library_targets)
         import_names.extend(library_vars[lib_index] for lib_index in exe.library_imports)
         if import_names:
             imports = ", ".join(import_names)

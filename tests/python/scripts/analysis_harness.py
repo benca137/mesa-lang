@@ -1,10 +1,10 @@
 """Tests for static analysis passes."""
 import sys
 sys.path.insert(0, '.')
-from src.parser import parse
-from src.checker import type_check
-from src.analysis import analyse, LayoutPass
-from src.types import *
+from src.syntax.parser import parse
+from src.semantics.checker import type_check
+from src.semantics.analysis import analyse, LayoutPass
+from src.semantics.types import *
 
 
 def run_analysis(src: str):

@@ -147,7 +147,7 @@ PYINSTALLER_CONFIG_DIR="$CONFIG_DIR" \
   --add-data "$ROOT/std:std" \
   --add-data "$ROOT/runtime:runtime" \
   --collect-submodules src \
-  "$ROOT/mesa.py"
+  "$ROOT/src/mesa.py"
 
 BUILT_BIN="$DIST_DIR/$BINARY_NAME"
 [[ -x "$BUILT_BIN" ]] || die "build finished but $BUILT_BIN was not created"

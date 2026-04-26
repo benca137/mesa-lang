@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 
-from src.meta import build_document_meta
+from src.editor.meta import build_document_meta
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -16,7 +16,7 @@ def _write(path: Path, text: str) -> None:
 
 def _mesa(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["python3", str(REPO_ROOT / "mesa.py"), *args],
+        ["python3", str(REPO_ROOT / "src" / "mesa.py"), *args],
         cwd=cwd,
         capture_output=True,
         text=True,
@@ -63,7 +63,7 @@ pub fun build(b: *build.Build) void {
 }
 """)
     _write(tmp_path / "src" / "math" / "types" / "vector.mesa", """
-pkg math
+pkg math.types
 
 pub struct Vec2 {
     x: f64,
@@ -261,6 +261,97 @@ fun main() void {
     proc = _mesa(tmp_path, "run")
     assert proc.returncode == 0, proc.stderr
     assert proc.stdout.strip() == "1"
+
+
+def test_build_supports_package_style_library_targets(tmp_path: Path):
+    _write(tmp_path / "build.mesa", """
+pub fun build(b: *build.Build) void {
+    let math = b.addLibrary("math", root = "src/math")
+    let physics = b.addLibrary("physics", root = "src/physics", imports = .{ math })
+    let entry = b.createEntry("src/main.mesa")
+    let app = b.addExecutable("app", entry = entry, imports = .{ physics })
+    b.install(app)
+}
+""")
+    _write(tmp_path / "src" / "math" / "math.pkg", """
+pkg math
+
+from "vector" export Vec2
+""")
+    _write(tmp_path / "src" / "math" / "vector.mesa", """
+pkg math
+
+pub struct Vec2 {
+    x: f64,
+    y: f64,
+}
+""")
+    _write(tmp_path / "src" / "physics" / "physics.pkg", """
+pkg physics
+
+from "api" export origin
+""")
+    _write(tmp_path / "src" / "physics" / "api.mesa", """
+pkg physics
+
+from math import Vec2
+
+pub fun origin() Vec2 {
+    .{ x: 0.0, y: 0.0 }
+}
+""")
+    _write(tmp_path / "src" / "main.mesa", """
+from physics import origin
+
+fun main() void {
+    let v = origin()
+    println(1)
+}
+""")
+
+    proc = _mesa(tmp_path, "run")
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.strip() == "1"
+
+
+def test_build_reports_missing_library_target_root(tmp_path: Path):
+    _write(tmp_path / "build.mesa", """
+pub fun build(b: *build.Build) void {
+    let missing = b.addLibrary("missing", root = "src/missing")
+    let entry = b.createEntry("src/main.mesa")
+    let app = b.addExecutable("app", entry = entry, imports = .{ missing })
+    b.install(app)
+}
+""")
+    _write(tmp_path / "src" / "main.mesa", """
+fun main() void {
+    println(1)
+}
+""")
+
+    proc = _mesa(tmp_path, "build")
+    assert proc.returncode == 1
+    assert "package root not found for 'missing': src/missing" in proc.stderr
+
+
+def test_build_rejects_duplicate_target_names(tmp_path: Path):
+    _write(tmp_path / "build.mesa", """
+pub fun build(b: *build.Build) void {
+    let math = b.addLibrary("app", root = "src/math")
+    let entry = b.createEntry("src/main.mesa")
+    let app = b.addExecutable("app", entry = entry, imports = .{ math })
+    b.install(app)
+}
+""")
+    _write(tmp_path / "src" / "main.mesa", """
+fun main() void {
+    println(1)
+}
+""")
+
+    proc = _mesa(tmp_path, "build")
+    assert proc.returncode == 1
+    assert "duplicate build target name 'app'" in proc.stderr
 
 
 def test_meta_uses_enclosing_build_file_for_editor_diagnostics(tmp_path: Path):

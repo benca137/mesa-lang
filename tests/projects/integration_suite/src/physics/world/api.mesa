@@ -1,4 +1,4 @@
-pkg physics
+pkg physics.world
 
 from physics import Body
 

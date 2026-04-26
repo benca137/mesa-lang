@@ -1,8 +1,8 @@
 """Tests for Mesa editor metadata and completions."""
 from __future__ import annotations
 
-from src.ast import SourcePos
-from src.meta import build_document_meta
+from src.syntax.ast import SourcePos
+from src.editor.meta import build_document_meta
 
 
 def _strip_marker(source: str, marker: str = "<<CURSOR>>") -> tuple[str, SourcePos]:
@@ -272,7 +272,7 @@ fun main() void {
 
     assert ("ArenaAllocator", "property") in pairs
     assert ("init", "function") in pairs
-    assert ("reset", "property") in pairs
+    assert ("reset", "function") in pairs
 
 
 def test_semantic_tokens_cover_method_references_and_anonymous_struct_fields():
@@ -360,3 +360,15 @@ fun identity[T](x: T) T {
     assert ("math", "namespace") in pairs
     assert ("io", "namespace") in pairs
     assert ("T", "typeParameter") in pairs
+
+
+def test_canonical_package_imports_resolve_public_surface():
+    from src.editor.meta import build_document_meta as canonical_meta_builder
+    from src.frontend import (
+        build_frontend_state_for_path as canonical_frontend_builder,
+    )
+    from src.syntax.ast import SourcePos as canonical_source_pos
+
+    assert canonical_source_pos is SourcePos
+    assert callable(canonical_frontend_builder)
+    assert callable(canonical_meta_builder)

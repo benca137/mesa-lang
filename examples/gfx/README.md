@@ -16,8 +16,8 @@ could be structured:
 
 Run it from this directory with:
 
-- `python3.14 ../../mesa.py test`
-- `python3.14 ../../mesa.py run`
+- `python3.14 ../../src/mesa.py test`
+- `python3.14 ../../src/mesa.py run`
 
 Running `mesa run` now produces all of:
 

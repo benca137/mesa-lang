@@ -11,8 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import difflib
 from typing import Dict, List, Optional, Set, Tuple
-from src.ast import SourcePos, SourceSpan
-from src.types import *
+from src.syntax.ast import SourcePos, SourceSpan
+from src.semantics.types import *
 
 
 # ══════════════════════════════════════════════════════════════
@@ -249,7 +249,7 @@ class Environment:
 
         # unit registry — user-defined units: name → (DimVec, scale)
         # overlaid on top of the built-in _SI_BASE registry in types.py
-        from src.types import _SI_BASE
+        from src.semantics.types import _SI_BASE
         self._unit_registry: dict = dict(_SI_BASE)
 
         # current struct being checked — for self resolution
@@ -405,14 +405,27 @@ class Environment:
         self._namespace_value_c_names.setdefault(path, {})
         self._namespace_type_c_names.setdefault(path, {})
 
-    def register_namespace_value(self, path: str, name: str, ty: Type, c_name: Optional[str] = None):
+    def register_namespace_path(self, path: str):
         self.register_namespace(path)
+        parts = [part for part in path.split(".") if part]
+        for index in range(1, len(parts)):
+            parent = ".".join(parts[:index])
+            child = parts[index]
+            child_path = ".".join(parts[: index + 1])
+            ns_ty = TNamespace(child_path)
+            self.register_namespace(parent)
+            self.register_namespace(child_path)
+            self._namespace_values[parent][child] = ns_ty
+            self._namespace_types[parent][child] = ns_ty
+
+    def register_namespace_value(self, path: str, name: str, ty: Type, c_name: Optional[str] = None):
+        self.register_namespace_path(path)
         self._namespace_values[path][name] = ty
         if c_name is not None:
             self._namespace_value_c_names[path][name] = c_name
 
     def register_namespace_type(self, path: str, name: str, ty: Type, c_name: Optional[str] = None):
-        self.register_namespace(path)
+        self.register_namespace_path(path)
         self._attach_c_name(ty, c_name)
         self._namespace_types[path][name] = ty
         if c_name is not None:
@@ -420,7 +433,7 @@ class Environment:
 
     def register_namespace_hidden(self, path: str, name: str, kind: str,
                                   *, is_value: bool = False, is_type: bool = False):
-        self.register_namespace(path)
+        self.register_namespace_path(path)
         self._namespace_hidden[path][name] = (kind, is_value, is_type)
 
     def lookup_namespace_value(self, path: str, name: str) -> Optional[Type]:
@@ -439,7 +452,7 @@ class Environment:
         return self._namespace_hidden.get(path, {}).get(name)
 
     def bind_import(self, path: str, alias: Optional[str] = None):
-        self.register_namespace(path)
+        self.register_namespace_path(path)
         bind_name = alias or path.split(".")[-1]
         self.define(Symbol(bind_name, TNamespace(path), False, pkg_path=self._current_pkg))
 
@@ -480,7 +493,7 @@ class Environment:
 
     def find_variant_type(self, variant_name: str) -> Optional[Type]:
         """Return the TUnion or TErrorSet that owns this variant name, or None."""
-        from src.types import TErrorSet as _TES
+        from src.semantics.types import TErrorSet as _TES
         if self._current_pkg is not None:
             for ty in self._pkg_types.get(self._current_pkg, {}).values():
                 if isinstance(ty, (TUnion, _TES)) and variant_name in ty.variants:
@@ -493,7 +506,7 @@ class Environment:
 
     def find_unit_variant_type(self, variant_name: str) -> Optional[Type]:
         """Return the TUnion or TErrorSet owning this unit (no-payload) variant."""
-        from src.types import TErrorSet as _TES
+        from src.semantics.types import TErrorSet as _TES
         if self._current_pkg is not None:
             for ty in self._pkg_types.get(self._current_pkg, {}).values():
                 if isinstance(ty, (TUnion, _TES)):

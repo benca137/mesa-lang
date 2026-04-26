@@ -8,8 +8,8 @@ It shows:
 - a pkg-less `main.mesa` entry point built through `build.mesa`
 
 Run it from this directory with:
-- `python3 ../../mesa.py build`
-- `python3 ../../mesa.py run`
+- `python3 ../../src/mesa.py build`
+- `python3 ../../src/mesa.py run`
 
 If your shell resolves `python3` to an older interpreter, use a Python 3.10+ binary instead.
 

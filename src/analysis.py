@@ -13,9 +13,9 @@ All passes share the DiagnosticBag from the type checker environment.
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
-from src.ast import *
-from src.types import *
-from src.env import Environment, DiagnosticBag
+from src.syntax.ast import *
+from src.semantics.types import *
+from src.semantics.env import Environment, DiagnosticBag
 
 
 # ══════════════════════════════════════════════════════════════

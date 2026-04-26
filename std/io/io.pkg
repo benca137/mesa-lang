@@ -1,6 +1,7 @@
 pkg io
 
 from "base" export Writer
-from "base" export Stdout, Stderr
+from "base" export Stdout, Stderr, File
 from "base" export stdout, stderr
 from "base" export write, writeln, print, println
+from "base" export openRead, openWrite, openAppend

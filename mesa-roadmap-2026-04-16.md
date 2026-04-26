@@ -151,7 +151,7 @@ Alpha gate:
 Likely work areas:
 
 - `src/buildsys.py`
-- `mesa.py`
+- `src/mesa.py`
 - `tests/python/test_buildsys.py`
 - multi-package fixtures under `tests/projects`
 
@@ -169,12 +169,17 @@ Likely work areas:
 
 ### 7. Tooling floor
 
-- Keep tooling modest for alpha.
-- Add:
-  - go-to-definition
-  - document symbols
-  - stronger diagnostics polish
+- Keep compiler-facing editor metadata modest for alpha.
+- Track MesaLSP in the separate MesaLSP project instead of this repository.
+- Do not count an in-tree `src.lsp.server` as part of the alpha contract.
 - Hold off on broader tooling depth until semantics and backend behavior stabilize.
+
+Supporting alpha docs:
+
+- `docs/alpha-feature-matrix.md`
+- `docs/alpha-release-checklist.md`
+- `docs/alpha-ffi-abi.md`
+- `docs/alpha-stdlib.md`
 
 Alpha acceptance criteria:
 

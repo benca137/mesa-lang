@@ -186,6 +186,14 @@ def interfaces__interface_with_bool_method_ok__Predicate for interfaces__interfa
     fun check(self: interfaces__interface_with_bool_method_ok__Positive) bool { return self.val > 0.0; }
 }
 
+interface interfaces__interface_method_visibility_ok__Visible {
+    pub fun value(self: @this) i64;
+}
+struct interfaces__interface_method_visibility_ok__Box { n: i64 }
+def interfaces__interface_method_visibility_ok__Visible for interfaces__interface_method_visibility_ok__Box {
+    pub fun value(self: interfaces__interface_method_visibility_ok__Box) i64 { return self.n; }
+}
+
 interface interfaces__interface_with_default_ok__Printable {
     fun to_str(self: @this) str;
     fun print(self: @this) void {
@@ -340,6 +348,11 @@ test "interfaces/interface_with_bool_method_ok.mesa" {
     let neg: interfaces__interface_with_bool_method_ok__Positive = .{ val: -1.0 }
     @assert(pos.check())
     @assert(!neg.check())
+}
+
+test "interfaces/interface_method_visibility_ok.mesa" {
+    let b: interfaces__interface_method_visibility_ok__Box = .{ n: 42 }
+    @assert(b.value() == 42)
 }
 
 test "interfaces/interface_with_default_ok.mesa" {

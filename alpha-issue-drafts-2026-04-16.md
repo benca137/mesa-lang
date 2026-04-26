@@ -80,7 +80,7 @@ Phase 1 backend/runtime hardening explicitly says to decide MIR scope clearly:
 The source currently describes MIR as unfinished integration work:
 
 - `src/mir.py:4-6` says it is `"not wired into the main compiler pipeline yet"`
-- the CLI pipeline in `mesa.py` still goes parse -> type check -> analysis -> C codegen -> cc
+- the CLI pipeline in `src/mesa.py` still goes parse -> type check -> analysis -> C codegen -> cc
 - there is a dedicated MIR test suite in `tests/test_mirgen.py`
 
 That means MIR exists, is tested, but is not yet clearly part of the compiler contract.
@@ -101,7 +101,7 @@ That means MIR exists, is tested, but is not yet clearly part of the compiler co
 
 - `Mesa/mesa-roadmap-2026-04-16.md` Phase 1 / Backend-runtime hardening
 - `src/mir.py:1-6`
-- `mesa.py` compilation pipeline docstring
+- `src/mesa.py` compilation pipeline docstring
 - `tests/test_mirgen.py`
 
 ## 4. Complete MIR lowering for remaining statement and expression forms

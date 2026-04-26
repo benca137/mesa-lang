@@ -1,14 +1,20 @@
 """
-Mesa parser.
+Mesa recursive-descent parser.
 
-The top-level grammar is recursive descent. Expressions are parsed in the
-same broad style as Zig's parser: a compact operator table feeds one
-precedence-climbing loop, while prefix, primary, and postfix forms stay in
-their own small parsing routines.
+Precedence (lowest → highest):
+    or
+    and
+    == != .== .!=
+    < > <= >= .< .> .<= .>=
+    + - .+ .-
+    * / % .* ./ .%
+    ^ .^                    (right associative)
+    unary  (- ! * @)
+    postfix (call . ?. index)
+    primary
 """
 from __future__ import annotations
-from enum import Enum
-from typing import List, NamedTuple, Optional, Union
+from typing import List, Optional, Union
 from src.syntax.tokenizer import Token, TK, Tokenizer
 from src.syntax.ast import *
 from src.syntax.ast import TyTuple
@@ -28,16 +34,14 @@ def _decode_string_literal(text: str) -> str:
     i = 0
     while i < len(text):
         ch = text[i]
-
         if ch != "\\":
             out.append(ch)
             i += 1
             continue
-        elif i >= len(text):
+        i += 1
+        if i >= len(text):
             out.append("\\")
             break
-
-        i += 1
         esc = text[i]
         match esc:
             case "n":
@@ -56,59 +60,40 @@ def _decode_string_literal(text: str) -> str:
     return "".join(out)
 
 
-class _Assoc(Enum):
-    LEFT = "left"
-    RIGHT = "right"
-
-
-class _OpInfo(NamedTuple):
-    symbol: str
-    prec: int
-    assoc: _Assoc = _Assoc.LEFT
-    chainable: bool = False
-
-
-# ── Operator table ──────────────────────────────────────────
-#
-# Precedence values are intentionally spaced like Zig's table. That makes it
-# cheap to insert new layers without renumbering the world.
-_OPER_TABLE: dict[TK, _OpInfo] = {
-    TK.KW_OR:       _OpInfo("or", 10),
-    TK.KW_AND:      _OpInfo("and", 20),
-
-    TK.EQ_EQ:       _OpInfo("==", 30, chainable=True),
-    TK.BANG_EQ:     _OpInfo("!=", 30, chainable=True),
-    TK.DOT_EQ_EQ:   _OpInfo(".==", 30),
-    TK.DOT_BANG_EQ: _OpInfo(".!=", 30),
-
-    TK.LT:          _OpInfo("<", 40, chainable=True),
-    TK.GT:          _OpInfo(">", 40, chainable=True),
-    TK.LT_EQ:       _OpInfo("<=", 40, chainable=True),
-    TK.GT_EQ:       _OpInfo(">=", 40, chainable=True),
-    TK.DOT_LT:      _OpInfo(".<", 40),
-    TK.DOT_GT:      _OpInfo(".>", 40),
-    TK.DOT_LT_EQ:   _OpInfo(".<=", 40),
-    TK.DOT_GT_EQ:   _OpInfo(".>=", 40),
-
-    TK.PLUS:        _OpInfo("+", 50),
-    TK.MINUS:       _OpInfo("-", 50),
-    TK.DOT_PLUS:    _OpInfo(".+", 50),
-    TK.DOT_MINUS:   _OpInfo(".-", 50),
-
-    TK.STAR:        _OpInfo("*", 60),
-    TK.SLASH:       _OpInfo("/", 60),
-    TK.PERCENT:     _OpInfo("%", 60),
-    TK.DOT_STAR:    _OpInfo(".*", 60),
-    TK.DOT_SLASH:   _OpInfo("./", 60),
-    TK.DOT_PERCENT: _OpInfo(".%", 60),
-
-    TK.CARET:       _OpInfo("^", 70, _Assoc.RIGHT),
-    TK.DOT_CARET:   _OpInfo(".^", 70, _Assoc.RIGHT),
+# ── Precedence table ─────────────────────────────────────────
+_PREC: dict[TK, int] = {
+    TK.KW_OR:       1,
+    TK.KW_AND:      2,
+    TK.EQ_EQ:       3, TK.BANG_EQ:    3,
+    TK.DOT_EQ_EQ:   3, TK.DOT_BANG_EQ: 3,
+    TK.LT:          4, TK.GT:         4,
+    TK.LT_EQ:       4, TK.GT_EQ:      4,
+    TK.DOT_LT:      4, TK.DOT_GT:     4,
+    TK.DOT_LT_EQ:   4, TK.DOT_GT_EQ:  4,
+    TK.PLUS:        5, TK.MINUS:      5,
+    TK.DOT_PLUS:    5, TK.DOT_MINUS:  5,
+    TK.STAR:        6, TK.SLASH:      6, TK.PERCENT:    6,
+    TK.DOT_STAR:    6, TK.DOT_SLASH:  6, TK.DOT_PERCENT: 6,
+    TK.CARET:       7, TK.DOT_CARET:  7,   # right-associative
 }
 
-_BINOP: dict[TK, str] = {kind: info.symbol for kind, info in _OPER_TABLE.items()}
-_BINOP[TK.PLUS_MINUS] = "+-"
-_BINOP[TK.DOT_PLUS_MINUS] = ".+-"
+_BINOP: dict[TK, str] = {
+    TK.PLUS: "+",      TK.MINUS: "-",
+    TK.STAR: "*",      TK.SLASH: "/",    TK.PERCENT: "%",
+    TK.CARET: "^",
+    TK.DOT_PLUS: ".+", TK.DOT_MINUS: ".-",
+    TK.DOT_STAR: ".*", TK.DOT_SLASH: "./", TK.DOT_PERCENT: ".%",
+    TK.DOT_CARET: ".^",
+    TK.EQ_EQ: "==",    TK.BANG_EQ: "!=",
+    TK.LT: "<",        TK.GT: ">",
+    TK.LT_EQ: "<=",    TK.GT_EQ: ">=",
+    TK.DOT_EQ_EQ: ".==",  TK.DOT_BANG_EQ: ".!=",
+    TK.DOT_LT: ".<",   TK.DOT_GT: ".>",
+    TK.DOT_LT_EQ: ".<=", TK.DOT_GT_EQ: ".>=",
+    TK.KW_AND: "and",  TK.KW_OR: "or",
+    TK.PLUS_MINUS: "+-",
+    TK.DOT_PLUS_MINUS: ".+-",
+}
 
 _ASSIGN_OPS: dict[TK, str] = {
     TK.EQ: "=",            TK.PLUS_EQ: "+=",
@@ -118,6 +103,8 @@ _ASSIGN_OPS: dict[TK, str] = {
     TK.DOT_PLUS_EQ: ".+=", TK.DOT_MINUS_EQ: ".-=",
     TK.DOT_STAR_EQ: ".*=", TK.DOT_SLASH_EQ: "./=",
 }
+
+_RIGHT_ASSOC = {TK.CARET, TK.DOT_CARET}
 
 _PRIM_TYPES = {
     TK.TY_I8: "i8",   TK.TY_I16: "i16",
@@ -249,86 +236,58 @@ class Parser:
 
     # ── attributes ──────────────────────────────────────────
 
-    def _parse_hash_attr(self) -> Attribute:
-        """HashAttr <- '#[' IDENT (('=' Expr) / ('(' Expr ')'))? ']'"""
-        self._advance()   # eat #[
-        name = self._expect_ident()
-        value = None
-        if self._eat(TK.EQ):
-            value = self._parse_expr()
-        elif self._eat(TK.LPAREN):
-            value = self._parse_expr()
-            self._expect(TK.RPAREN)
-        self._expect(TK.RBRACKET)
-        return Attribute(name=name, value=value)
-
     def _parse_attrs(self) -> List[Attribute]:
-        """AttrList <- HashAttr*"""
         attrs = []
-        while self._check(TK.HASH_LBRACKET):
-            attrs.append(self._parse_hash_attr())
-        return attrs
-
-    def _parse_compiler_intrinsic_expr(self) -> Expr:
-        """CompilerIntrinsic <- '@' IDENT ArgList?"""
-        at_tok = self._expect(TK.AT)
-        if self._cur.kind != TK.IDENT and not self._cur.kind.name.startswith("KW_"):
-            raise ParseError("expected IDENT", self._cur)
-        name_tok = self._advance()
-        callee = Ident(
-            f"@{name_tok.lexeme}",
-            line=at_tok.line,
-            col=at_tok.col,
-            span=self._span_from_tokens(at_tok, name_tok),
-        )
-        if not self._check(TK.LPAREN):
-            return callee
-        args = self._parse_arglist()
-        return CallExpr(
-            callee=callee,
-            args=args,
-            line=at_tok.line,
-            col=at_tok.col,
-            span=SourceSpan(
-                start=SourcePos(at_tok.line, at_tok.col),
-                end=self._token_end_pos(self._prev),
-            ),
-        )
-
-    def _parse_compiler_intrinsic_attr(self) -> Attribute:
-        """CompilerIntrinsicAttr <- CompilerIntrinsic"""
-        intrinsic = self._parse_compiler_intrinsic_expr()
-        name = ""
-        callee: Expr = intrinsic
-        if isinstance(intrinsic, CallExpr):
-            callee = intrinsic.callee
-        if isinstance(callee, Ident) and callee.name.startswith("@"):
-            name = callee.name[1:]
-        return Attribute(name=name, value=intrinsic)
-
-    def _parse_decl_metadata(self) -> List[Attribute]:
-        """
-        DeclMetadata <- (HashAttr / CompilerIntrinsic)*
-
-        Parser storage note: compiler intrinsics still live in decl.attrs until
-        the AST grows a dedicated declaration-directive field.
-        """
-        metadata = []
         while True:
             if self._check(TK.HASH_LBRACKET):
-                metadata.append(self._parse_hash_attr())
-                self._eat_newlines()
+                self._advance()   # eat #[
+                name = self._expect_ident()
+                value = None
+                if self._eat(TK.EQ):
+                    value = self._parse_expr()
+                elif self._eat(TK.LPAREN):
+                    value = self._parse_expr()
+                    self._expect(TK.RPAREN)
+                self._expect(TK.RBRACKET)
+                attrs.append(Attribute(name=name, value=value))
                 continue
             if self._check(TK.AT):
-                metadata.append(self._parse_compiler_intrinsic_attr())
-                self._eat_newlines()
+                at_tok = self._advance()
+                if self._cur.kind != TK.IDENT and not self._cur.kind.name.startswith("KW_"):
+                    raise ParseError("expected IDENT", self._cur)
+                name_tok = self._advance()
+                value = Ident(
+                    f"@{name_tok.lexeme}",
+                    line=name_tok.line,
+                    col=name_tok.col,
+                    span=self._span_from_tokens(at_tok, name_tok),
+                )
+                if self._eat(TK.LPAREN):
+                    args: List[Arg] = []
+                    while not self._check(TK.RPAREN, TK.EOF):
+                        if args:
+                            self._expect(TK.COMMA)
+                        arg_name = None
+                        if self._check(TK.IDENT) and self._peek(1).kind == TK.EQ:
+                            arg_name = self._advance().lexeme
+                            self._advance()
+                        args.append(Arg(arg_name, self._parse_expr()))
+                    end_tok = self._expect(TK.RPAREN)
+                    value = CallExpr(
+                        callee=value,
+                        args=args,
+                        line=at_tok.line,
+                        col=at_tok.col,
+                        span=self._span_from_tokens(at_tok, end_tok),
+                    )
+                attrs.append(Attribute(name=name_tok.lexeme, value=value))
                 continue
-            return metadata
+            break
+        return attrs
 
     # ── visibility ───────────────────────────────────────────
 
     def _parse_vis(self) -> Visibility:
-        """Visibility <- 'pub' / 'export' / empty"""
         match self._cur.kind:
             case TK.KW_PUB:
                 self._advance()
@@ -344,7 +303,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def parse(self) -> Program:
-        """Program <- Newline* PkgDecl? Decl* EOF"""
         pkg     = None
         imports = []
         decls   = []
@@ -380,7 +338,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_pkg_decl(self) -> PkgDecl:
-        """PkgDecl <- 'pkg' DottedName"""
         start_tok = self._expect(TK.KW_PKG)
         path = self._parse_dotted_name()
         end_tok = self._prev
@@ -388,22 +345,16 @@ class Parser:
         return PkgDecl(path=path, span=self._span_from_tokens(start_tok, end_tok))
 
     def _parse_dotted_name(self) -> str:
-        """DottedName <- IDENT ('.' IDENT)*"""
         parts = [self._expect_ident()]
         while self._eat(TK.DOT):
             parts.append(self._expect_ident())
         return ".".join(parts)
 
     def _parse_string_path(self) -> str:
-        """StringPath <- STRING"""
         tok = self._expect(TK.STRING)
         return _decode_string_literal(tok.lexeme[1:-1])
 
     def _parse_import(self) -> Union[ImportDecl, FromImportDecl]:
-        """
-        ImportDecl     <- 'import' DottedName ('as' IDENT)?
-        FromImportDecl <- 'from' DottedName 'import' ImportName (',' ImportName)*
-        """
         match self._cur.kind:
             case TK.KW_IMPORT:
                 start_tok = self._advance()
@@ -432,7 +383,6 @@ class Parser:
                 raise ParseError("expected import", self._cur)
 
     def _parse_pkg_export(self, opaque: bool = False) -> PkgExportDecl:
-        """PkgExportDecl <- 'from' StringPath 'export' ExportName (',' ExportName)*"""
         start_tok = self._expect(TK.KW_FROM)
         source_path = self._parse_string_path()
         self._expect(TK.KW_EXPORT)
@@ -453,7 +403,6 @@ class Parser:
         )
 
     def _parse_pkg_export_all(self) -> PkgExportAllDecl:
-        """PkgExportAllDecl <- 'export' StringPath"""
         start_tok = self._expect(TK.KW_EXPORT)
         source_path = self._parse_string_path()
         end_tok = self._prev
@@ -468,12 +417,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_decl(self) -> Decl:
-        """
-        Decl <- DeclMetadata Visibility? ('inline')?
-                (FunDef / TestDecl / StructDecl / UnionDecl / InterfaceDecl /
-                 DefDecl / TypeAlias / ImportDecl / LetDecl / ErrorDecl /
-                 PkgExportDecl / FromExportDecl / OpaqueTypeDecl)
-        """
         if self._check(TK.KW_OPAQUE):
             start_tok = self._advance()
             if not self._check(TK.KW_FROM):
@@ -486,7 +429,7 @@ class Parser:
         if self._check(TK.KW_FROM) and self._peek(1).kind == TK.STRING:
             return self._parse_pkg_export()
 
-        attrs = self._parse_decl_metadata()
+        attrs = self._parse_attrs()
         self._eat_newlines()
         vis   = self._parse_vis()
 
@@ -497,8 +440,8 @@ class Parser:
 
         match self._cur.kind:
             case TK.KW_FUN:
-                decl = self._parse_fun_def(vis, attrs)
-                decl.proto.is_inline = is_inline
+                decl = self._parse_fun(vis, attrs)
+                decl.is_inline = is_inline
                 return decl
             case TK.KW_OPAQUE:
                 start_tok = self._advance()
@@ -550,7 +493,6 @@ class Parser:
     # ── fun ──────────────────────────────────────────────────
 
     def _parse_test_decl(self) -> TestDecl:
-        """TestDecl <- 'test' STRING Block"""
         start_tok = self._expect(TK.KW_TEST)
         name_tok = self._expect(TK.STRING)
         body = self._parse_block()
@@ -560,9 +502,8 @@ class Parser:
             span=self._span_from_token_and_end(start_tok, body.span.end if body.span else self._token_end_pos(name_tok)),
         )
 
-    def _parse_fun_proto(self, vis: Visibility,
-                         attrs: List[Attribute]) -> FunProto:
-        """FunProto <- 'fun' IDENT GenericParams? '(' ParamList ')' TypeExpr"""
+    def _parse_fun(self, vis: Visibility,
+                   attrs: List[Attribute]) -> FunDecl:
         start_tok = self._expect(TK.KW_FUN)
         name        = self._expect_ident()
         type_params = self._parse_generic_params()  # fun foo[T, U](...)
@@ -570,22 +511,6 @@ class Parser:
         params = self._parse_params()
         self._expect(TK.RPAREN)
         ret    = self._parse_type()
-        proto = FunProto(
-            vis=vis,
-            attrs=attrs,
-            name=name,
-            params=params,
-            ret=ret,
-            is_extern=any(attr.name == "extern" for attr in attrs),
-            span=self._span_from_tokens(start_tok, self._prev),
-        )
-        proto._type_params = type_params
-        return proto
-
-    def _parse_fun_def(self, vis: Visibility,
-                       attrs: List[Attribute]) -> FunDecl:
-        """FunDef <- FunProto Block? HandleBlock?"""
-        proto = self._parse_fun_proto(vis, attrs)
         if self._check(TK.LBRACE):
             body = self._parse_block()
         else:
@@ -593,21 +518,20 @@ class Parser:
             body = None
         # Optional handle block: } handle |e| { ... }
         handle = self._parse_handle_block() if self._check(TK.KW_HANDLE) else None
-        d = FunDecl(proto=proto, body=body, handle_block=handle)
+        d = FunDecl(vis=vis, attrs=attrs, name=name,
+                       params=params, ret=ret, body=body,
+                       handle_block=handle)
+        d.is_extern = any(attr.name == "extern" for attr in attrs)
         if handle and handle.body.span is not None:
-            d.span = SourceSpan(start=proto.span.start, end=handle.body.span.end) if proto.span else handle.body.span
+            d.span = self._span_from_token_and_end(start_tok, handle.body.span.end)
         elif body and body.span is not None:
-            d.span = SourceSpan(start=proto.span.start, end=body.span.end) if proto.span else body.span
+            d.span = self._span_from_token_and_end(start_tok, body.span.end)
         else:
-            d.span = proto.span
-        d._type_params = getattr(proto, "_type_params", [])
+            d.span = self._span_from_tokens(start_tok, self._prev)
+        d._type_params = type_params  # store for checker
         return d
 
     def _parse_params(self) -> List[Param]:
-        """
-        ParamList <- (Param (',' Param)*)?
-        Param     <- 'self' ':' TypeExpr / IDENT ':' TypeExpr ('=' Expr)?
-        """
         params = []
         while not self._check(TK.RPAREN, TK.EOF):
             if params: self._expect(TK.COMMA)
@@ -634,10 +558,6 @@ class Parser:
 
     def _parse_struct(self, vis: Visibility,
                       attrs: List[Attribute]) -> StructDecl:
-        """
-        StructDecl <- 'struct' IDENT GenericParams? WhereClause? '{' StructMember* '}'
-        StructMember <- FieldDecl / FunDef
-        """
         start_tok = self._expect(TK.KW_STRUCT)
         name   = self._expect_ident()
         params = self._parse_generic_params()
@@ -651,13 +571,13 @@ class Parser:
             if self._check(TK.RBRACE, TK.EOF):
                 break
             if self._check(TK.HASH_LBRACKET, TK.AT, TK.KW_FUN, TK.KW_PUB, TK.KW_INLINE, TK.KW_EXTERN):
-                m_attrs = self._parse_decl_metadata()
+                m_attrs = self._parse_attrs()
                 m_vis   = self._parse_vis()
                 m_inline = bool(self._eat(TK.KW_INLINE))
                 if self._check(TK.KW_EXTERN):
                     raise ParseError("`extern` is no longer a declaration keyword; use @extern(...)", self._cur)
-                m = self._parse_fun_def(m_vis, m_attrs)
-                m.proto.is_inline = m_inline
+                m = self._parse_fun(m_vis, m_attrs)
+                m.is_inline = m_inline
                 methods.append(m)
             else:
                 fname = self._expect_ident()
@@ -679,10 +599,6 @@ class Parser:
     # ── union ────────────────────────────────────────────────
 
     def _parse_union(self, vis: Visibility) -> UnionDecl:
-        """
-        UnionDecl <- 'union' IDENT GenericParams? '{' UnionVariant* '}'
-        UnionVariant <- IDENT ('(' TypeExpr (',' TypeExpr)* ')')? ','?
-        """
         start_tok = self._expect(TK.KW_UNION)
         name     = self._expect_ident()
         params   = self._parse_generic_params()
@@ -718,10 +634,6 @@ class Parser:
     # ── interface ────────────────────────────────────────────
 
     def _parse_interface(self, vis: Visibility) -> InterfaceDecl:
-        """
-        InterfaceDecl <- 'interface' IDENT GenericParams? (':' IDENT (',' IDENT)*)?
-                         WhereClause? '{' ('?'? DeclMetadata Visibility? (FunProto / FunDef))* '}'
-        """
         start_tok = self._expect(TK.KW_INTERFACE)
         name    = self._expect_ident()
         params  = self._parse_generic_params()
@@ -740,17 +652,8 @@ class Parser:
                 break
             # optional method: ?fun
             is_optional = bool(self._eat(TK.QUESTION))
-            m_attrs = self._parse_decl_metadata()
-            m_vis = self._parse_vis()
-            proto = self._parse_fun_proto(m_vis, m_attrs)
-            if self._check(TK.LBRACE):
-                body = self._parse_block()
-                m = FunDecl(proto=proto, body=body, span=SourceSpan(
-                    start=proto.span.start,
-                    end=body.span.end,
-                ) if proto.span and body.span else body.span)
-            else:
-                m = proto
+            m_attrs = self._parse_attrs()
+            m = self._parse_fun(Visibility.PRIVATE, m_attrs)
             if is_optional:
                 m.attrs.append(Attribute(name="optional"))
             methods.append(m)
@@ -764,7 +667,6 @@ class Parser:
     # ── def ──────────────────────────────────────────────────
 
     def _parse_def(self) -> DefDecl:
-        """DefDecl <- 'def' IDENT (',' IDENT)* 'for' IDENT WhereClause? '{' (DeclMetadata Visibility? ('inline')? FunDef)* '}'"""
         start_tok = self._expect(TK.KW_DEF)
         interfaces = [self._expect_ident()]
         while self._eat(TK.COMMA):
@@ -779,11 +681,8 @@ class Parser:
             self._eat_newlines()
             if self._check(TK.RBRACE, TK.EOF):
                 break
-            m_attrs = self._parse_decl_metadata()
-            m_vis = self._parse_vis()
-            m_inline = bool(self._eat(TK.KW_INLINE))
-            m = self._parse_fun_def(m_vis, m_attrs)
-            m.proto.is_inline = m_inline
+            m_attrs = self._parse_attrs()
+            m = self._parse_fun(Visibility.PRIVATE, m_attrs)
             methods.append(m)
             self._eat_newlines()
         end_tok = self._expect(TK.RBRACE)
@@ -794,7 +693,6 @@ class Parser:
     # ── type alias ───────────────────────────────────────────
 
     def _parse_type_alias(self, vis: Visibility) -> TypeAlias:
-        """TypeAlias <- 'type' IDENT '=' TypeExpr"""
         start_tok = self._expect(TK.KW_TYPE)
         name  = self._expect_ident()
         self._expect(TK.EQ)
@@ -807,10 +705,6 @@ class Parser:
     # ── error declaration ────────────────────────────────────
 
     def _parse_error_decl(self, vis: Visibility) -> ErrorDecl:
-        """
-        ErrorDecl <- 'error' IDENT '{' ErrorVariant* '}'
-        ErrorVariant <- IDENT ('(' TypeExpr ')')? ','?
-        """
         # KW_ERROR already eaten by caller
         start_tok = self._prev
         name = self._expect_ident()
@@ -833,10 +727,6 @@ class Parser:
     # ── from X export Y (<pkgname>.pkg) ──────────────────────
 
     def _parse_from_export(self) -> FromExportDecl:
-        """
-        FromExportDecl <- 'from' DottedName 'export' IDENT FieldRestriction?
-                        / 'from' DottedName 'export' IDENT (',' IDENT)*
-        """
         start_tok = self._expect(TK.KW_FROM)
         path = self._parse_dotted_name()
         self._expect(TK.KW_EXPORT)
@@ -865,7 +755,6 @@ class Parser:
     # ── generic params & where ───────────────────────────────
 
     def _parse_generic_params(self) -> List[str]:
-        """GenericParams <- '[' IDENT (',' IDENT)* ']'"""
         if not self._eat(TK.LBRACKET): return []
         params = [self._expect_ident()]
         while self._eat(TK.COMMA):
@@ -874,7 +763,6 @@ class Parser:
         return params
 
     def _parse_where(self) -> List[str]:
-        """WhereClause <- 'where' <tokens until block start>"""
         # parse where T : Add, Mul as raw strings for now
         constraints = []
         if not (self._check(TK.IDENT) and self._cur.lexeme == "where"):
@@ -893,11 +781,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_let(self, vis: Visibility = Visibility.PRIVATE, attrs: List[Attribute] = None) -> LetStmt:
-        """
-        LetDecl <- 'let' 'var'? IDENT (':' TypeExpr)? ('=' Expr)?
-                / 'let' UNIT ':=' Expr
-                / 'let' IDENT ':=' TypeExpr
-        """
         if attrs is None: attrs = []
         start_tok = self._expect(TK.KW_LET)
         mutable  = bool(self._eat(TK.KW_VAR))
@@ -941,10 +824,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_type(self) -> TypeExpr:
-        """
-        TypeExpr <- '!' TypeExpr
-                  / TypeBase ('|' TypeBase)* ('!' TypeExpr)? UnitSuffix?
-        """
         if self._eat(TK.BANG):
             start_tok = self._prev
             payload = self._parse_type()
@@ -973,22 +852,6 @@ class Parser:
         return self._wrap_unitful(ty)
 
     def _parse_type_base(self) -> TypeExpr:
-        """
-        TypeBase <- '?' TypeExpr
-                  / '*' TypeExpr
-                  / '*' 'any' DottedName
-                  / 'any' DottedName
-                  / '[' ']' TypeExpr
-                  / '[' TypeExpr ';' Expr ']'
-                  / 'vec' '[' TypeExpr (';' Expr)? ']'
-                  / 'mat' '[' TypeExpr (';' Expr (',' Expr)?)? ']'
-                  / '.{' TupleTypeFields? '}'
-                  / 'fun' '(' TypeList? ')' TypeExpr
-                  / '[' '.' IDENT ']' 'fun' '(' TypeList? ')' TypeExpr
-                  / '@' IDENT
-                  / PrimitiveType
-                  / DottedName GenericArgs?
-        """
         match self._cur.kind:
             case TK.QUESTION:
                 start_tok = self._advance()
@@ -1134,7 +997,6 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_block(self) -> Block:
-        """Block <- '{' Stmt* ExprStmt? '}'"""
         start_tok = self._expect(TK.LBRACE)
         self._eat_newlines()
         stmts = []
@@ -1154,10 +1016,6 @@ class Parser:
                      span=self._span_from_tokens(start_tok, end_tok))
 
     def _parse_stmt(self) -> Stmt:
-        """
-        Stmt <- Label? (LetDecl / ReturnStmt / BreakStmt / ContinueStmt /
-                        ForStmt / WhileStmt / DeferStmt / ExprStmt)
-        """
         self._eat_newlines()
         # named loop label:  label_name: for/while { }
         label = None
@@ -1200,7 +1058,6 @@ class Parser:
                 return self._parse_expr_stmt()
 
     def _parse_return(self) -> ReturnStmt:
-        """ReturnStmt <- 'return' Expr?"""
         ret_tok = self._expect(TK.KW_RETURN)
         val = None
         if not self._check(TK.SEMI, TK.RBRACE, TK.EOF):
@@ -1209,7 +1066,6 @@ class Parser:
         return ReturnStmt(value=val, line=ret_tok.line, col=ret_tok.col)
 
     def _parse_break(self) -> BreakStmt:
-        """BreakStmt <- 'break' (IDENT / Expr)?"""
         self._expect(TK.KW_BREAK)
         label = None
         val   = None
@@ -1225,7 +1081,6 @@ class Parser:
         return BreakStmt(label=label, value=val)
 
     def _parse_loop_stmt(self, label: Optional[str]) -> Stmt:
-        """LabeledLoop <- IDENT ':' (ForStmt / WhileStmt)"""
         """Dispatch to for/while with a label already parsed."""
         match self._cur.kind:
             case TK.KW_FOR:
@@ -1241,20 +1096,16 @@ class Parser:
                 raise ParseError("expected for or while after label", self._cur)
 
     def _parse_for(self) -> Stmt:
-        """
-        ForStmt <- 'for' IDENT '=' Expr ('..' / '...') Expr (':' Expr)? Body
-                 / 'for' ForPattern 'in' Expr (':' Expr)? Body
-        """
         self._expect(TK.KW_FOR)
 
         # range: for i = 0...n if cond { }
         if self._check(TK.IDENT) and self._peek(1).kind == TK.EQ:
             var = self._advance().lexeme
             self._advance()   # eat =
-            start = self._parse_expr_precedence(0)  # no suffix-if for range bounds
+            start = self._prec(0)  # no suffix-if for range bounds
             if self._eat(TK.DOT_DOT_DOT): inclusive = True
             else: self._expect(TK.DOT_DOT); inclusive = False
-            end    = self._parse_expr_precedence(0)  # no suffix-if for range bounds
+            end    = self._prec(0)  # no suffix-if for range bounds
             filter = None
             if self._eat(TK.COLON):
                 filter = self._parse_expr()
@@ -1275,7 +1126,6 @@ class Parser:
                            filter=filter, body=body, label=None)
 
     def _parse_for_pattern(self) -> ForPattern:
-        """ForPattern <- '*' IDENT / '(' IDENT (',' IDENT)* ')' / IDENT"""
         if self._eat(TK.STAR):
             return PatRef(self._expect_ident())
         if self._eat(TK.LPAREN):
@@ -1287,7 +1137,6 @@ class Parser:
         return PatIdent(self._expect_ident())
 
     def _parse_while(self) -> Stmt:
-        """WhileStmt <- 'while' Expr ('|' '*'? IDENT '|' Block / Body)"""
         self._expect(TK.KW_WHILE)
         # while expr |v| { } — unwrapping form
         expr = self._parse_expr()
@@ -1302,14 +1151,48 @@ class Parser:
         return WhileStmt(cond=expr, body=body)
 
     def _parse_cond_expr(self) -> Expr:
-        """CondExpr <- ExprPrecedence<no orelse/catch>"""
         """Parse a condition for suffix ternary — binary ops only, no orelse/catch."""
-        return self._parse_expr_precedence(0, allow_orelse=False, allow_catch=False)
+        # We parse with _prec but stop before postfix orelse/catch by
+        # only going through _parse_unary (which calls _parse_postfix,
+        # which handles orelse as postfix). The trick: after _prec, we're done.
+        # The issue is _parse_postfix consumes orelse. We need _prec without orelse.
+        # Solution: temporarily parse a binary expression that stops at known terminators.
+        left = self._parse_unary_no_postfix_chain()
+        while True:
+            prec = _PREC.get(self._cur.kind)
+            if prec is None or prec < 0: break
+            op_tok = self._advance()
+            op = _BINOP[op_tok.kind]
+            next_prec = prec if op_tok.kind in _RIGHT_ASSOC else prec + 1
+            right = self._parse_unary_no_postfix_chain()
+            left = BinExpr(op=op, left=left, right=right, span=self._span_from_exprs(left, right))
+        return left
 
     def _parse_unary_no_postfix_chain(self) -> Expr:
-        """PrefixExprNoTryPostfix <- PrefixExpr<no orelse/catch>"""
         """Parse unary + primary without the postfix orelse/catch chain."""
-        return self._parse_prefix_expr(allow_orelse=False, allow_catch=False)
+        match self._cur.kind:
+            case TK.MINUS:
+                op_tok = self._advance()
+                operand = self._parse_unary_no_postfix_chain()
+                return UnaryExpr("-", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
+            case TK.BANG:
+                op_tok = self._advance()
+                operand = self._parse_unary_no_postfix_chain()
+                return UnaryExpr("!", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
+            case TK.STAR:
+                op_tok = self._advance()
+                operand = self._parse_unary_no_postfix_chain()
+                return UnaryExpr("*", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
+            case TK.AMP:
+                op_tok = self._advance()
+                operand = self._parse_unary_no_postfix_chain()
+                return UnaryExpr("&", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
+            case _:
+                return self._parse_postfix_chain(
+                    self._parse_primary(),
+                    allow_orelse=False,
+                    allow_catch=False,
+                )
 
     def _wrap_unitful(self, inner):
         """Consume a trailing UNIT token and return TyUnitful(inner, unit)."""
@@ -1325,7 +1208,6 @@ class Parser:
         return inner
 
     def _parse_block_or_comma_stmt(self) -> Block:
-        """Body <- Block / ',' Stmt"""
         """Parse { block } or , single_stmt for one-liner bodies."""
         if self._eat(TK.COMMA):
             stmt = self._parse_stmt()
@@ -1335,7 +1217,6 @@ class Parser:
         return self._parse_block()
 
     def _parse_defer_body(self) -> Block:
-        """DeferBody <- Block / Stmt"""
         """Parse defer body as either { ... } or a single statement."""
         if self._check(TK.LBRACE):
             return self._parse_block()
@@ -1345,7 +1226,6 @@ class Parser:
         return Block(stmts=[stmt], tail=None)
 
     def _parse_handle_block(self) -> HandleBlock:
-        """HandleBlock <- 'handle' '|' IDENT '|' Block"""
         self._expect(TK.KW_HANDLE)
         self._expect(TK.PIPE)
         binding = self._expect_ident()
@@ -1353,7 +1233,6 @@ class Parser:
         return HandleBlock(binding=binding, body=self._parse_block())
 
     def _parse_expr_stmt(self) -> Stmt:
-        """ExprStmt <- Expr (AssignOp Expr)?"""
         expr = self._parse_expr()
         if self._cur.kind in _ASSIGN_OPS:
             op  = _ASSIGN_OPS[self._advance().kind]
@@ -1368,16 +1247,10 @@ class Parser:
     # ══════════════════════════════════════════════════════════
 
     def _parse_expr(self) -> Expr:
-        """
-        Expr <- ExprPrecedence
-              ('+-' ExprPrecedence)?
-              UnitSuffix?
-              SuffixIf?
-        """
-        expr = self._parse_expr_precedence(0)
+        expr = self._prec(0)
         # Uncertain literal: value +- error  or  value +- error `unit`
         if self._eat(TK.PLUS_MINUS):
-            err = self._parse_expr_precedence(0)
+            err = self._prec(0)
             # If the error term already consumed a unit (0.5`N`), lift it up:
             # 10.0 +- 0.5`N`  →  UnitLit(UncertainLit(10.0, 0.5), "N")
             if isinstance(err, UnitLit) and err.value is not None:
@@ -1451,130 +1324,63 @@ class Parser:
             return result
         return expr
 
-    def _parse_expr_precedence(
-        self,
-        min_prec: int,
-        *,
-        allow_orelse: bool = True,
-        allow_catch: bool = True,
-    ) -> Expr:
-        """ExprPrecedence <- PrefixExpr (BinaryOp ExprPrecedence)*"""
-        left = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+    def _prec(self, min_prec: int) -> Expr:
+        left = self._parse_unary()
         while True:
-            info = _OPER_TABLE.get(self._cur.kind)
-            if info is None or info.prec < min_prec:
-                break
-            if info.chainable:
-                left = self._parse_comparison_chain(
-                    left,
-                    info.prec,
-                    allow_orelse=allow_orelse,
-                    allow_catch=allow_catch,
-                )
-                continue
-
-            self._advance()
-            next_min = info.prec if info.assoc is _Assoc.RIGHT else info.prec + 1
-            right = self._parse_expr_precedence(
-                next_min,
-                allow_orelse=allow_orelse,
-                allow_catch=allow_catch,
-            )
-            left = BinExpr(
-                op=info.symbol,
-                left=left,
-                right=right,
-                span=self._span_from_exprs(left, right),
-            )
+            prec = _PREC.get(self._cur.kind)
+            if prec is None or prec < min_prec: break
+            op_tok = self._advance()
+            op     = _BINOP[op_tok.kind]
+            # right-associative for ^
+            next_prec = prec if op_tok.kind in _RIGHT_ASSOC else prec + 1
+            right = self._prec(next_prec)
+            left  = BinExpr(op=op, left=left, right=right, span=self._span_from_exprs(left, right))
         return left
 
-    def _parse_comparison_chain(
-        self,
-        left: Expr,
-        prec: int,
-        *,
-        allow_orelse: bool,
-        allow_catch: bool,
-    ) -> Expr:
-        """
-        ComparisonChain <- Expr (ChainableCmp Expr)+
-        Lowers `a < b < c` to `(a < b) and (b < c)`.
-        """
-        terms = [left]
-        ops: list[str] = []
-        while True:
-            info = _OPER_TABLE.get(self._cur.kind)
-            if info is None or not info.chainable or info.prec != prec:
-                break
-            self._advance()
-            rhs = self._parse_expr_precedence(
-                prec + 1,
-                allow_orelse=allow_orelse,
-                allow_catch=allow_catch,
-            )
-            ops.append(info.symbol)
-            terms.append(rhs)
-
-        result = BinExpr(
-            op=ops[0],
-            left=terms[0],
-            right=terms[1],
-            span=self._span_from_exprs(terms[0], terms[1]),
-        )
-        for index in range(1, len(ops)):
-            cmp_expr = BinExpr(
-                op=ops[index],
-                left=terms[index],
-                right=terms[index + 1],
-                span=self._span_from_exprs(terms[index], terms[index + 1]),
-            )
-            result = BinExpr(
-                op="and",
-                left=result,
-                right=cmp_expr,
-                span=self._span_from_exprs(result, cmp_expr),
-            )
-        return result
-
-    def _parse_prefix_expr(self, *, allow_orelse: bool, allow_catch: bool) -> Expr:
-        """
-        PrefixExpr <- ('-' / '!' / '*' / '&' / 'comptime' / 'try' / 'esc') PrefixExpr
-                    / CompilerIntrinsic PostfixSuffix*
-                    / PostfixExpr
-        """
+    def _parse_unary(self) -> Expr:
         match self._cur.kind:
             case TK.MINUS:
                 op_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return UnaryExpr("-", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
             case TK.BANG:
                 op_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return UnaryExpr("!", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
             case TK.STAR:
                 op_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return UnaryExpr("*", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
             case TK.AMP:
                 op_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return UnaryExpr("&", operand, span=self._span_from_token_and_end(op_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(op_tok.line, op_tok.col + 1)))
             case TK.AT:
+                self._advance()
+                if self._cur.kind != TK.IDENT and not self._cur.kind.name.startswith("KW_"):
+                    raise ParseError("expected IDENT", self._cur)
+                tok = self._advance()
+                base = Ident(
+                    f"@{tok.lexeme}",
+                    line=tok.line,
+                    col=tok.col,
+                    span=self._span_from_tokens(tok, tok),
+                )
                 return self._parse_postfix_chain(
-                    self._parse_compiler_intrinsic_expr(),
-                    allow_orelse=allow_orelse,
-                    allow_catch=allow_catch,
+                    base,
+                    allow_orelse=True,
+                    allow_catch=True,
                 )
             case TK.KW_COMPTIME:
                 start_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return ComptimeExpr(
                     operand,
                     span=self._span_from_token_and_end(start_tok, self._expr_span(operand).end if self._expr_span(operand) else SourcePos(start_tok.line, start_tok.col + len(start_tok.lexeme))),
                 )
             case TK.KW_TRY:
                 start_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 callee = Ident("__try")
                 return CallExpr(
                     callee=callee,
@@ -1585,7 +1391,7 @@ class Parser:
                 )
             case TK.KW_ESC:
                 start_tok = self._advance()
-                operand = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                operand = self._parse_unary()
                 return EscExpr(
                     expr=operand,
                     span=self._span_from_token_and_end(
@@ -1594,19 +1400,9 @@ class Parser:
                     ),
                 )
             case _:
-                return self._parse_postfix(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                return self._parse_postfix()
 
     def _parse_postfix_chain(self, base: Expr, *, allow_orelse: bool, allow_catch: bool) -> Expr:
-        """
-        PostfixChain <- PrimaryExpr PostfixSuffix*
-        PostfixSuffix <- '?.' IDENT
-                       / '.' IDENT ArgList?
-                       / ArgList
-                       / '[' Expr (',' Expr)* ']'
-                       / 'orelse' Expr
-                       / 'catch' CatchPayload? CatchArms
-                       / 'with' PrefixExpr
-        """
         while True:
             match self._cur.kind:
                 case TK.QUESTION_DOT:
@@ -1713,7 +1509,7 @@ class Parser:
                         )
                 case TK.KW_WITH:
                     with_tok = self._advance()
-                    alloc = self._parse_prefix_expr(allow_orelse=allow_orelse, allow_catch=allow_catch)
+                    alloc = self._parse_unary()
                     base = WithAllocExpr(
                         expr=base,
                         allocator=alloc,
@@ -1725,19 +1521,14 @@ class Parser:
                 case _:
                     return base
 
-    def _parse_postfix(self, *, allow_orelse: bool = True, allow_catch: bool = True) -> Expr:
-        """PostfixExpr <- PrimaryExpr PostfixSuffix*"""
+    def _parse_postfix(self) -> Expr:
         return self._parse_postfix_chain(
             self._parse_primary(),
-            allow_orelse=allow_orelse,
-            allow_catch=allow_catch,
+            allow_orelse=True,
+            allow_catch=True,
         )
 
     def _parse_arglist(self) -> List[Arg]:
-        """
-        ArgList <- '(' (Arg (',' Arg)*)? ')'
-        Arg     <- IDENT '=' Expr / Expr
-        """
         self._expect(TK.LPAREN)
         args = []
         while not self._check(TK.RPAREN, TK.EOF):
@@ -1754,22 +1545,6 @@ class Parser:
         return args
 
     def _parse_primary(self) -> Expr:
-        """
-        PrimaryExpr <- Literal
-                     / IDENT
-                     / PrimitiveType
-                     / '(' Expr ')'
-                     / Block
-                     / WithExpr
-                     / IfExpr
-                     / MatchExpr
-                     / WhileExpr
-                     / ArrayLit
-                     / VariantLit
-                     / TupleLit
-                     / Closure
-                     / 'comptime' Expr
-        """
         match self._cur.kind:
             case TK.UNIT:
                 tok = self._advance()
@@ -1950,10 +1725,6 @@ class Parser:
                 raise ParseError("expected expression", self._cur)
 
     def _parse_if(self) -> Expr:
-        """
-        IfExpr <- 'if' Expr IfUnwrap? Body ('else' (IfExpr / Body))?
-        IfUnwrap <- '|' '*'? IDENT '|'
-        """
         start_tok = self._expect(TK.KW_IF)
         expr = self._parse_expr()
         # if expr |v| { } — optional unwrap
@@ -1995,7 +1766,6 @@ class Parser:
         )
 
     def _parse_catch_arms(self) -> list:
-        """CatchArms <- '{' MatchArm* '}'"""
         """Parse { .Variant => expr, .Other(p) => expr, _ => expr } for catch."""
         self._expect(TK.LBRACE)
         self._eat_newlines()
@@ -2017,10 +1787,6 @@ class Parser:
         return arms
 
     def _parse_match(self) -> MatchExpr:
-        """
-        MatchExpr <- 'match' Expr '{' MatchArm* '}'
-        MatchArm  <- MatchPattern '=>' (Block / Expr) ','?
-        """
         start_tok = self._expect(TK.KW_MATCH)
         val  = self._parse_expr()
         self._expect(TK.LBRACE)
@@ -2045,11 +1811,6 @@ class Parser:
         return MatchExpr(value=val, arms=arms, span=self._span_from_tokens(start_tok, end_tok))
 
     def _parse_match_pattern(self) -> MatchPattern:
-        """
-        MatchPattern <- '_' / INT / FLOAT / BOOL / 'none'
-                      / '.' IDENT ('(' IDENT (',' IDENT)* ')')?
-                      / IDENT
-        """
         match self._cur.kind:
             case TK.IDENT if self._cur.lexeme == "_":
                 self._advance()
@@ -2085,10 +1846,6 @@ class Parser:
                 return PatIdent(self._expect_ident())
 
     def _parse_vec(self) -> Expr:
-        """
-        VecExpr <- 'vec' '[' ']'
-                 / 'vec' '[' Expr ('for' ForPattern 'in' Expr (':' Expr)? / (',' Expr)*) ']'
-        """
         start_tok = self._advance()   # eat vec
         self._expect(TK.LBRACKET)
         if self._check(TK.RBRACKET):
@@ -2100,7 +1857,7 @@ class Parser:
             pat    = self._parse_for_pattern()
             self._expect(TK.KW_IN)
             # Stop before the comprehension's trailing `: ...` filter.
-            iter_  = self._parse_expr_precedence(0)
+            iter_  = self._prec(0)
             filter = None
             if self._eat(TK.COLON):
                 filter = self._parse_expr()
@@ -2121,7 +1878,6 @@ class Parser:
         return VecLit(elems, span=self._span_from_tokens(start_tok, end_tok))
 
     def _parse_tuple_lit_body(self, dot_tok: Token, lbrace_tok: Token) -> TupleLit:
-        """TupleLitBody <- '.{' (IDENT ':' Expr / Expr) (',' Field)* ','? '}'"""
         self._eat_newlines()
         fields = []
         while not self._check(TK.RBRACE, TK.EOF):
@@ -2141,7 +1897,6 @@ class Parser:
     # ── string interpolation ─────────────────────────────────
 
     def _parse_interpolation(self, raw: str) -> List[Union[str, Expr]]:
-        """Interpolation <- string text containing '{' Expr (':' FormatSpec)? '}'"""
         """Parse {expr} and {expr:fmt} segments from a string."""
         segments: List[Union[str, Expr]] = []
         i = 0
@@ -2187,7 +1942,6 @@ class Parser:
         return segments
 
     def parse_expr_only(self) -> Expr:
-        """ExprOnly <- Expr EOF"""
         """Parse a single expression — used for string interpolation."""
         expr = self._parse_expr()
         self._eat_newlines()
@@ -2199,7 +1953,6 @@ class Parser:
 # ══════════════════════════════════════════════════════════════
 # Convenience
 # ══════════════════════════════════════════════════════════════
-# parse <- Tokenize(source) then Program
 def parse(source: str) -> Program:
     tokens = Tokenizer(source).tokenize()
     return Parser(tokens).parse()

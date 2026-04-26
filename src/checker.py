@@ -20,9 +20,9 @@ import copy
 import os
 from typing import Dict, List, Optional, Tuple
 import math
-from src.ast import *
-from src.types import *
-from src.env import Environment, DiagnosticBag, Symbol, ImplRegistry
+from src.syntax.ast import *
+from src.semantics.types import *
+from src.semantics.env import Environment, DiagnosticBag, Symbol, ImplRegistry
 from src.stdlib import canonicalize_std_import_path, is_std_source_path
 
 
@@ -110,6 +110,25 @@ def _qualified_name(expr: Expr) -> Optional[str]:
     return None
 
 
+def _lookup_dotted_namespace_type(env: Environment, name: str) -> Optional[Type]:
+    parts = name.split(".")
+    if len(parts) < 2:
+        return None
+    head = env.lookup(parts[0])
+    if head is not None and isinstance(head.type_, TNamespace):
+        ns_path = head.type_.name
+        tail = parts[1:]
+    else:
+        ns_path = ".".join(parts[:-1])
+        tail = [parts[-1]]
+    for part in tail[:-1]:
+        child = env.lookup_namespace_value(ns_path, part) or env.lookup_namespace_type(ns_path, part)
+        if not isinstance(child, TNamespace):
+            return None
+        ns_path = child.name
+    return env.lookup_namespace_type(ns_path, tail[-1])
+
+
 def _decl_attr(decl, name: str) -> Optional[Attribute]:
     for attr in getattr(decl, "attrs", []) or []:
         if attr.name == name:
@@ -178,16 +197,13 @@ def lower_type(ty: TypeExpr, env: Environment,
             # that will be resolved when the interface is implemented
             return TVar(name="Self")
         if "." in ty.name:
-            head, leaf = ty.name.split(".", 1)
-            ns_sym = env.lookup(head)
-            if ns_sym is not None and isinstance(ns_sym.type_, TNamespace):
-                ns_ty = env.lookup_namespace_type(ns_sym.type_.name, leaf)
-                if ns_ty is not None:
-                    return ns_ty
+            ns_ty = _lookup_dotted_namespace_type(env, ty.name)
+            if ns_ty is not None:
+                return ns_ty
         return env.lookup_type_or_error(ty.name, line, col, span=span)
 
     if isinstance(ty, TyAnyInterface):
-        from src.types import TAnyInterface, TInterface
+        from src.semantics.types import TAnyInterface, TInterface
         iface_ty = env.lookup_type(ty.iface_name)
         if not isinstance(iface_ty, TInterface):
             env.diags.error(f"'{ty.iface_name}' is not an interface", line, col)
@@ -197,7 +213,7 @@ def lower_type(ty: TypeExpr, env: Environment,
     if isinstance(ty, TyPointer):
         inner_ty = lower_type(ty.inner, env, line, col)
         # *any Interface → TDynInterface (heap fat pointer)
-        from src.types import TDynInterface, TAnyInterface
+        from src.semantics.types import TDynInterface, TAnyInterface
         if isinstance(inner_ty, TAnyInterface):
             return TDynInterface(iface=inner_ty.iface)
         return TPointer(inner_ty)
@@ -254,7 +270,7 @@ def lower_type(ty: TypeExpr, env: Environment,
         return TMat(inner, rows, cols)
 
     if isinstance(ty, TyUnitful):
-        from src.types import TUnitful, make_unitful
+        from src.semantics.types import TUnitful, make_unitful
         inner = lower_type(ty.inner, env, line, col)
         # Get user unit registry from env if available
         registry = getattr(env, '_unit_registry', None)
@@ -324,6 +340,7 @@ def lower_type(ty: TypeExpr, env: Environment,
                 methods=methods,
                 parents=list(base.parents),
                 defaults=set(base.defaults),
+                method_visibility=dict(getattr(base, "method_visibility", {})),
             )
         return base
 
@@ -396,7 +413,7 @@ class DeclarationPass:
 
     def _register_builtins(self):
         """Register built-in functions so they resolve in type checking."""
-        from src.types import TFun, T_VOID, T_STR, T_I64, T_F64
+        from src.semantics.types import TFun, T_VOID, T_STR, T_I64, T_F64
         # println/print are special-cased later to accept more printable values.
         println_str = TFun([T_STR], T_VOID)
         println_int = TFun([T_I64], T_VOID)
@@ -522,28 +539,28 @@ class DeclarationPass:
             return opaque_ty
         return ty
 
-    def _register_pkg_exports(self, pkg_path: str, decl: Decl, export_names: List[Tuple[str, bool]]):
+    def _register_pkg_exports(self, pkg_path: str, decl: Decl, export_names: List[Tuple[str, str, bool]]):
         if isinstance(decl, (OpaqueTypeDecl, StructDecl, UnionDecl, InterfaceDecl, ErrorDecl, TypeAlias)):
             base_ty = self.env.lookup_type(getattr(decl, "name", ""))
             if base_ty is None:
                 return
             c_name = self.env.lookup_c_type_name(getattr(decl, "name", ""))
-            for public_name, opaque in export_names:
+            for namespace_path, public_name, opaque in export_names:
                 export_ty = self._opaque_export_type(decl, public_name) if opaque else base_ty
-                self.env.register_namespace_value(pkg_path, public_name, export_ty, c_name=c_name)
-                self.env.register_namespace_type(pkg_path, public_name, export_ty, c_name=c_name)
+                self.env.register_namespace_value(namespace_path, public_name, export_ty, c_name=c_name)
+                self.env.register_namespace_type(namespace_path, public_name, export_ty, c_name=c_name)
         elif isinstance(decl, FunDecl):
             sym = self.env.lookup_pkg_symbol(pkg_path, decl.name)
             if sym is None:
                 return
-            for public_name, _opaque in export_names:
-                self.env.register_namespace_value(pkg_path, public_name, sym.type_, c_name=sym.c_name)
+            for namespace_path, public_name, _opaque in export_names:
+                self.env.register_namespace_value(namespace_path, public_name, sym.type_, c_name=sym.c_name)
         elif isinstance(decl, LetStmt):
             sym = self.env.lookup_pkg_symbol(pkg_path, decl.name)
             if sym is None:
                 return
-            for public_name, _opaque in export_names:
-                self.env.register_namespace_value(pkg_path, public_name, sym.type_, c_name=sym.c_name)
+            for namespace_path, public_name, _opaque in export_names:
+                self.env.register_namespace_value(namespace_path, public_name, sym.type_, c_name=sym.c_name)
 
     def _register_opaque_type(self, decl: OpaqueTypeDecl):
         pkg_path = getattr(decl, "_pkg_path", None)
@@ -624,8 +641,10 @@ class DeclarationPass:
     def _register_interface(self, i: InterfaceDecl):
         methods  = {}
         defaults = set()
+        method_visibility = {}
         for m in i.methods:
             methods[m.name] = self._fun_type(m)
+            method_visibility[m.name] = m.vis
             if m.body is not None:
                 defaults.add(m.name)
         iface = TInterface(
@@ -634,6 +653,7 @@ class DeclarationPass:
             methods=methods,
             parents=i.parents,
             defaults=defaults,
+            method_visibility=method_visibility,
         )
         self.env.register_interface(iface)
         pkg_path = getattr(i, "_pkg_path", None)
@@ -652,8 +672,8 @@ class DeclarationPass:
 
     def _register_unit_alias(self, a):
         """Register a user-defined unit into the environment's unit registry."""
-        from src.types import make_unitful, T_F64
-        from src.ast import UnitLit, FloatLit, IntLit
+        from src.semantics.types import make_unitful, T_F64
+        from src.syntax.ast import UnitLit, FloatLit, IntLit
         registry = self.env._unit_registry
         try:
             defn = a.defn
@@ -671,7 +691,7 @@ class DeclarationPass:
                              line=0, col=0)
 
     def _register_error(self, e: ErrorDecl):
-        from src.types import TErrorSet
+        from src.semantics.types import TErrorSet
         variants = {}
         for v in e.variants:
             payload_ty = lower_type(v.payload, self.env) if v.payload else None
@@ -865,7 +885,7 @@ class BodyChecker:
         source_path: Optional[str] = None,
         local_root: Optional[str] = None,
     ) -> dict:
-        from src.analysis import analyse
+        from src.semantics.analysis import analyse
         from src.frontend import build_frontend_state_for_path
 
         target_path = source_path or self._current_source_file
@@ -922,7 +942,7 @@ class BodyChecker:
         return TErrorUnion(self._esc_error_set(), payload)
 
     def _is_esc_cloneable_type(self, ty: Type) -> bool:
-        from src.types import (
+        from src.semantics.types import (
             TInt, TFloat, TBool, TString, TVoid, TIntLit, TFloatLit,
             TOptional, TVec, TStruct, TUnion, TUnitful, TUncertain,
         )
@@ -1259,11 +1279,26 @@ class BodyChecker:
                             f"missing method '{method_name}'",
                             hint=f"implement: fun {method_name}(...)"
                         )
+                else:
+                    required_vis = getattr(iface, "method_visibility", {}).get(method_name, Visibility.PRIVATE)
+                    if provided_decl.vis != required_vis:
+                        self._error_at(
+                            provided_decl,
+                            f"def {iface_name} for {d.for_type}: method '{method_name}' visibility does not match interface",
+                            hint=f"repeat the interface marker: {self._visibility_source(required_vis)}fun {method_name}(...)",
+                        )
 
         # Check method bodies
         for m in d.methods:
             self._check_fun(m, receiver=d.for_type)
         self.env.set_current_struct(None)
+
+    def _visibility_source(self, vis: Visibility) -> str:
+        if vis == Visibility.PUB:
+            return "pub "
+        if vis == Visibility.EXPORT:
+            return "export "
+        return ""
 
     def _check_let(self, l: LetStmt) -> Type:
         expected = lower_type(l.type_, self.env) if l.type_ else None
@@ -1732,7 +1767,7 @@ class BodyChecker:
         if expected.is_error(): return T_ERR
 
         def expected_variant_owner(ty: Type):
-            from src.types import TOptional as _TOpt, TUnion as _TUnion, TErrorSet as _TErr, TErrorSetUnion as _TErrU
+            from src.semantics.types import TOptional as _TOpt, TUnion as _TUnion, TErrorSet as _TErr, TErrorSetUnion as _TErrU
             if isinstance(ty, _TOpt):
                 inner = ty.inner
                 if isinstance(inner, (_TUnion, _TErr, _TErrU)):
@@ -1971,7 +2006,7 @@ class BodyChecker:
                 expr._resolved_type = expected
             return expected
         # Coercion: value or error → TErrorUnion
-        from src.types import TErrorUnion, TErrorSet, TErrorSetUnion
+        from src.semantics.types import TErrorUnion, TErrorSet, TErrorSetUnion
         if isinstance(expected, TErrorUnion):
             if isinstance(got, (TErrorSet, TErrorSetUnion)):
                 if expected.error_set is None or error_set_contains(expected.error_set, got):
@@ -1998,7 +2033,7 @@ class BodyChecker:
             return self._coerce_or_error(got, expected.payload, expr)
 
         # Coercion: ConcreteType → any Interface  or  *any Interface
-        from src.types import TDynInterface, TAnyInterface
+        from src.semantics.types import TDynInterface, TAnyInterface
         if isinstance(expected, (TDynInterface, TAnyInterface)):
             got_name = None
             if isinstance(got, TStruct): got_name = got.name
@@ -2185,7 +2220,7 @@ class BodyChecker:
                     return T_ERR
                 self._error_at(expr, f"namespace '{obj_ty.name}' has no member '{expr.field}'")
                 return T_ERR
-            from src.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
+            from src.semantics.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
             if isinstance(obj_ty, (TDynInterface, TAnyInterface)):
                 method_name = expr.field
                 if method_name in obj_ty.iface.methods:
@@ -2405,7 +2440,7 @@ class BodyChecker:
 
     def _synth_unit_lit(self, expr) -> Type:
         """Synth type for UnitLit: 10.0`N`, `N` (bare), UncertainLit`N`."""
-        from src.types import TUnitful, make_unitful, T_F64, T_I64, TIntLit, TFloatLit
+        from src.semantics.types import TUnitful, make_unitful, T_F64, T_I64, TIntLit, TFloatLit
         registry = getattr(self.env, '_unit_registry', None)
         try:
             unitful = make_unitful(T_F64, expr.unit, registry)
@@ -2421,7 +2456,7 @@ class BodyChecker:
 
         # Annotated literal: 10.0`N`, (uncertain_val)`N`
         inner_ty = self._synth_expr(expr.value)
-        from src.types import TUncertain
+        from src.semantics.types import TUncertain
         if isinstance(inner_ty, TUncertain):
             # Propagate unitful wrapping into uncertain type
             unitful_inner = TUnitful(inner=inner_ty.inner, dims=unitful.dims,
@@ -2438,7 +2473,7 @@ class BodyChecker:
 
     def _synth_uncertain_lit(self, expr) -> Type:
         """Synth type for UncertainLit: 10.0 +- 0.5"""
-        from src.types import TUncertain, T_F64, TIntLit, TFloatLit, default_numeric
+        from src.semantics.types import TUncertain, T_F64, TIntLit, TFloatLit, default_numeric
         val_ty = self._synth_expr(expr.value)
         err_ty = self._synth_expr(expr.error)
         # Resolve literal types to concrete types
@@ -2450,7 +2485,7 @@ class BodyChecker:
 
     def _synth_unit_binary(self, b, lt, rt) -> Type:
         """Handle binary operations where at least one side is TUnitful."""
-        from src.types import (TUnitful, make_unitful, dim_mul, dim_div, T_F64,
+        from src.semantics.types import (TUnitful, make_unitful, dim_mul, dim_div, T_F64,
                                dim_is_dimensionless, DIM_ZERO, _best_unit_name)
         import math
 
@@ -2534,7 +2569,7 @@ class BodyChecker:
 
         lt = self._synth_expr(b.left)
         rt = self._synth_expr(b.right)
-        from src.types import TUnitful, TUncertain
+        from src.semantics.types import TUnitful, TUncertain
         if isinstance(lt, TUncertain) or isinstance(rt, TUncertain):
             result = self._synth_uncertain_binary(b, lt, rt)
             b._resolved_type = result
@@ -2567,7 +2602,7 @@ class BodyChecker:
         return result
 
     def _synth_uncertain_binary(self, b: BinExpr, lt: Type, rt: Type) -> Type:
-        from src.types import TUncertain, TUnitful, T_BOOL
+        from src.semantics.types import TUncertain, TUnitful, T_BOOL
 
         left_inner = lt.inner if isinstance(lt, TUncertain) else lt
         right_inner = rt.inner if isinstance(rt, TUncertain) else rt
@@ -2595,7 +2630,7 @@ class BodyChecker:
         return inner_result
 
     def _sqrt_result_type(self, ty: Type, node) -> Type:
-        from src.types import (
+        from src.semantics.types import (
             TInt, TFloat, TIntLit, TFloatLit, TUnitful, TUncertain,
             T_F64, _best_unit_name,
         )
@@ -2771,7 +2806,7 @@ class BodyChecker:
             self._error_at(f, f"str has no field '{f.field}' (available: len, data)")
             return T_ERR
 
-        from src.types import TInt as _TIntField, TFloat as _TFloatField, TIntLit as _TIntLitField, TFloatLit as _TFloatLitField, TUnitful as _TUnitfulField, TUncertain as _TUncertainField
+        from src.semantics.types import TInt as _TIntField, TFloat as _TFloatField, TIntLit as _TIntLitField, TFloatLit as _TFloatLitField, TUnitful as _TUnitfulField, TUncertain as _TUncertainField
         if isinstance(obj_ty, (_TIntField, _TFloatField, _TIntLitField, _TFloatLitField, _TUnitfulField, _TUncertainField)):
             if f.field == "sqrt":
                 result = self._sqrt_result_type(obj_ty, f)
@@ -2873,7 +2908,7 @@ class BodyChecker:
             return T_ERR
 
         # Method calls: receiver is implicit — skip self param
-        from src.types import TVar as _TV_check
+        from src.semantics.types import TVar as _TV_check
         is_method_call = isinstance(c.callee, FieldExpr)
         is_static_type_call = is_method_call and isinstance(c.callee, FieldExpr) and self._is_type_receiver_expr(c.callee.obj)
         params = list(callee_ty.params)
@@ -2884,7 +2919,7 @@ class BodyChecker:
                 params = params[1:]
 
         # Dynamic dispatch through *any Interface or any Interface
-        from src.types import TDynInterface, TAnyInterface
+        from src.semantics.types import TDynInterface, TAnyInterface
         if is_method_call and isinstance(c.callee, FieldExpr):
             recv_ty = self._synth_expr(c.callee.obj)
             if isinstance(recv_ty, (TDynInterface, TAnyInterface)):
@@ -2908,7 +2943,7 @@ class BodyChecker:
             return T_ERR
 
         # Generic call — infer concrete type bindings from arguments
-        from src.types import TVar
+        from src.semantics.types import TVar
 
         def contains_tvar(ty: Type) -> bool:
             if isinstance(ty, TVar):
@@ -2980,7 +3015,7 @@ class BodyChecker:
         # Check each argument — println/print accept any numeric
         fn_name = c.callee.name if isinstance(c.callee, Ident) else ""
         for arg, param_ty in zip(c.args, params):
-            from src.types import TUnitful, TUncertain
+            from src.semantics.types import TUnitful, TUncertain
             if fn_name in ("println", "print") and (
                 (arg_ty := self._synth_expr(arg.value)).is_numeric() or
                 isinstance(arg_ty, TBool) or

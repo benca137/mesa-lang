@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
-from src.ast import (
+from src.syntax.ast import (
     Arg,
     AssignStmt,
     Block,
@@ -61,8 +61,8 @@ from src.ast import (
     WhileUnwrap,
     WithExpr,
 )
-from src.checker import lower_type
-from src.env import Diagnostic, Environment
+from src.semantics.checker import lower_type
+from src.semantics.env import Diagnostic, Environment
 from src.frontend import (
     FrontendState,
     _parse_frontend_state_for_path,
@@ -70,10 +70,10 @@ from src.frontend import (
     build_frontend_state_for_path,
 )
 from src.buildsys import BuildPlanError, load_build_plan
-from src.parser import ParseError, Parser
+from src.syntax.parser import ParseError, Parser
 from src.stdlib import is_std_source_path, resolve_package_root_path
-from src.tokenizer import KEYWORDS, TK, Token, TokenizeError, Tokenizer
-from src.types import (
+from src.syntax.tokenizer import KEYWORDS, TK, Token, TokenizeError, Tokenizer
+from src.semantics.types import (
     TArray,
     TAnyInterface,
     TBool,

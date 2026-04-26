@@ -3,7 +3,8 @@ import mem
 from mem import PoolAllocator, poolFreeSlot
 
 from math import Vec2
-from physics import Body as PhysicsBody, make as makePhysics, answer as physicsAnswer
+import physics
+from physics import Body as PhysicsBody
 from a import Body as ABody, Shape as AShape, E as AE, make as makeA, value as valueA, read as readA, pass as passA
 from b import Body as BBody, Shape as BShape, E as BE, make as makeB, value as valueB, read as readB, pass as passB
 
@@ -72,12 +73,12 @@ test "debug allocator tracks allocation stats" {
 }
 
 test "package facade imports work" {
-    let body: PhysicsBody = makePhysics()
+    let body: PhysicsBody = physics.world.make()
     let zero: Vec2 = .{ x: 0.0, y: 0.0 }
     @assert(zero.x == 0.0)
     @assert(body.position.x == 1.0)
     @assert(body.position.y == 2.0)
-    @assert(physicsAnswer() == 42)
+    @assert(physics.world.answer() == 42)
 }
 
 test "backend mangling across packages works" {

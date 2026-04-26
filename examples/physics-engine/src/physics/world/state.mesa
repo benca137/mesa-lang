@@ -1,6 +1,7 @@
-pkg physics
+pkg physics.world
 
 from math import Vec2
+from physics import BodyDesc, Material, ShapeDesc
 
 pub struct Body {
     position: Vec2,

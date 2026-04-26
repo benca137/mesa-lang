@@ -582,18 +582,118 @@ class Param:
     default: Optional[Expr] = None
 
 @dataclass
-class FunDecl:
+class FunProto:
     vis:     Visibility
     attrs:   List[Attribute]
     name:    str
     params:  List[Param]
     ret:     TypeExpr
+    is_inline: bool = False
+    is_extern: bool = False
+    span:    Optional[SourceSpan] = None
+
+    @property
+    def body(self) -> None:
+        return None
+
+    @property
+    def handle_block(self) -> None:
+        return None
+
+@dataclass(init=False)
+class FunDecl:
+    proto:   FunProto
     body:    Optional[Block]   # None = interface signature
-    # modifiers
-    is_inline:    bool = False
-    is_extern:    bool = False
     handle_block: Optional["HandleBlock"] = None
     span:         Optional[SourceSpan] = None
+
+    def __init__(
+        self,
+        proto: Optional[FunProto] = None,
+        body: Optional[Block] = None,
+        handle_block: Optional["HandleBlock"] = None,
+        span: Optional[SourceSpan] = None,
+        *,
+        vis: Optional[Visibility] = None,
+        attrs: Optional[List[Attribute]] = None,
+        name: Optional[str] = None,
+        params: Optional[List[Param]] = None,
+        ret: Optional[TypeExpr] = None,
+        is_inline: bool = False,
+        is_extern: bool = False,
+    ):
+        if proto is None:
+            if vis is None or attrs is None or name is None or params is None or ret is None:
+                raise TypeError("FunDecl requires either proto or vis/attrs/name/params/ret")
+            proto = FunProto(
+                vis=vis,
+                attrs=attrs,
+                name=name,
+                params=params,
+                ret=ret,
+                is_inline=is_inline,
+                is_extern=is_extern,
+            )
+        self.proto = proto
+        self.body = body
+        self.handle_block = handle_block
+        self.span = span
+
+    @property
+    def vis(self) -> Visibility:
+        return self.proto.vis
+
+    @vis.setter
+    def vis(self, value: Visibility) -> None:
+        self.proto.vis = value
+
+    @property
+    def attrs(self) -> List[Attribute]:
+        return self.proto.attrs
+
+    @attrs.setter
+    def attrs(self, value: List[Attribute]) -> None:
+        self.proto.attrs = value
+
+    @property
+    def name(self) -> str:
+        return self.proto.name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self.proto.name = value
+
+    @property
+    def params(self) -> List[Param]:
+        return self.proto.params
+
+    @params.setter
+    def params(self, value: List[Param]) -> None:
+        self.proto.params = value
+
+    @property
+    def ret(self) -> TypeExpr:
+        return self.proto.ret
+
+    @ret.setter
+    def ret(self, value: TypeExpr) -> None:
+        self.proto.ret = value
+
+    @property
+    def is_inline(self) -> bool:
+        return self.proto.is_inline
+
+    @is_inline.setter
+    def is_inline(self, value: bool) -> None:
+        self.proto.is_inline = value
+
+    @property
+    def is_extern(self) -> bool:
+        return self.proto.is_extern
+
+    @is_extern.setter
+    def is_extern(self, value: bool) -> None:
+        self.proto.is_extern = value
 
 @dataclass
 class OpaqueTypeDecl:
@@ -644,7 +744,7 @@ class InterfaceDecl:
     name:    str
     params:  List[str]         # interface Add[T]
     parents: List[str]         # interface Ord[T] : Eq[T]
-    methods: List[FunDecl]
+    methods: List[Union[FunProto, FunDecl]]
     where:   List[str]
     span:    Optional[SourceSpan] = None
 

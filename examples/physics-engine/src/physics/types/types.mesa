@@ -1,4 +1,4 @@
-pkg physics
+pkg physics.types
 
 from math import Vec2
 

@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from src.frontend import build_frontend_state_for_path
-from src.types import format_type_for_user
+from src.semantics.types import format_type_for_user
 
 
 def _write(path: Path, text: str) -> None:
@@ -17,7 +17,7 @@ def test_pkg_opaque_export_hides_fields_from_importers(tmp_path: Path):
     root = tmp_path / "sim"
 
     _write(root / "physics" / "world" / "state.mesa", """
-pkg physics
+pkg physics.world
 
 pub struct Body {
     value: i64,
@@ -55,7 +55,7 @@ def test_pkg_import_does_not_leak_non_exported_pub_names(tmp_path: Path):
     root = tmp_path / "sim"
 
     _write(root / "physics" / "world" / "state.mesa", """
-pkg physics
+pkg physics.world
 
 pub struct Body {
     value: i64,
@@ -86,6 +86,33 @@ fun main() void {
     errors = state.diags.all_errors()
     assert errors
     assert any("undefined name 'makeBody'" in d.message for d in errors)
+
+
+def test_pkg_export_source_must_declare_path_derived_pkg(tmp_path: Path):
+    root = tmp_path / "sim"
+
+    _write(root / "physics" / "world" / "state.mesa", """
+pkg physics
+
+pub struct Body {
+    value: i64,
+}
+""")
+    _write(root / "physics" / "physics.pkg", """
+pkg physics
+
+from "world/state" export Body
+""")
+    _write(root / "game" / "main.mesa", """
+pkg game
+
+from physics import Body
+""")
+
+    state = build_frontend_state_for_path(str(root / "game" / "main.mesa"))
+    errors = state.diags.all_errors()
+    assert errors
+    assert any("must declare 'pkg physics.world'" in d.message for d in errors)
 
 
 def test_std_bare_package_names_are_reserved(tmp_path: Path):
@@ -131,7 +158,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -151,7 +178,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -180,7 +207,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -215,7 +242,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -246,7 +273,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -268,7 +295,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -300,13 +327,76 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
     )
     assert proc.returncode == 0, proc.stderr
     assert proc.stdout == "hello\n"
+
+
+def test_cli_file_mode_supports_basic_io_file_round_trip(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[2]
+    data_path = tmp_path / "message.txt"
+    main = tmp_path / "main.mesa"
+    _write(main, f"""
+import io
+
+fun main() void {{
+    if io.openWrite("{data_path}") |out| {{
+        io.writeln(out, "alpha")
+        @assert(out.flush())
+        @assert(out.close())
+    }} else {{
+        @panic("openWrite failed")
+    }}
+
+    if io.openRead("{data_path}") |input| {{
+        let text = input.readAll()
+        @assert(input.close())
+        io.write(io.stdout(), text)
+    }} else {{
+        @panic("openRead failed")
+    }}
+}}
+""")
+
+    proc = subprocess.run(
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == "alpha\n"
+
+
+def test_cli_file_mode_reports_missing_io_file_as_none(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[2]
+    missing_path = tmp_path / "missing.txt"
+    main = tmp_path / "main.mesa"
+    _write(main, f"""
+import io
+
+fun main() void {{
+    if io.openRead("{missing_path}") |input| {{
+        input.close()
+        println("unexpected")
+    }} else {{
+        println("missing")
+    }}
+}}
+""")
+
+    proc = subprocess.run(
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == "missing\n"
 
 
 def test_cli_file_mode_hides_raw_buffer_intrinsics_from_user_code(tmp_path: Path):
@@ -322,7 +412,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -345,7 +435,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -364,7 +454,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -394,7 +484,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--run"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--run"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -423,7 +513,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--emit-c"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--emit-c"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -500,7 +590,7 @@ fun main() void {
 """)
 
     proc = subprocess.run(
-        [sys.executable, str(repo_root / "mesa.py"), str(main), "--emit-c"],
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--emit-c"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -510,3 +600,36 @@ fun main() void {
     assert "mesa_gc_alloc(" in proc.stdout
     assert "typedef struct Mesa_GC_Obj {" not in proc.stdout
     assert "static void mesa_gc_collect(void)" not in proc.stdout
+
+
+def test_cli_emit_c_covers_representative_alpha_markers(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[2]
+    main = tmp_path / "main.mesa"
+    _write(main, """
+error BadError { Bad }
+
+fun mightFail(ok: bool) BadError!i64 {
+    if ok {
+        return 7
+    }
+    return BadError.Bad
+}
+
+fun main() void {
+    defer println("done")
+    let value = mightFail(true) catch { _ => 0 }
+    println(value)
+}
+""")
+
+    proc = subprocess.run(
+        [sys.executable, str(repo_root / "src" / "mesa.py"), str(main), "--emit-c"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    emitted = proc.stdout
+    assert '#include "mesa_gc_runtime.h"' in emitted
+    assert "defer" in emitted or "done" in emitted
+    assert "Bad" in emitted

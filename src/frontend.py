@@ -8,7 +8,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from src.ast import (
+from src.syntax.ast import (
     Decl,
     ErrorDecl,
     FromImportDecl,
@@ -27,15 +27,15 @@ from src.ast import (
     UnionDecl,
     Visibility,
 )
-from src.checker import type_check
-from src.env import DiagnosticBag, Environment
-from src.parser import ParseError, Parser
+from src.semantics.checker import type_check
+from src.semantics.env import DiagnosticBag, Environment
+from src.syntax.parser import ParseError, Parser
 from src.stdlib import (
     augment_package_roots_with_std,
     canonicalize_std_import_path,
     is_reserved_std_bare_name,
 )
-from src.tokenizer import Token, TokenizeError, Tokenizer
+from src.syntax.tokenizer import Token, TokenizeError, Tokenizer
 
 
 @dataclass
@@ -106,6 +106,8 @@ def build_frontend_state(source: str) -> FrontendState:
 
 _BUILTIN_PACKAGES: set[str] = set()
 PackageRoot = Tuple[str, Optional[str]]
+PkgExportSpec = Tuple[str, str, bool]  # namespace path, public name, opaque
+PkgExportTarget = Tuple[str, str]  # declared package path, effective package path
 
 
 def _pkg_facade_basename(pkg_path: str) -> str:
@@ -361,6 +363,39 @@ def _resolve_export_target(target: str, pkg_root: str) -> str:
     return os.path.abspath(os.path.join(pkg_root, target + ".mesa"))
 
 
+def _expected_export_pkg_path(facade_pkg_path: str, source_path: str) -> Optional[str]:
+    rel = source_path[:-5] if source_path.endswith(".mesa") else source_path
+    parts = [
+        part
+        for part in rel.replace("\\", "/").split("/")[:-1]
+        if part and part != "."
+    ]
+    if any(part == ".." for part in parts):
+        return None
+    if not parts:
+        return facade_pkg_path
+    return ".".join([facade_pkg_path, *parts])
+
+
+def _check_export_target_pkg(
+    target_state: FrontendState,
+    *,
+    source_path: str,
+    expected_pkg_path: str,
+) -> Optional[str]:
+    if target_state.program is None:
+        return f"failed to parse export source '{source_path}'"
+    if target_state.program.pkg is None:
+        return f"export source '{source_path}' must declare 'pkg {expected_pkg_path}'"
+    actual = target_state.program.pkg.path
+    if actual != expected_pkg_path:
+        return (
+            f"export source '{source_path}' must declare 'pkg {expected_pkg_path}', "
+            f"not 'pkg {actual}'"
+        )
+    return None
+
+
 def _find_exportable_decl(program: Program, name: str) -> Optional[Decl]:
     for decl in program.decls:
         if getattr(decl, "name", None) == name:
@@ -438,10 +473,17 @@ def _collect_interface_decls(
 def _collect_pkg_export_specs(
     facade_state: FrontendState,
     pkg_root: str,
-) -> Tuple[Dict[Tuple[str, str], List[Tuple[str, bool]]], Optional[str]]:
+    *,
+    effective_pkg_path: Optional[str] = None,
+) -> Tuple[Dict[Tuple[str, str], List[PkgExportSpec]], Dict[str, PkgExportTarget], Optional[str]]:
     if facade_state.program is None:
-        return {}, None
-    specs: Dict[Tuple[str, str], List[Tuple[str, bool]]] = {}
+        return {}, {}, None
+    if facade_state.program.pkg is None:
+        return {}, {}, None
+    declared_pkg_path = facade_state.program.pkg.path
+    export_pkg_path = effective_pkg_path or declared_pkg_path
+    specs: Dict[Tuple[str, str], List[PkgExportSpec]] = {}
+    target_pkgs: Dict[str, PkgExportTarget] = {}
     target_cache: Dict[str, FrontendState] = {}
 
     def target_state_for(path_key: str) -> tuple[str, FrontendState]:
@@ -453,29 +495,49 @@ def _collect_pkg_export_specs(
     for decl in facade_state.program.decls:
         if isinstance(decl, PkgExportAllDecl):
             target_path, target_state = target_state_for(decl.source_path)
-            if target_state.program is None:
-                return {}, f"failed to parse export source '{decl.source_path}'"
+            declared_target_pkg_path = _expected_export_pkg_path(declared_pkg_path, decl.source_path)
+            target_pkg_path = _expected_export_pkg_path(export_pkg_path, decl.source_path)
+            if declared_target_pkg_path is None or target_pkg_path is None:
+                return {}, {}, f"invalid export source path '{decl.source_path}'"
+            pkg_err = _check_export_target_pkg(
+                target_state,
+                source_path=decl.source_path,
+                expected_pkg_path=declared_target_pkg_path,
+            )
+            if pkg_err:
+                return {}, {}, pkg_err
+            target_pkgs[target_path] = (declared_target_pkg_path, target_pkg_path)
             for target_decl in target_state.program.decls:
                 if getattr(target_decl, "vis", Visibility.PRIVATE) != Visibility.PUB:
                     continue
                 name = getattr(target_decl, "name", None)
                 if name is None:
                     continue
-                specs.setdefault((target_path, name), []).append((name, False))
+                specs.setdefault((target_path, name), []).append((target_pkg_path, name, False))
         elif isinstance(decl, PkgExportDecl):
             target_path, target_state = target_state_for(decl.source_path)
-            if target_state.program is None:
-                return {}, f"failed to parse export source '{decl.source_path}'"
+            declared_target_pkg_path = _expected_export_pkg_path(declared_pkg_path, decl.source_path)
+            target_pkg_path = _expected_export_pkg_path(export_pkg_path, decl.source_path)
+            if declared_target_pkg_path is None or target_pkg_path is None:
+                return {}, {}, f"invalid export source path '{decl.source_path}'"
+            pkg_err = _check_export_target_pkg(
+                target_state,
+                source_path=decl.source_path,
+                expected_pkg_path=declared_target_pkg_path,
+            )
+            if pkg_err:
+                return {}, {}, pkg_err
+            target_pkgs[target_path] = (declared_target_pkg_path, target_pkg_path)
             for name, alias in decl.names:
                 target_decl = _find_exportable_decl(target_state.program, name)
                 if target_decl is None:
-                    return {}, f"export target '{decl.source_path}.{name}' not found"
+                    return {}, {}, f"export target '{decl.source_path}.{name}' not found"
                 if getattr(target_decl, "vis", Visibility.PRIVATE) != Visibility.PUB:
-                    return {}, f"cannot export private declaration '{decl.source_path}.{name}'"
+                    return {}, {}, f"cannot export private declaration '{decl.source_path}.{name}'"
                 if decl.opaque and not isinstance(target_decl, (StructDecl, UnionDecl, ErrorDecl)):
-                    return {}, f"opaque export requires a named type, got '{name}'"
-                specs.setdefault((target_path, name), []).append((alias or name, decl.opaque))
-    return specs, None
+                    return {}, {}, f"opaque export requires a named type, got '{name}'"
+                specs.setdefault((target_path, name), []).append((export_pkg_path, alias or name, decl.opaque))
+    return specs, target_pkgs, None
 
 
 def _load_package_graph(
@@ -612,12 +674,14 @@ def _load_package_graph(
                     if effective_pkg_name and is_reserved_std_bare_name(effective_pkg_name):
                         visiting.remove(mod_file)
                         return _reserved_std_pkg_error(effective_pkg_name)
-                    export_specs, export_err = _collect_pkg_export_specs(
+                    export_specs, export_targets, export_err = _collect_pkg_export_specs(
                         mod_state,
                         pkg_root or os.path.dirname(mod_file),
+                        effective_pkg_path=effective_pkg_name,
                     )
                     if export_err:
-                        mod_state.diags.error(export_err)
+                        visiting.remove(mod_file)
+                        return export_err
                     else:
                         pkg_name = mod_state.program.pkg.path
                         pkg_root = pkg_root or os.path.dirname(mod_file)
@@ -626,16 +690,47 @@ def _load_package_graph(
                             pkg_name,
                             root_source_path=mod_file,
                         )
+                        impl_decls: List[Decl] = []
+                        seen_impl_paths: Set[str] = set()
                         if pkg_err:
-                            mod_state.diags.error(pkg_err)
+                            if not export_targets:
+                                visiting.remove(mod_file)
+                                return pkg_err
                         else:
-                            impl_decls: List[Decl] = []
                             for path, state in pkg_states:
                                 if state.program is None:
                                     continue
+                                seen_impl_paths.add(path)
                                 cloned = _annotate_decls(
                                     _clone_program_decls(state.program),
                                     pkg_path=effective_pkg_name,
+                                    source_file=path,
+                                    imported_interface=True,
+                                )
+                                for cloned_decl in cloned:
+                                    setattr(cloned_decl, "_pkg_facade_controlled", True)
+                                    export_meta = export_specs.get((path, getattr(cloned_decl, "name", "")), [])
+                                    if export_meta:
+                                        setattr(cloned_decl, "_pkg_export_names", export_meta)
+                                impl_decls.extend(cloned)
+                        for declared_target_pkg, target_pkg_path in sorted(set(export_targets.values())):
+                            target_states, target_err = _collect_same_pkg_states(
+                                pkg_root,
+                                declared_target_pkg,
+                                root_source_path=mod_file,
+                            )
+                            if target_err:
+                                visiting.remove(mod_file)
+                                return target_err
+                            for path, state in target_states:
+                                if path in seen_impl_paths:
+                                    continue
+                                seen_impl_paths.add(path)
+                                if state.program is None:
+                                    return f"failed to parse export source '{path}'"
+                                cloned = _annotate_decls(
+                                    _clone_program_decls(state.program),
+                                    pkg_path=target_pkg_path,
                                     source_file=path,
                                     imported_interface=True,
                                 )

@@ -13,11 +13,11 @@ There are really two related pipelines:
 1. The normal program pipeline.
 2. The `build.mesa` pipeline that decides which program to compile and with which package roots.
 
-The top-level CLI entry is [`mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/mesa.py).
+The top-level CLI entry is [`src/mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/Mesa/src/mesa.py).
 
 ```mermaid
 flowchart TD
-    A["CLI: mesa.py"] --> B{"Direct file or build command?"}
+    A["CLI: src/mesa.py"] --> B{"Direct file or build command?"}
     B -->|Direct file| C["compile_file()"]
     B -->|mesa build/run/test| D["load_build_plan(build.mesa)"]
     D --> E["Interpret build AST into BuildPlan"]
@@ -81,7 +81,7 @@ The key modules are:
 
 ## 3. CLI Control Flow
 
-The CLI in [`mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/mesa.py) has two user-facing modes:
+The CLI in [`src/mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/Mesa/src/mesa.py) has two user-facing modes:
 
 - Legacy direct compilation:
   - `mesa file.mesa`
@@ -761,7 +761,7 @@ The CLI does not emit one monolithic C file when building a binary. It emits:
 
 Then it compiles each to an object and links them.
 
-That is why [`mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/mesa.py) has:
+That is why [`src/mesa.py`](/Users/oppenheimer/mesa_MVP/mesa2/Mesa/src/mesa.py) has:
 
 - `_group_program_by_source_file()`
 - `emit_support_header()`
@@ -831,7 +831,7 @@ This is not dictionary passing or runtime polymorphism. It is template-style spe
 
 ## 15. Linking Strategy
 
-`mesa.py` uses the system C compiler as the final lowering stage.
+`src/mesa.py` uses the system C compiler as the final lowering stage.
 
 Normal build:
 
@@ -1026,7 +1026,7 @@ If you want one compact mental model for the whole system, it is this:
 - `checker.py` registers names first, then checks bodies with bidirectional typing and context-sensitive error/lifetime rules.
 - `analysis.py` validates exhaustiveness, assignment, return paths, and layout.
 - `ccodegen.py` turns the annotated AST into C plus a small runtime model.
-- `mesa.py` orchestrates host C compilation and linking.
+- `src/mesa.py` orchestrates host C compilation and linking.
 - `buildsys.py` interprets `build.mesa` to choose which real Mesa program to feed into that pipeline.
 
 That is the compiler.

@@ -1,4 +1,4 @@
-pkg math
+pkg math.types
 
 pub struct Vec2 {
     x: f32,

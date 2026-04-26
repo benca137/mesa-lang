@@ -298,6 +298,16 @@ fun operators__cmp_bool_result_ok__f(a: i64, b: i64, c: i64) bool {  //~ compile
     return (a < b) and (b < c);
 }
 
+// operators__chained_cmp_ok
+fun operators__chained_cmp_ok__f(x: i64) bool {  //~ compile-ok
+    return 0 < x < 10;
+}
+
+// operators__chained_cmp_expr_ok
+fun operators__chained_cmp_expr_ok__f(x: i64) i64 {  //~ compile-ok
+    return if 0 <= x < 10 { 1 } else { 0 };
+}
+
 // operators__cmp_f32_eq_ok
 fun operators__cmp_f32_eq_ok__f(a: f32, b: f32) bool {  //~ compile-ok
     return a == b;
@@ -1435,6 +1445,15 @@ test "operators/bool_or.mesa" {
 test "operators/cmp_bool_result_ok.mesa" {
     @assert(operators__cmp_bool_result_ok__f(1, 2, 3))
     @assert(!operators__cmp_bool_result_ok__f(3, 2, 1))
+}
+test "operators/chained_cmp_ok.mesa" {
+    @assert(operators__chained_cmp_ok__f(5))
+    @assert(!operators__chained_cmp_ok__f(0))
+    @assert(!operators__chained_cmp_ok__f(10))
+}
+test "operators/chained_cmp_expr_ok.mesa" {
+    @assert(operators__chained_cmp_expr_ok__f(5) == 1)
+    @assert(operators__chained_cmp_expr_ok__f(10) == 0)
 }
 test "operators/cmp_f32_eq_ok.mesa" {
     @assert(operators__cmp_f32_eq_ok__f(2.5, 2.5) == true)
