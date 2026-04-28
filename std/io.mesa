@@ -90,7 +90,7 @@ pub struct Writer {
                 let n = try self.sink.drain(@ptrAdd(data, pos), len - pos)
                 pos = pos + n
             }
-            return
+            return 
         } else {
             let var pos: i64 = 0
             while pos < len {
@@ -116,7 +116,7 @@ pub struct Writer {
     }
 
     pub fun flush(self: *Writer) IoError!void {
-        var pos: i64 = 0
+        let var pos: i64 = 0
         while pos < self.end {
             let n = try self.sink.drain(@ptrAdd(self.buf, pos), self.end - pos)
             pos = pos + n
@@ -154,28 +154,28 @@ pub fun openFile(path: str, mode: OpenMode) IoError!File {
 // Each uses Writer with cap=0 so writeAll bypasses buffering and drains directly.
 
 pub fun print(text: str) void {
-    var f = stdout()
-    var w = Writer.init(&f, text.data, 0)
+    let var f = stdout()
+    let var w = Writer.init(&f, text.data, 0)
     w.writeAll(text.data, text.len) catch { _ => @panic("print: io error") }
 }
 
 pub fun println(text: str) void {
-    var f = stdout()
-    var w = Writer.init(&f, text.data, 0)
+    let var f = stdout()
+    let var w = Writer.init(&f, text.data, 0)
     w.writeAll(text.data, text.len) catch { _ => @panic("println: io error") }
     let nl = "\n"
     w.writeAll(nl.data, nl.len) catch { _ => @panic("println: io error") }
 }
 
 pub fun eprint(text: str) void {
-    var f = stderr()
-    var w = Writer.init(&f, text.data, 0)
+    let var f = stderr()
+    let var w = Writer.init(&f, text.data, 0)
     w.writeAll(text.data, text.len) catch { _ => @panic("eprint: io error") }
 }
 
 pub fun eprintln(text: str) void {
-    var f = stderr()
-    var w = Writer.init(&f, text.data, 0)
+    let var f = stderr()
+    let var w = Writer.init(&f, text.data, 0)
     w.writeAll(text.data, text.len) catch { _ => @panic("eprintln: io error") }
     let nl = "\n"
     w.writeAll(nl.data, nl.len) catch { _ => @panic("eprintln: io error") }
