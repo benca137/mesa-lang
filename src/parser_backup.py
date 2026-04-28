@@ -15,9 +15,9 @@ Precedence (lowest → highest):
 """
 from __future__ import annotations
 from typing import List, Optional, Union
-from src.syntax.tokenizer import Token, TK, Tokenizer
-from src.syntax.ast import *
-from src.syntax.ast import TyTuple
+from src.tokenizer import Token, TK, Tokenizer
+from src.ast import *
+from src.ast import TyTuple
 
 
 class ParseError(Exception):

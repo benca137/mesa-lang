@@ -28,10 +28,10 @@ Mesa → C type mapping:
 """
 from __future__ import annotations
 from typing import Dict, List, Optional, Set, Tuple
-from src.syntax.ast import *
-from src.semantics.types import *
-from src.semantics.env import Environment
-from src.semantics.analysis import LayoutPass
+from src.ast import *
+from src.types import *
+from src.env import Environment
+from src.analysis import LayoutPass
 
 _ACTIVE_ENV: Optional[Environment] = None
 
@@ -121,14 +121,14 @@ def c_type(ty: Type, name: str = "") -> str:
     if isinstance(ty, TError): return "int64_t"
     if isinstance(ty, TVar):
         return "int64_t"
-    from src.semantics.types import TErrorUnion, TErrorSet, TErrorSetUnion
+    from src.types import TErrorUnion, TErrorSet, TErrorSetUnion
     if isinstance(ty, (TErrorSet, TErrorSetUnion)):
         return f"Mesa_error_{_error_key(ty)}"
     if isinstance(ty, TErrorUnion):
         ename = _error_key(ty.error_set)
         tmangle = _mangle_type(ty.payload)
         return f"Mesa_result_{ename}_{tmangle}"  # key matches _emit_result_struct
-    from src.semantics.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
+    from src.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
     if isinstance(ty, TAnyInterface):
         if _is_builtin_allocator_iface_name(ty.iface.name):
             return "Mesa_Allocator"
@@ -218,7 +218,7 @@ def _mangle_type(ty: Type) -> str:
     if isinstance(ty, TUnion):  return (getattr(ty, "_c_name", None) or _lookup_c_type_name(ty.name)).replace("_", "_")
     if isinstance(ty, (TErrorSet, TErrorSetUnion)):
         return _error_key(ty).replace(".", "_")
-    from src.semantics.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
+    from src.types import TUnitful, TUncertain, TDynInterface, TAnyInterface
     if isinstance(ty, TAnyInterface):
         return f"Mesa_any_{_iface_c_name(ty.iface)}"   # stack existential — value type
     if isinstance(ty, TDynInterface):
@@ -485,7 +485,7 @@ class CCodegen:
             return
         alloc_name = frame["alloc_name"]
         alloc_ty = frame["alloc_ty"]
-        from src.semantics.types import TStruct, TPointer
+        from src.types import TStruct, TPointer
         target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
         if isinstance(target_ty, TStruct):
             self.w.line(f"{c_type(target_ty)}__{cleanup}(&{alloc_name});")
@@ -495,7 +495,7 @@ class CCodegen:
             if isinstance(alloc_entry, str):
                 return f"mesa_allocctx_alloc({alloc_entry}, {size_expr}, {align})"
             alloc_expr, alloc_ty = alloc_entry
-            from src.semantics.types import TStruct, TPointer
+            from src.types import TStruct, TPointer
             target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
             if isinstance(target_ty, TStruct) and self.env.impls.implements(target_ty.name, "Allocator"):
                 return f"{c_type(target_ty)}__alloc(&{alloc_expr}, {size_expr}, {align})"
@@ -534,7 +534,7 @@ class CCodegen:
         ]
 
     def _allocctx_helper_name(self, alloc_ty: Type) -> Optional[str]:
-        from src.semantics.types import TStruct, TPointer
+        from src.types import TStruct, TPointer
 
         target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
         if not isinstance(target_ty, TStruct):
@@ -693,66 +693,166 @@ class CCodegen:
         self.w.line(f"#endif /* {header_guard} */")
 
     def emit_runtime_state_source(self, header_name: str):
-        self.w.line(f'#include "{header_name}"')
-        self.w.line()
-        self.w.line("void mesa__std__io__stdout_write(mesa_str text) {")
-        self.w.line("    mesa_stdout_write(text);")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("void mesa__std__io__stderr_write(mesa_str text) {")
-        self.w.line("    mesa_stderr_write(text);")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("void* mesa__std__io__file_open(mesa_str path, mesa_str mode) {")
-        self.w.line("    char* c_path = (char*)malloc((size_t)path.len + 1);")
-        self.w.line("    char* c_mode = (char*)malloc((size_t)mode.len + 1);")
-        self.w.line("    if (!c_path || !c_mode) { free(c_path); free(c_mode); return NULL; }")
-        self.w.line("    memcpy(c_path, path.data, (size_t)path.len);")
-        self.w.line("    c_path[path.len] = 0;")
-        self.w.line("    memcpy(c_mode, mode.data, (size_t)mode.len);")
-        self.w.line("    c_mode[mode.len] = 0;")
-        self.w.line("    FILE* f = fopen(c_path, c_mode);")
-        self.w.line("    free(c_path);")
-        self.w.line("    free(c_mode);")
-        self.w.line("    return f;")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("int mesa__std__io__file_is_open(void* file) {")
-        self.w.line("    return file != NULL;")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("int64_t mesa__std__io__file_write(void* file, mesa_str text) {")
-        self.w.line("    if (!file) return -1;")
-        self.w.line("    return (int64_t)fwrite(text.data, 1, (size_t)text.len, (FILE*)file);")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("mesa_str mesa__std__io__file_read_all(void* file) {")
-        self.w.line("    if (!file) return (mesa_str){\"\", 0};")
-        self.w.line("    long start = ftell((FILE*)file);")
-        self.w.line("    if (start < 0) start = 0;")
-        self.w.line("    if (fseek((FILE*)file, 0, SEEK_END) != 0) return (mesa_str){\"\", 0};")
-        self.w.line("    long end = ftell((FILE*)file);")
-        self.w.line("    if (end < 0 || end < start) { fseek((FILE*)file, start, SEEK_SET); return (mesa_str){\"\", 0}; }")
-        self.w.line("    int64_t len = (int64_t)(end - start);")
-        self.w.line("    if (fseek((FILE*)file, start, SEEK_SET) != 0) return (mesa_str){\"\", 0};")
-        self.w.line("    char* data = (char*)malloc((size_t)len + 1);")
-        self.w.line("    if (!data) return (mesa_str){\"\", 0};")
-        self.w.line("    size_t got = fread(data, 1, (size_t)len, (FILE*)file);")
-        self.w.line("    data[got] = 0;")
-        self.w.line("    return (mesa_str){data, (int64_t)got};")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("int mesa__std__io__file_flush(void* file) {")
-        self.w.line("    if (!file) return 0;")
-        self.w.line("    return fflush((FILE*)file) == 0;")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("int mesa__std__io__file_close(void* file) {")
-        self.w.line("    if (!file) return 0;")
-        self.w.line("    return fclose((FILE*)file) == 0;")
-        self.w.line("}")
-        self.w.line()
-        self.w.line("static int64_t _mesa_test_total = 0;")
+        w = self.w
+        w.line(f'#include "{header_name}"')
+        w.line()
+        # Platform-specific includes (not in the preamble header)
+        w.line("#ifndef _WIN32")
+        w.line("#  include <unistd.h>")
+        w.line("#  include <fcntl.h>")
+        w.line("#  include <errno.h>")
+        w.line("#  include <pthread.h>")
+        w.line("#  include <sys/stat.h>")
+        w.line("#endif")
+        w.line()
+        # Internal write helper (loop on short writes)
+        w.line("#ifdef _WIN32")
+        w.line("static void _rs_write_fd(HANDLE h, const char* p, size_t n) {")
+        w.line("    DWORD written;")
+        w.line("    while (n > 0) {")
+        w.line("        DWORD chunk = (DWORD)(n > 0x7fffffffu ? 0x7fffffffu : n);")
+        w.line("        if (!WriteFile(h, p, chunk, &written, NULL) || written == 0) break;")
+        w.line("        p += written; n -= written;")
+        w.line("    }")
+        w.line("}")
+        w.line("#else")
+        w.line("static void _rs_write_fd(int fd, const char* p, size_t n) {")
+        w.line("    while (n > 0) {")
+        w.line("        ssize_t r = write(fd, p, n);")
+        w.line("        if (r > 0) { p += (size_t)r; n -= (size_t)r; } else break;")
+        w.line("    }")
+        w.line("}")
+        w.line("#endif")
+        w.line()
+        # ── I/O intrinsics ────────────────────────────────────────────────
+        w.line("/* ── I/O intrinsics ─────────────────────────────────────────────── */")
+        w.line()
+        w.line("int64_t mesa__std__io__std_handle(int32_t which) {")
+        w.line("#ifdef _WIN32")
+        w.line("    DWORD id = (which == 0) ? STD_INPUT_HANDLE :")
+        w.line("               (which == 1) ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE;")
+        w.line("    return (int64_t)(intptr_t)GetStdHandle(id);")
+        w.line("#else")
+        w.line("    return (int64_t)which;")
+        w.line("#endif")
+        w.line("}")
+        w.line()
+        w.line("int64_t mesa__std__io__io_write(int64_t handle, const uint8_t* data, int64_t len) {")
+        w.line("#ifdef _WIN32")
+        w.line("    HANDLE h = (HANDLE)(intptr_t)handle;")
+        w.line("    DWORD written = 0;")
+        w.line("    DWORD chunk = (DWORD)(len > 0x7fffffff ? 0x7fffffff : len);")
+        w.line("    if (!WriteFile(h, data, chunk, &written, NULL)) return -1;")
+        w.line("    return (int64_t)written;")
+        w.line("#else")
+        w.line("    ssize_t n;")
+        w.line("    do { n = write((int)handle, data, (size_t)len); } while (n < 0 && errno == EINTR);")
+        w.line("    return (int64_t)n;")
+        w.line("#endif")
+        w.line("}")
+        w.line()
+        w.line("int64_t mesa__std__io__io_read(int64_t handle, uint8_t* buf, int64_t len) {")
+        w.line("#ifdef _WIN32")
+        w.line("    HANDLE h = (HANDLE)(intptr_t)handle;")
+        w.line("    DWORD nread = 0;")
+        w.line("    DWORD chunk = (DWORD)(len > 0x7fffffff ? 0x7fffffff : len);")
+        w.line("    if (!ReadFile(h, buf, chunk, &nread, NULL)) return -1;")
+        w.line("    return (int64_t)nread;")
+        w.line("#else")
+        w.line("    ssize_t n;")
+        w.line("    do { n = read((int)handle, buf, (size_t)len); } while (n < 0 && errno == EINTR);")
+        w.line("    return (int64_t)n;")
+        w.line("#endif")
+        w.line("}")
+        w.line()
+        # OpenMode enum order must match the Mesa union declaration:
+        # 0=Read, 1=Write, 2=Append, 3=ReadWrite
+        w.line("int64_t mesa__std__io__io_open(mesa_str path, int32_t mode) {")
+        w.line("#ifdef _WIN32")
+        w.line("    int wlen = MultiByteToWideChar(CP_UTF8, 0, path.data, (int)path.len, NULL, 0);")
+        w.line("    if (wlen <= 0) return -1;")
+        w.line("    wchar_t* wpath = (wchar_t*)malloc((size_t)(wlen + 1) * sizeof(wchar_t));")
+        w.line("    if (!wpath) return -1;")
+        w.line("    MultiByteToWideChar(CP_UTF8, 0, path.data, (int)path.len, wpath, wlen);")
+        w.line("    wpath[wlen] = 0;")
+        w.line("    DWORD access = 0, share = FILE_SHARE_READ | FILE_SHARE_WRITE, disposition = 0;")
+        w.line("    switch (mode) {")
+        w.line("        case 0: access = GENERIC_READ;                  disposition = OPEN_EXISTING; break;")
+        w.line("        case 1: access = GENERIC_WRITE;                 disposition = CREATE_ALWAYS; break;")
+        w.line("        case 2: access = FILE_APPEND_DATA;              disposition = OPEN_ALWAYS;   break;")
+        w.line("        case 3: access = GENERIC_READ|GENERIC_WRITE;    disposition = CREATE_ALWAYS; break;")
+        w.line("        default: free(wpath); return -1;")
+        w.line("    }")
+        w.line("    HANDLE h = CreateFileW(wpath, access, share, NULL, disposition,")
+        w.line("                           FILE_ATTRIBUTE_NORMAL, NULL);")
+        w.line("    free(wpath);")
+        w.line("    return (h == INVALID_HANDLE_VALUE) ? -1 : (int64_t)(intptr_t)h;")
+        w.line("#else")
+        w.line("    char* c_path = (char*)malloc((size_t)path.len + 1);")
+        w.line("    if (!c_path) return -1;")
+        w.line("    memcpy(c_path, path.data, (size_t)path.len);")
+        w.line("    c_path[path.len] = 0;")
+        w.line("    int flags = 0;")
+        w.line("    switch (mode) {")
+        w.line("        case 0: flags = O_RDONLY;                          break;")
+        w.line("        case 1: flags = O_WRONLY | O_CREAT | O_TRUNC;      break;")
+        w.line("        case 2: flags = O_WRONLY | O_CREAT | O_APPEND;     break;")
+        w.line("        case 3: flags = O_RDWR   | O_CREAT | O_TRUNC;      break;")
+        w.line("        default: free(c_path); return -1;")
+        w.line("    }")
+        w.line("    int fd = open(c_path, flags, 0644);")
+        w.line("    free(c_path);")
+        w.line("    return (int64_t)fd;")
+        w.line("#endif")
+        w.line("}")
+        w.line()
+        w.line("int32_t mesa__std__io__io_close(int64_t handle) {")
+        w.line("#ifdef _WIN32")
+        w.line("    return CloseHandle((HANDLE)(intptr_t)handle) ? 0 : -1;")
+        w.line("#else")
+        w.line("    return (int32_t)close((int)handle);")
+        w.line("#endif")
+        w.line("}")
+        w.line()
+        # ── Locked print intrinsics ───────────────────────────────────────
+        w.line("/* ── Locked print intrinsics ────────────────────────────────────── */")
+        w.line("/* One static mutex per process. The compiler lowers the global      */")
+        w.line("/* print/println/eprint/eprintln builtins to these C functions.      */")
+        w.line()
+        w.line("#ifdef _WIN32")
+        w.line("static CRITICAL_SECTION _mesa_print_lock;")
+        w.line("static INIT_ONCE _mesa_print_once = INIT_ONCE_STATIC_INIT;")
+        w.line("static BOOL CALLBACK _mesa_print_init_fn(PINIT_ONCE o, PVOID p, PVOID* c) {")
+        w.line("    (void)o; (void)p; (void)c;")
+        w.line("    InitializeCriticalSection(&_mesa_print_lock); return TRUE;")
+        w.line("}")
+        w.line("static void _mesa_plk(void) {")
+        w.line("    InitOnceExecuteOnce(&_mesa_print_once, _mesa_print_init_fn, NULL, NULL);")
+        w.line("    EnterCriticalSection(&_mesa_print_lock);")
+        w.line("}")
+        w.line("static void _mesa_pul(void) { LeaveCriticalSection(&_mesa_print_lock); }")
+        w.line("static void _mesa_pw(int fd, mesa_str s, int nl) {")
+        w.line("    HANDLE h = (fd == 2) ? GetStdHandle(STD_ERROR_HANDLE)")
+        w.line("                        : GetStdHandle(STD_OUTPUT_HANDLE);")
+        w.line("    if (s.len > 0) { _rs_write_fd(h, s.data, (size_t)s.len); }")
+        w.line("    if (nl) { DWORD _w; WriteFile(h, \"\\n\", 1, &_w, NULL); }")
+        w.line("}")
+        w.line("#else")
+        w.line("static pthread_mutex_t _mesa_print_mutex = PTHREAD_MUTEX_INITIALIZER;")
+        w.line("static void _mesa_plk(void) { pthread_mutex_lock(&_mesa_print_mutex); }")
+        w.line("static void _mesa_pul(void) { pthread_mutex_unlock(&_mesa_print_mutex); }")
+        w.line("static void _mesa_pw(int fd, mesa_str s, int nl) {")
+        w.line("    if (s.len > 0) { _rs_write_fd(fd, s.data, (size_t)s.len); }")
+        w.line("    if (nl) { _rs_write_fd(fd, \"\\n\", 1); }")
+        w.line("}")
+        w.line("#endif")
+        w.line()
+        w.line("void mesa__std__io__locked_print_stdout(mesa_str s)   { _mesa_plk(); _mesa_pw(1, s, 0); _mesa_pul(); }")
+        w.line("void mesa__std__io__locked_println_stdout(mesa_str s) { _mesa_plk(); _mesa_pw(1, s, 1); _mesa_pul(); }")
+        w.line("void mesa__std__io__locked_print_stderr(mesa_str s)   { _mesa_plk(); _mesa_pw(2, s, 0); _mesa_pul(); }")
+        w.line("void mesa__std__io__locked_println_stderr(mesa_str s) { _mesa_plk(); _mesa_pw(2, s, 1); _mesa_pul(); }")
+        w.line()
+        w.line("static int64_t _mesa_test_total = 0;")
         self.w.line("static int64_t _mesa_test_failed = 0;")
         self.w.line("static int64_t _mesa_test_current_failures = 0;")
         self.w.line("static const char* _mesa_test_current_name = NULL;")
@@ -829,14 +929,19 @@ class CCodegen:
         w = self.w
         w.line("/* Mesa generated C — do not edit */")
         w.line("#include <stdint.h>")
-        w.line("#include <stdio.h>")
+        w.line("#include <stdio.h>   /* snprintf only — no printf/fprintf in runtime paths */")
         w.line("#include <math.h>")
         w.line("#include <string.h>")
         w.line("#include <stdlib.h>")
         w.line("#include <stddef.h>  /* offsetof */")
-        w.line("#include <errno.h>")
-        w.line("#include <sys/mman.h>")
-        w.line("#include <unistd.h>")
+        w.line("#ifdef _WIN32")
+        w.line("#  include <windows.h>")
+        w.line("#else")
+        w.line("#  include <errno.h>")
+        w.line("#  include <fcntl.h>")
+        w.line("#  include <unistd.h>")
+        w.line("#  include <sys/mman.h>")
+        w.line("#endif")
         w.line('#include "mesa_gc_runtime.h"')
         w.line()
         # Mesa runtime types
@@ -859,16 +964,72 @@ class CCodegen:
         w.line("    const char* name; /* canonical unit name, e.g. N */")
         w.line("} mesa_unitful;")
         w.line()
-        # println built-ins
-        w.line("/* ── Built-ins ───────────────────────────────────── */")
-        w.line("static inline void mesa_stdout_write(mesa_str s) { printf(\"%.*s\", (int)s.len, s.data); }")
-        w.line("static inline void mesa_stderr_write(mesa_str s) { fprintf(stderr, \"%.*s\", (int)s.len, s.data); }")
-        w.line("static inline void mesa_println_str(mesa_str s) { printf(\"%.*s\\n\", (int)s.len, s.data); }")
-        w.line("static inline void mesa_println_i64(int64_t n)  { printf(\"%lld\\n\", (long long)n); }")
-        w.line("static inline void mesa_println_f64(double f)   { printf(\"%.6g\\n\", f); }")
-        w.line("static inline void mesa_println_bool(int b)     { printf(\"%s\\n\", b ? \"true\" : \"false\"); }")
-        w.line("static inline void mesa_println_cstr(const char* s) { printf(\"%s\\n\", s); }")
-        w.line("static inline void mesa_panic(mesa_str s) { fprintf(stderr, \"%.*s\\n\", (int)s.len, s.data); abort(); }")
+        # I/O runtime — forward declarations (bodies in mesa_runtime_state.c)
+        w.line("/* ── I/O runtime forward declarations ───────────── */")
+        w.line("void    mesa__std__io__locked_print_stdout(mesa_str s);")
+        w.line("void    mesa__std__io__locked_println_stdout(mesa_str s);")
+        w.line("void    mesa__std__io__locked_print_stderr(mesa_str s);")
+        w.line("void    mesa__std__io__locked_println_stderr(mesa_str s);")
+        w.line("int64_t mesa__std__io__std_handle(int32_t which);")
+        w.line("int64_t mesa__std__io__io_write(int64_t handle, const uint8_t* data, int64_t len);")
+        w.line("int64_t mesa__std__io__io_read(int64_t handle, uint8_t* buf, int64_t len);")
+        w.line("int64_t mesa__std__io__io_open(mesa_str path, int32_t mode);")
+        w.line("int32_t mesa__std__io__io_close(int64_t handle);")
+        w.line()
+        # println / print built-ins — use write(2)/WriteFile, no stdio
+        w.line("/* ── Built-in print helpers (write(2)-based) ────── */")
+        w.line("#ifdef _WIN32")
+        w.line("static inline void _mesa_write_fd(int fd, const char* p, size_t n) {")
+        w.line("    HANDLE h = (fd == 2) ? GetStdHandle(STD_ERROR_HANDLE) : GetStdHandle(STD_OUTPUT_HANDLE);")
+        w.line("    DWORD written; WriteFile(h, p, (DWORD)n, &written, NULL);")
+        w.line("}")
+        w.line("#else")
+        w.line("static inline void _mesa_write_fd(int fd, const char* p, size_t n) {")
+        w.line("    while (n > 0) { ssize_t r = write(fd, p, n); if (r > 0) { p += (size_t)r; n -= (size_t)r; } else break; }")
+        w.line("}")
+        w.line("#endif")
+        w.line("static inline void _mesa_wi64(int fd, int64_t n, int nl) {")
+        w.line("    char buf[32];")
+        w.line("    int len = snprintf(buf, sizeof(buf), nl ? \"%lld\\n\" : \"%lld\", (long long)n);")
+        w.line("    if (len > 0) { _mesa_write_fd(fd, buf, (size_t)len); }")
+        w.line("}")
+        w.line("static inline void _mesa_wf64(int fd, double f, int nl) {")
+        w.line("    char buf[32];")
+        w.line("    int len = snprintf(buf, sizeof(buf), nl ? \"%.6g\\n\" : \"%.6g\", f);")
+        w.line("    if (len > 0) { _mesa_write_fd(fd, buf, (size_t)len); }")
+        w.line("}")
+        w.line("static inline void _mesa_wbool(int fd, int b, int nl) {")
+        w.line("    const char* s = b ? \"true\" : \"false\"; size_t slen = b ? 4 : 5;")
+        w.line("    _mesa_write_fd(fd, s, slen); if (nl) { _mesa_write_fd(fd, \"\\n\", 1); }")
+        w.line("}")
+        w.line("static inline void _mesa_wcstr(int fd, const char* s, int nl) {")
+        w.line("    size_t slen = strlen(s); _mesa_write_fd(fd, s, slen);")
+        w.line("    if (nl) { _mesa_write_fd(fd, \"\\n\", 1); }")
+        w.line("}")
+        # stdout variants
+        w.line("static inline void mesa_println_i64(int64_t n)   { _mesa_wi64(1, n, 1); }")
+        w.line("static inline void mesa_print_i64(int64_t n)     { _mesa_wi64(1, n, 0); }")
+        w.line("static inline void mesa_println_f64(double f)    { _mesa_wf64(1, f, 1); }")
+        w.line("static inline void mesa_print_f64(double f)      { _mesa_wf64(1, f, 0); }")
+        w.line("static inline void mesa_println_bool(int b)      { _mesa_wbool(1, b, 1); }")
+        w.line("static inline void mesa_print_bool(int b)        { _mesa_wbool(1, b, 0); }")
+        w.line("static inline void mesa_println_cstr(const char* s) { _mesa_wcstr(1, s, 1); }")
+        w.line("static inline void mesa_print_cstr(const char* s)   { _mesa_wcstr(1, s, 0); }")
+        # stderr variants
+        w.line("static inline void mesa_eprintln_i64(int64_t n)  { _mesa_wi64(2, n, 1); }")
+        w.line("static inline void mesa_eprint_i64(int64_t n)    { _mesa_wi64(2, n, 0); }")
+        w.line("static inline void mesa_eprintln_f64(double f)   { _mesa_wf64(2, f, 1); }")
+        w.line("static inline void mesa_eprint_f64(double f)     { _mesa_wf64(2, f, 0); }")
+        w.line("static inline void mesa_eprintln_bool(int b)     { _mesa_wbool(2, b, 1); }")
+        w.line("static inline void mesa_eprint_bool(int b)       { _mesa_wbool(2, b, 0); }")
+        w.line("static inline void mesa_eprintln_cstr(const char* s) { _mesa_wcstr(2, s, 1); }")
+        w.line("static inline void mesa_eprint_cstr(const char* s)   { _mesa_wcstr(2, s, 0); }")
+        # panic
+        w.line("static inline void mesa_panic(mesa_str s) {")
+        w.line("    _mesa_write_fd(2, s.data, (size_t)s.len);")
+        w.line("    _mesa_write_fd(2, \"\\n\", 1);")
+        w.line("    abort();")
+        w.line("}")
         w.line("void mesa_test_begin(const char* name);")
         w.line("void mesa_test_assert(int cond, int64_t line, int64_t col);")
         w.line("void mesa_test_end(void);")
@@ -893,7 +1054,7 @@ class CCodegen:
         w.line("    size_t actual_align = (size_t)(align > (int64_t)sizeof(void*) ? align : (int64_t)sizeof(void*));")
         w.line("    void* ptr = NULL;")
         w.line("    if (posix_memalign(&ptr, actual_align, actual_size) != 0) {")
-        w.line("        fprintf(stderr, \"posix_memalign failed\\n\");")
+        w.line("        _mesa_write_fd(2, \"posix_memalign failed\\n\", 22);")
         w.line("        abort();")
         w.line("    }")
         w.line("    return ptr;")
@@ -942,7 +1103,7 @@ class CCodegen:
         self._emit_all_result_structs(program)
 
         # Type aliases: let Score := i64  →  typedef int64_t Score;
-        from src.syntax.ast import TypeAlias
+        from src.ast import TypeAlias
         for decl in program.decls:
             self.env.set_current_pkg(getattr(decl, "_pkg_path", None))
             if isinstance(decl, TypeAlias):
@@ -1110,8 +1271,8 @@ class CCodegen:
 
     def _prescan_mono(self, program):
         """Walk all function bodies collecting generic call instantiations."""
-        from src.syntax.ast import CallExpr as CE2, FieldExpr as FE2, Ident as ID2, FunDecl as FD2, Block as BK2
-        from src.semantics.types import TPointer as _TPMono, TStruct as _TSMono
+        from src.ast import CallExpr as CE2, FieldExpr as FE2, Ident as ID2, FunDecl as FD2, Block as BK2
+        from src.types import TPointer as _TPMono, TStruct as _TSMono
         def walk_expr(e):
             if e is None: return
             bindings = getattr(e, '_type_bindings', None)
@@ -1171,7 +1332,7 @@ class CCodegen:
         suffix = self._mono_suffix(bindings)
         base_name = getattr(f, "_c_name", None) or f.name
         key = f"{base_name}__{suffix}"
-        from src.semantics.checker import effective_return_type as _ert7, lower_type as _lt7
+        from src.checker import effective_return_type as _ert7, lower_type as _lt7
         prev_pkg = getattr(self.env, "_current_pkg", None)
         prev_receiver = getattr(self.env, "_current_struct", None)
         self.env.set_current_pkg(getattr(f, "_pkg_path", None))
@@ -1211,13 +1372,13 @@ class CCodegen:
         # Build C signature with substituted types
         ret_ty = substitute(fn_sym.type_.ret, bindings) if fn_sym and isinstance(fn_sym.type_, TFun) else None
         if ret_ty is None:
-            from src.semantics.checker import lower_type as _lt5
+            from src.checker import lower_type as _lt5
             ret_ty = substitute(_lt5(f.ret, self.env), bindings)
         ret_c = c_type(ret_ty) if ret_ty else "int64_t"
 
         params_c = []
         for p in f.params:
-            from src.semantics.checker import lower_type as _lt6
+            from src.checker import lower_type as _lt6
             pt = _lt6(p.type_, self.env)
             pt = substitute(pt, bindings)
             c_pt = c_type(pt)
@@ -1269,8 +1430,8 @@ class CCodegen:
 
     def _emit_all_result_structs(self, program: Program):
         """Pre-scan all functions and emit result structs in the type section."""
-        from src.semantics.types import TErrorUnion
-        from src.semantics.checker import effective_return_type as _ert3
+        from src.types import TErrorUnion
+        from src.checker import effective_return_type as _ert3
         def scan_fn(f):
             ret = _ert3(f, self.env)
             if isinstance(ret, TErrorUnion):
@@ -1491,7 +1652,7 @@ class CCodegen:
         if rendered in ("/* void */", "/* undef */") or target_ty is None:
             return rendered
         value_ty = self._expr_type_raw(value_expr) or self._expr_type(value_expr)
-        from src.semantics.types import is_assignable
+        from src.types import is_assignable
         if (
             isinstance(target_ty, TOptional)
             and value_ty is not None
@@ -1535,7 +1696,7 @@ class CCodegen:
             for fname, ftype in ty.fields.items():
                 ct = c_type(ftype)
                 # Track pointer field offsets for GC descriptor
-                from src.semantics.types import TPointer as _TPgc, TDynInterface as _TDgc, TAnyInterface as _TAgc
+                from src.types import TPointer as _TPgc, TDynInterface as _TDgc, TAnyInterface as _TAgc
                 if isinstance(ftype, (_TPgc, _TDgc, _TAgc)):
                     ptr_offsets.append(f"offsetof({c_name}, {fname})")
                 if isinstance(ftype, TArray):
@@ -1555,7 +1716,7 @@ class CCodegen:
 
     def _fn_typedef(self, ty) -> str:
         """Get or create a typedef name for a function pointer type."""
-        from src.syntax.ast import TyFun
+        from src.ast import TyFun
         if not isinstance(ty, TyFun):
             return c_typeexpr(ty)
         params_str = ", ".join(c_typeexpr(p) for p in ty.params) or "void"
@@ -1570,11 +1731,11 @@ class CCodegen:
 
     def _emit_optional_typedefs(self, program: Program):
         """Scan annotations/expressions and emit helper typedefs used by generated C."""
-        from src.syntax.ast import TyOptional, IfExpr as IExpr, NoneLit as NLit
+        from src.ast import TyOptional, IfExpr as IExpr, NoneLit as NLit
         seen = set()
         def emit_for_type(ty):
             if ty is None: return
-            from src.semantics.types import TOptional as TOpt
+            from src.types import TOptional as TOpt
             if isinstance(ty, TOpt):
                 emit_for_type(ty.inner)
                 if isinstance(ty.inner, TVar):
@@ -1886,8 +2047,8 @@ class CCodegen:
                 name = "main"
                 ret = "int"
             else:
-                from src.semantics.types import TDynInterface, TAnyInterface
-                from src.semantics.checker import effective_return_type
+                from src.types import TDynInterface, TAnyInterface
+                from src.checker import effective_return_type
                 resolved_ret = effective_return_type(f, self.env)
                 if isinstance(resolved_ret, TAnyInterface):
                     ret = self._iface_any_name(resolved_ret.iface)
@@ -1906,8 +2067,8 @@ class CCodegen:
                     ir = c_typeexpr(p.type_.ret)
                     params.append(f"{ir} (*{p.name})({inner_params})")
                 else:
-                    from src.semantics.types import TDynInterface, TAnyInterface
-                    from src.semantics.checker import lower_type as _lower_type
+                    from src.types import TDynInterface, TAnyInterface
+                    from src.checker import lower_type as _lower_type
                     resolved_p = _lower_type(p.type_, self.env)
                     if isinstance(resolved_p, TAnyInterface):
                         params.append(f"{self._iface_any_name(resolved_p.iface)} {p.name}")
@@ -1994,7 +2155,7 @@ class CCodegen:
                 extra_call = "".join(f", _a{i}" for i in range(len(extra_params)))
                 # Check if self param is pointer receiver (*T) or value receiver (T)
                 self_param = mty.params[0] if mty.params else None
-                from src.semantics.types import TPointer as _TPtr
+                from src.types import TPointer as _TPtr
                 if isinstance(self_param, _TPtr):
                     self_cast = f"({concrete_c}*)_self"   # pointer receiver
                     direct_target = f"{concrete_c}__{mname}"
@@ -2059,7 +2220,7 @@ class CCodegen:
         saved_fn_handle_target = getattr(self, '_current_fn_handle_target', None)
         fn_handle = getattr(f, 'handle_block', None)
         fn_handle_binding_ty = getattr(fn_handle, '_binding_type', None)
-        from src.semantics.checker import effective_return_type as _effective_ret
+        from src.checker import effective_return_type as _effective_ret
         self._current_fn_ret  = f.ret
         self._current_fn_ret_ty = _effective_ret(f, self.env)
         self._current_fn_name = f.name
@@ -2133,7 +2294,7 @@ class CCodegen:
 
     def _emit_return_value(self, value_expr: Expr):
         w = self.w
-        from src.semantics.types import TErrorUnion, TErrorSet, TErrorSetUnion
+        from src.types import TErrorUnion, TErrorSet, TErrorSetUnion
         ret_ty = self._current_fn_ret_ty
         val_ty = self._expr_type(value_expr)
         rendered = self._expr(value_expr)
@@ -2275,12 +2436,12 @@ class CCodegen:
         # Pointers are never const — you need to write through them
         is_ptr = isinstance(l.type_, TyPointer) if l.type_ else False
         if not is_ptr and l.init:
-            from src.semantics.types import TPointer as _TPtrInfer
+            from src.types import TPointer as _TPtrInfer
             init_ty = self._expr_type(l.init)
             is_ptr = isinstance(init_ty, _TPtrInfer)
         is_allocator = False
         if l.type_:
-            from src.semantics.checker import lower_type as _lower_type
+            from src.checker import lower_type as _lower_type
             lowered = _lower_type(l.type_, self.env)
             is_allocator = self._is_allocator_operand_type(lowered)
         elif l.init:
@@ -2291,8 +2452,8 @@ class CCodegen:
             ty = self._fn_typedef(l.type_)
         elif l.type_:
             # Check if it's a pointer to an interface
-            from src.semantics.types import TDynInterface
-            from src.semantics.checker import lower_type as _lower_type
+            from src.types import TDynInterface
+            from src.checker import lower_type as _lower_type
             resolved = _lower_type(l.type_, self.env)
             target_mesa_ty = resolved
             if isinstance(resolved, TAnyInterface):
@@ -2308,10 +2469,10 @@ class CCodegen:
         if not l.type_ and l.init:
             mesa_ty = self._expr_type(l.init)
             # Resolve TVar in mono context
-            from src.semantics.types import TVar as _TVlet
+            from src.types import TVar as _TVlet
             if isinstance(mesa_ty, _TVlet) and mesa_ty.name and mesa_ty.name in self._mono_bindings:
                 mesa_ty = self._mono_bindings[mesa_ty.name]
-            from src.semantics.types import TOptional as TOpt, TVar, TUnitful, TUncertain
+            from src.types import TOptional as TOpt, TVar, TUnitful, TUncertain
             if isinstance(mesa_ty, TUnitful):
                 # Static unitful — use inner type (usually double)
                 ty = c_type(mesa_ty.inner) if mesa_ty.dims is not None else "mesa_unitful"
@@ -2321,7 +2482,7 @@ class CCodegen:
                 inner = mesa_ty.inner
                 # If inner is a TVar (unresolved), get concrete type from IfExpr then-branch
                 if isinstance(inner, TVar):
-                    from src.syntax.ast import IfExpr as IEx
+                    from src.ast import IfExpr as IEx
                     if isinstance(l.init, IEx) and l.init.then_block.tail:
                         inner = self._expr_type(l.init.then_block.tail) or inner
                 mangle = _mangle_type(inner)
@@ -2332,7 +2493,7 @@ class CCodegen:
                 ty = c_type(mesa_ty) if c_type(mesa_ty) != "int64_t" else self._infer_c_type(l.init)
             else:
                 ty = self._infer_c_type(l.init)
-            from src.semantics.types import TFun as _TFunLet
+            from src.types import TFun as _TFunLet
             if isinstance(mesa_ty, _TFunLet):
                 ty = c_type(mesa_ty, l.name)
                 decl_includes_name = True
@@ -2340,15 +2501,15 @@ class CCodegen:
 
         if l.init:
             # Pointer let inside with block — allocate from active allocator
-            from src.syntax.ast import TyPointer as _TyPtr
+            from src.ast import TyPointer as _TyPtr
             if self._active_alloc and isinstance(l.type_, _TyPtr) and not isinstance(l.init, WithAllocExpr):
                 alloc_expr, alloc_ty = self._active_alloc
-                from src.semantics.checker import lower_type as _ltalloc
+                from src.checker import lower_type as _ltalloc
                 inner_ty = _ltalloc(l.type_.inner, self.env)
                 inner_c  = c_type(inner_ty)
                 lo    = self.layout.layout_of(inner_ty) if self.layout else None
                 align = lo.align if lo else 8
-                from src.semantics.types import TStruct, TPointer
+                from src.types import TStruct, TPointer
                 target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
                 if isinstance(target_ty, TStruct) and self.env.impls.implements(target_ty.name, "Allocator"):
                     alloc_call = f"{c_type(target_ty)}__alloc(&{alloc_expr}, sizeof({inner_c}), {align})"
@@ -2360,9 +2521,9 @@ class CCodegen:
                 self._ptr_params.add(l.name)  # field access uses -> not .
             else:
                 # No active allocator — use GC for pointer types with struct literal init
-                from src.syntax.ast import TyPointer as _TyPtrGC, TupleLit as _TupGC
+                from src.ast import TyPointer as _TyPtrGC, TupleLit as _TupGC
                 if isinstance(l.type_, _TyPtrGC) and not self._active_alloc and isinstance(l.init, _TupGC):
-                    from src.semantics.checker import lower_type as _ltgc
+                    from src.checker import lower_type as _ltgc
                     inner_ty = _ltgc(l.type_.inner, self.env)
                     inner_c  = c_type(inner_ty)
                     desc_name = f"_mesa_gc_desc_{c_type(inner_ty)}" if hasattr(inner_ty, 'name') else "_mesa_gc_desc_none"
@@ -2376,7 +2537,7 @@ class CCodegen:
                     val = self._expr(l.init)
                     if target_mesa_ty is not None:
                         val = self._coerce_expr_for_target_type(val, l.init, target_mesa_ty)
-                    from src.semantics.types import TPointer as _TPtrLet
+                    from src.types import TPointer as _TPtrLet
                     init_ty = self._expr_type(l.init)
                     if isinstance(init_ty, _TPtrLet):
                         self._ptr_params.add(l.name)
@@ -2485,7 +2646,7 @@ class CCodegen:
     def _alloc_bytes_expr(self, size_expr: str, align: int) -> str:
         if self._active_alloc:
             alloc_expr, alloc_ty = self._active_alloc
-            from src.semantics.types import TStruct, TPointer
+            from src.types import TStruct, TPointer
             target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
             if isinstance(target_ty, TStruct) and self.env.impls.implements(target_ty.name, "Allocator"):
                 return f"{c_type(target_ty)}__alloc(&{alloc_expr}, {size_expr}, {align})"
@@ -2494,7 +2655,7 @@ class CCodegen:
     def _realloc_bytes_expr(self, ptr_expr: str, old_size_expr: str, new_size_expr: str, align: int) -> str:
         if self._active_alloc:
             alloc_expr, alloc_ty = self._active_alloc
-            from src.semantics.types import TStruct, TPointer
+            from src.types import TStruct, TPointer
             target_ty = alloc_ty.inner if isinstance(alloc_ty, TPointer) else alloc_ty
             if isinstance(target_ty, TStruct) and self.env.impls.implements(target_ty.name, "Allocator"):
                 return f"{c_type(target_ty)}__realloc(&{alloc_expr}, {ptr_expr}, {old_size_expr}, {new_size_expr}, {align})"
@@ -2544,7 +2705,7 @@ class CCodegen:
 
     def _expr(self, expr: Expr) -> str:
         # Coerce concrete type to *any Interface or any Interface if annotated
-        from src.semantics.types import TDynInterface as _TDyn, TAnyInterface as _TAny
+        from src.types import TDynInterface as _TDyn, TAnyInterface as _TAny
         rt = getattr(expr, '_resolved_type', None)
         if isinstance(rt, (_TDyn, _TAny)):
             return self._coerce_to_dyn(expr, rt)
@@ -2568,7 +2729,7 @@ class CCodegen:
             # Try to use annotated type for proper optional literal
             rt = getattr(expr, '_resolved_type', None)
             if rt is not None:
-                from src.semantics.types import TOptional as TOpt
+                from src.types import TOptional as TOpt
                 if isinstance(rt, TOpt):
                     mangle = _mangle_type(rt.inner)
                     return f"(mesa_opt_{mangle}){{0, 0}}"
@@ -2609,7 +2770,7 @@ class CCodegen:
             qname = self._qualified_name(expr)
             # .value and .units on unitful/uncertain types — intercept before normal field access
             obj_ty = self._expr_type(expr.obj)
-            from src.semantics.types import TUnitful, TUncertain, TNamespace
+            from src.types import TUnitful, TUncertain, TNamespace
             if isinstance(obj_ty, TNamespace):
                 if qname and qname.startswith("std.mem."):
                     return qname
@@ -2737,7 +2898,7 @@ class CCodegen:
 
         # str == str needs mesa_str_eq
         if op in ("==", "!="):
-            from src.semantics.types import TString
+            from src.types import TString
             if isinstance(lt, TString) or isinstance(rt, TString):
                 eq = f"mesa_str_eq({lhs}, {rhs})"
                 return eq if op == "==" else f"(!{eq})"
@@ -2826,7 +2987,7 @@ class CCodegen:
         return f"v_{field}" if field in c_keywords else field
 
     def _esc_needs_allocator(self, ty: Type) -> bool:
-        from src.semantics.types import TString, TVec, TOptional, TStruct, TUnion, TUnitful, TUncertain
+        from src.types import TString, TVec, TOptional, TStruct, TUnion, TUnitful, TUncertain
         if isinstance(ty, TString):
             return True
         if isinstance(ty, TVec):
@@ -2844,7 +3005,7 @@ class CCodegen:
         return False
 
     def _clone_value_to_allocator(self, src_expr: str, ty: Type, alloc_entry) -> str:
-        from src.semantics.types import (
+        from src.types import (
             TInt, TFloat, TBool, TString, TVoid, TIntLit, TFloatLit,
             TOptional, TVec, TStruct, TUnion, TUnitful, TUncertain,
         )
@@ -3034,8 +3195,8 @@ class CCodegen:
         return f"{obj}{arrow}{f.field}"
 
     def _qualified_variant_expr(self, f: FieldExpr) -> Optional[str]:
-        from src.syntax.ast import Ident
-        from src.semantics.types import TUnion, TErrorSet, TErrorSetUnion
+        from src.ast import Ident
+        from src.types import TUnion, TErrorSet, TErrorSetUnion
 
         if not isinstance(f.obj, Ident):
             return None
@@ -3097,8 +3258,8 @@ class CCodegen:
         return f"{obj}[{idx}]"
 
     def _expr_type(self, expr: Expr) -> Optional[Type]:
-        from src.semantics.types import T_I64, T_F64, T_BOOL, T_STR, TInt, TFloat, TBool, TString, TPointer
-        from src.syntax.ast import IntLit, FloatLit, BoolLit, StringLit, BinExpr, UnaryExpr, SelfExpr
+        from src.types import T_I64, T_F64, T_BOOL, T_STR, TInt, TFloat, TBool, TString, TPointer
+        from src.ast import IntLit, FloatLit, BoolLit, StringLit, BinExpr, UnaryExpr, SelfExpr
         if isinstance(expr, SelfExpr):
             # Look up 'self' symbol — the checker registers it in the method scope
             sym = self.env.lookup("self")
@@ -3138,9 +3299,9 @@ class CCodegen:
             return self._expr_type(expr.operand)
         if isinstance(expr, EscExpr):
             return getattr(expr, '_resolved_type', None)
-        from src.syntax.ast import FieldExpr, CallExpr as CExpr, VariantLit as ELit, ArrayLit as ALit
+        from src.ast import FieldExpr, CallExpr as CExpr, VariantLit as ELit, ArrayLit as ALit
         if isinstance(expr, ALit):
-            from src.semantics.types import TArray as _TArray
+            from src.types import TArray as _TArray
             if not expr.elems:
                 return _TArray(T_I64, 0)
             first = self._expr_type(expr.elems[0]) or T_I64
@@ -3148,7 +3309,7 @@ class CCodegen:
         if isinstance(expr, FieldExpr):
             if isinstance(expr.obj, Ident):
                 type_ns = self.env.lookup_type(expr.obj.name)
-                from src.semantics.types import TUnion as _TU, TErrorSet as _TES, TErrorSetUnion as _TESU
+                from src.types import TUnion as _TU, TErrorSet as _TES, TErrorSetUnion as _TESU
                 if isinstance(type_ns, _TU) and expr.field in type_ns.variants:
                     return type_ns
                 if isinstance(type_ns, (_TES, _TESU)) and expr.field in error_set_variants(type_ns):
@@ -3161,7 +3322,7 @@ class CCodegen:
                 type_ty = self.env.lookup_namespace_type(obj_ty.name, expr.field)
                 if type_ty is not None:
                     return type_ty
-            from src.semantics.types import TStruct as _TS
+            from src.types import TStruct as _TS
             if isinstance(obj_ty, _TS):
                 return obj_ty.field_type(expr.field)
             if isinstance(obj_ty, TPointer) and isinstance(obj_ty.inner, _TS):
@@ -3199,7 +3360,7 @@ class CCodegen:
         return ty.root() if isinstance(ty, TVar) else ty
 
     def _is_allocator_operand_type(self, ty: Optional[Type]) -> bool:
-        from src.semantics.types import TStruct, TPointer, TAnyInterface, TDynInterface
+        from src.types import TStruct, TPointer, TAnyInterface, TDynInterface
         if ty is None:
             return False
         if isinstance(ty, (TAnyInterface, TDynInterface)):
@@ -3211,7 +3372,7 @@ class CCodegen:
     def _allocator_intrinsic_call(self, alloc_expr: Expr, op: str, *args: str) -> str:
         alloc_c = self._expr(alloc_expr)
         alloc_ty = self._expr_type(alloc_expr)
-        from src.semantics.types import TStruct, TPointer, TAnyInterface, TDynInterface
+        from src.types import TStruct, TPointer, TAnyInterface, TDynInterface
         if isinstance(alloc_ty, TPointer) and isinstance(alloc_ty.inner, TStruct) and self.env.impls.implements(alloc_ty.inner.name, "Allocator"):
             method = op if op != "freeBytes" else "free_bytes"
             fn = f"{c_type(alloc_ty.inner)}__{method}"
@@ -3325,7 +3486,7 @@ class CCodegen:
             if (_try0.is_err) return _try0;
             _try0.value
         """
-        from src.semantics.types import TErrorUnion, TErrorSet
+        from src.types import TErrorUnion, TErrorSet
         inner_ty = self._expr_type(inner_expr)
         if not isinstance(inner_ty, TErrorUnion):
             return self._expr(inner_expr)   # not an error union — pass through
@@ -3368,8 +3529,8 @@ class CCodegen:
 
     def _emit_catch_expr(self, c: CallExpr) -> str:
         """expr catch { .V(p) => expr, _ => expr }"""
-        from src.semantics.types import TErrorUnion, TErrorSet
-        from src.syntax.ast import MatchExpr, PatVariant, PatWildcard
+        from src.types import TErrorUnion, TErrorSet
+        from src.ast import MatchExpr, PatVariant, PatWildcard
         inner_expr = c.args[0].value
         # __catch_bind: args = [inner, StringLit(binding), MatchExpr(arms)]
         # __catch:      args = [inner, MatchExpr(arms)]
@@ -3577,6 +3738,28 @@ class CCodegen:
             if name == "@panic":
                 arg = self._expr(c.args[0].value) if c.args else '(mesa_str){"panic", 5}'
                 return f"mesa_panic({arg})"
+            if name == "@stdHandle":
+                which_expr = self._expr(c.args[0].value)
+                return f"mesa__std__io__std_handle((int32_t)({which_expr}))"
+            if name == "@ioWrite":
+                handle_expr = self._expr(c.args[0].value)
+                data_expr   = self._expr(c.args[1].value)
+                len_expr    = self._expr(c.args[2].value)
+                return (f"mesa__std__io__io_write((int64_t)({handle_expr}), "
+                        f"(const uint8_t*)({data_expr}), (int64_t)({len_expr}))")
+            if name == "@ioRead":
+                handle_expr = self._expr(c.args[0].value)
+                buf_expr    = self._expr(c.args[1].value)
+                len_expr    = self._expr(c.args[2].value)
+                return (f"mesa__std__io__io_read((int64_t)({handle_expr}), "
+                        f"(uint8_t*)({buf_expr}), (int64_t)({len_expr}))")
+            if name == "@ioOpen":
+                path_expr = self._expr(c.args[0].value)
+                mode_expr = self._expr(c.args[1].value)
+                return f"mesa__std__io__io_open({path_expr}, (int32_t)({mode_expr}))"
+            if name == "@ioClose":
+                handle_expr = self._expr(c.args[0].value)
+                return f"(int64_t)mesa__std__io__io_close((int64_t)({handle_expr}))"
             if name == "__optional_chain":
                 return self._expr(c.args[0].value)
             if name == "__try":
@@ -3591,12 +3774,12 @@ class CCodegen:
                 escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
                 return f'(mesa_str){{"{escaped}", {len(text)}}}'
             sym = getattr(c.callee, "_bound_symbol", None) or self.env.lookup(name)
-            if name in ("println", "print") and getattr(sym, "pkg_path", None) is None:
+            if name in ("println", "print", "eprintln", "eprint") and getattr(sym, "pkg_path", None) is None:
                 return self._println(c)
 
         # Method call — obj.method(args)
         if isinstance(c.callee, FieldExpr):
-            from src.semantics.types import TNamespace
+            from src.types import TNamespace
             if isinstance(self._expr_type(c.callee.obj), TNamespace):
                 fn = self._expr(c.callee)
                 args = ", ".join(self._expr(a.value) for a in c.args)
@@ -3638,7 +3821,7 @@ class CCodegen:
         for i, a in enumerate(c.args):
             val = self._expr(a.value)
             if i < len(param_types):
-                from src.semantics.types import TOptional as TOpt, is_assignable
+                from src.types import TOptional as TOpt, is_assignable
                 pt = param_types[i]
                 at = self._expr_type(a.value)
                 if (
@@ -3653,8 +3836,8 @@ class CCodegen:
         return f"{fn}({', '.join(args)})"
 
     def _qualified_payload_variant_expr(self, c: CallExpr) -> Optional[str]:
-        from src.syntax.ast import Ident
-        from src.semantics.types import TUnion, TErrorSet, TErrorSetUnion, TTuple
+        from src.ast import Ident
+        from src.types import TUnion, TErrorSet, TErrorSetUnion, TTuple
 
         if not isinstance(c.callee, FieldExpr) or not isinstance(c.callee.obj, Ident):
             return None
@@ -3693,13 +3876,32 @@ class CCodegen:
         return None
 
     def _println(self, c: CallExpr) -> str:
+        # Determine which builtin we're lowering and select the right C functions.
+        fn_name = c.callee.name if isinstance(c.callee, Ident) else "println"
+        is_err  = fn_name in ("eprint", "eprintln")
+        add_nl  = fn_name in ("println", "eprintln")
+
+        # str-typed arguments call the locked runtime functions directly.
+        if is_err:
+            str_fn = "mesa__std__io__locked_println_stderr" if add_nl else "mesa__std__io__locked_print_stderr"
+        else:
+            str_fn = "mesa__std__io__locked_println_stdout" if add_nl else "mesa__std__io__locked_print_stdout"
+
+        # Numeric helpers — write(2)-based, prefix distinguishes stdout/stderr × nl.
+        pfx = ("eprint" if is_err else "print") + ("ln" if add_nl else "")
+        i64_fn  = f"mesa_{pfx}_i64"
+        f64_fn  = f"mesa_{pfx}_f64"
+        bool_fn = f"mesa_{pfx}_bool"
+        cstr_fn = f"mesa_{pfx}_cstr"
+
         if not c.args:
-            return 'printf("\\n")'
-        arg   = c.args[0].value
-        val   = self._expr(arg)
-        ty    = self._expr_type(arg)
+            return f'{str_fn}((mesa_str){{"", 0}})'
+
+        arg = c.args[0].value
+        val = self._expr(arg)
+        ty  = self._expr_type(arg)
         # Unwrap unitful/uncertain to inner type for dispatch
-        from src.semantics.types import TUnitful, TUncertain, TDynInterface, TAnyInterface as _TAny3, TVar as _TVpr, TFloatLit as _TFLpr, TFloat as _TF2
+        from src.types import TUnitful, TUncertain, TDynInterface, TAnyInterface as _TAny3, TVar as _TVpr, TFloatLit as _TFLpr, TFloat as _TF2
         if isinstance(ty, (_TAny3, TDynInterface)):
             ty = None
         # Resolve TVar from mono context
@@ -3716,20 +3918,20 @@ class CCodegen:
         if isinstance(ty, TUnitful):
             ty = ty.inner
         if isinstance(ty, TString):
-            return f"mesa_println_str({val})"
+            return f"{str_fn}({val})"
         if isinstance(ty, TFloat):
-            return f"mesa_println_f64({val})"
+            return f"{f64_fn}({val})"
         if isinstance(ty, TBool):
-            return f"mesa_println_bool({val})"
-        # Check if it's a string literal
+            return f"{bool_fn}({val})"
+        # Check if it's a string literal — use cstr helper to avoid mesa_str wrapping
         if isinstance(arg, StringLit):
             escaped = arg.raw.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
-            return f'mesa_println_cstr("{escaped}")'
+            return f'{cstr_fn}("{escaped}")'
         # Float literals and float-typed expressions
         if isinstance(arg, (FloatLit, UnitLit, UncertainLit)):
-            return f"mesa_println_f64({val})"
+            return f"{f64_fn}({val})"
         # Default: integer
-        return f"mesa_println_i64((int64_t)({val}))"
+        return f"{i64_fn}((int64_t)({val}))"
 
     def _method_call(self, c: CallExpr) -> str:
         fe   = c.callee
@@ -3737,11 +3939,11 @@ class CCodegen:
 
         # Find the receiver type
         recv_ty = self._expr_type(fe.obj)
-        from src.semantics.types import TStruct as _TStruct, TDynInterface
+        from src.types import TStruct as _TStruct, TDynInterface
 
         # Dynamic dispatch through *Interface
         if isinstance(recv_ty, (TDynInterface, TAnyInterface)):
-            from src.semantics.types import TAnyInterface as _TAny
+            from src.types import TAnyInterface as _TAny
             method = fe.field
             if isinstance(recv_ty, _TAny):
                 # Stack existential: data is either inline_buf or *(void*)inline_buf
@@ -3756,7 +3958,7 @@ class CCodegen:
                                  [self._expr(a.value) for a in c.args])
                 return f"(({recv})->vtable->{method}({args}))"
 
-        from src.semantics.types import TInt as _TIntM, TFloat as _TFloatM, TIntLit as _TIntLitM, TFloatLit as _TFloatLitM
+        from src.types import TInt as _TIntM, TFloat as _TFloatM, TIntLit as _TIntLitM, TFloatLit as _TFloatLitM
         if fe.field == "sqrt":
             if isinstance(recv_ty, (_TIntM, _TFloatM, _TIntLitM, _TFloatLitM, TUnitful)):
                 return f"sqrt({recv})"
@@ -3833,7 +4035,7 @@ class CCodegen:
         """Emit .Variant(payload) as a tagged union compound literal."""
         el = c.callee
         ty = getattr(el, '_resolved_type', None) or self.env.find_variant_type(el.name)
-        from src.semantics.types import TUnion, TErrorSet, TErrorSetUnion, TTuple
+        from src.types import TUnion, TErrorSet, TErrorSetUnion, TTuple
         if isinstance(ty, (TErrorSet, TErrorSetUnion)):
             val = self._expr(c.args[0].value) if c.args else "0"
             owner = next((m for m in error_set_members(ty) if el.name in m.variants), None)
@@ -3860,7 +4062,7 @@ class CCodegen:
         ty = getattr(el, '_resolved_type', None)
         if ty is None:
             ty = self.env.find_variant_type(el.name)
-        from src.semantics.types import TUnion, TErrorSet, TErrorSetUnion
+        from src.types import TUnion, TErrorSet, TErrorSetUnion
         if isinstance(ty, (TErrorSet, TErrorSetUnion)):
             owner = next((m for m in error_set_members(ty) if el.name in m.variants), None)
             return self._error_object_literal(ty, self._error_tag_name(owner, el.name))
@@ -3886,7 +4088,7 @@ class CCodegen:
         resolved = getattr(tl, '_resolved_type', None)
         if resolved is None:
             resolved = getattr(tl, '_checked_type', None)
-        from src.semantics.types import TStruct, TTuple
+        from src.types import TStruct, TTuple
         if isinstance(resolved, (TStruct, TTuple)):
             return f"({c_type(resolved)}){{{fields}}}"
         return f"{{{fields}}}"
@@ -3915,7 +4117,7 @@ class CCodegen:
         lines = [
             f"{vec_c} {tmp}",
             f"{elem_c}* {data} = ({elem_c}*){self._alloc_bytes_expr(size_expr, align)}",
-            f"if (!{data}) {{ fprintf(stderr, \"vec literal: OOM\\n\"); abort(); }}",
+            f"if (!{data}) {{ write(2, \"vec literal: OOM\\n\", 17); abort(); }}",
         ]
         for i, elem in enumerate(vl.elems):
             lines.append(f"{data}[{i}] = {self._expr(elem)}")
@@ -3948,7 +4150,7 @@ class CCodegen:
             f"{result}.len = 0",
             f"{result}.cap = ({iter_var}.len > 0 ? {iter_var}.len : 4)",
             f"{result}.data = ({elem_c}*){self._alloc_bytes_expr(f'sizeof({elem_c}) * (size_t){result}.cap', align)}",
-            f"if (!{result}.data) {{ fprintf(stderr, \"{oom}\"); abort(); }}",
+            f"if (!{result}.data) {{ write(2, \"{oom}\", 23); abort(); }}",
             f"for (int64_t {idx} = 0; {idx} < {iter_var}.len; {idx}++) {{",
         ]
         if isinstance(vc.pattern, PatIdent):
@@ -3964,7 +4166,7 @@ class CCodegen:
             f"if ({result}.len == {result}.cap) {{",
             f"int64_t {new_cap} = ({result}.cap > 0 ? {result}.cap * 2 : 4)",
             f"{result}.data = ({elem_c}*){self._realloc_bytes_expr(f'{result}.data', f'sizeof({elem_c}) * (size_t){result}.cap', f'sizeof({elem_c}) * (size_t){new_cap}', align)}",
-            f"if (!{result}.data) {{ fprintf(stderr, \"{oom}\"); abort(); }}",
+            f"if (!{result}.data) {{ write(2, \"{oom}\", 23); abort(); }}",
             f"{result}.cap = {new_cap}",
             "}",
             f"{result}.data[{result}.len++] = {self._expr(vc.expr)}",
@@ -4099,7 +4301,7 @@ class CCodegen:
             if arm.body.tail:
                 mesa_ty = self._expr_type(arm.body.tail)
                 if mesa_ty is not None:
-                    from src.semantics.types import TVoid
+                    from src.types import TVoid
                     if isinstance(mesa_ty, TVoid):
                         ret_ty = "void"
                     else:
@@ -4109,7 +4311,7 @@ class CCodegen:
                 break
 
         if ret_ty != "void":
-            from src.semantics.types import TStruct as _TS_match, TTuple as _TT_match, TUnion as _TU_match
+            from src.types import TStruct as _TS_match, TTuple as _TT_match, TUnion as _TU_match
             if isinstance(match_ty, (_TS_match, _TT_match, _TU_match)):
                 w.line(f"{ret_ty} {tmp} = ({ret_ty}){{0}};")
             else:
@@ -4262,7 +4464,7 @@ class CCodegen:
         alloc_ty = self._expr_type(we.resource)
         alloc_name = self._lvalue(we.resource)
         prev_alloc = self._active_alloc
-        from src.semantics.types import TVoid
+        from src.types import TVoid
         allocctx_frame = None
         if self._is_allocator_operand_type(alloc_ty):
             self._active_alloc = (alloc_name, alloc_ty)
@@ -4369,7 +4571,7 @@ class CCodegen:
 
     def _coerce_to_dyn(self, expr, dyn_ty) -> str:
         """Coerce concrete type to any Interface (stack) or *any Interface (heap)."""
-        from src.semantics.types import TStruct, TDynInterface, TAnyInterface, MESA_SBO_SIZE
+        from src.types import TStruct, TDynInterface, TAnyInterface, MESA_SBO_SIZE
         w = self.w
 
         concrete_ty = self._expr_type_raw(expr)
@@ -4410,7 +4612,7 @@ class CCodegen:
             # Check concrete type size for SBO decision
             size = None
             if self.layout:
-                from src.semantics.types import TStruct as _TS2
+                from src.types import TStruct as _TS2
                 ct2 = self.env.lookup_type(concrete_name)
                 if isinstance(ct2, _TS2):
                     try:
@@ -4440,7 +4642,7 @@ class CCodegen:
 
     def _expr_type_raw(self, expr):
         """Get the concrete type of expr before any coercion."""
-        from src.syntax.ast import Ident
+        from src.ast import Ident
         if isinstance(expr, Ident):
             sym = self.env.lookup(expr.name)
             if sym:
@@ -4453,14 +4655,14 @@ class CCodegen:
         return rt
 
     def _collect_closure_captures(self, c) -> List[Tuple[str, Type, str]]:
-        from src.syntax.ast import (
+        from src.ast import (
             AssignStmt, BinExpr, Block, BreakStmt, CallExpr, Closure, ContinueStmt,
             DeferStmt, ExprStmt, FieldExpr, ForIterStmt, ForRangeStmt, HandleBlock,
             Ident, IfExpr, IndexExpr, LetStmt, MatchExpr, ReturnStmt, UnaryExpr,
             WhileStmt, WithAllocExpr, EscExpr, ComptimeExpr,
         )
 
-        builtins = {"print", "println", "len", "cap"}
+        builtins = {"print", "println", "eprint", "eprintln", "len", "cap"}
         params = {p.name for p in c.params}
         captures: Dict[str, Tuple[Type, str]] = {}
 
@@ -4649,7 +4851,7 @@ class CCodegen:
             qname = self._qualified_name(expr)
             # .value and .units on unitful/uncertain types — intercept before normal field access
             obj_ty = self._expr_type(expr.obj)
-            from src.semantics.types import TUnitful, TUncertain, TNamespace
+            from src.types import TUnitful, TUncertain, TNamespace
             if isinstance(obj_ty, TNamespace):
                 return qname or "0"
             if isinstance(obj_ty, TUnitful):
@@ -4689,7 +4891,7 @@ class CCodegen:
         if isinstance(expr, Ident):
             sym = self.env.lookup(expr.name)
             if sym:
-                from src.semantics.types import TVar
+                from src.types import TVar
                 t = sym.type_
                 if isinstance(t, TVar) and t.name and t.name in self._mono_bindings:
                     t = self._mono_bindings[t.name]
@@ -4725,7 +4927,7 @@ class CCodegen:
                 # Expression — use Mesa type system for format selection
                 c_expr = self._expr(seg)
                 mesa_ty = self._expr_type(seg)
-                from src.semantics.types import TFloat, TBool, TString, TInt
+                from src.types import TFloat, TBool, TString, TInt
                 if isinstance(mesa_ty, TFloat):
                     fmt_parts.append("%.6g")
                     args.append(f"(double)({c_expr})")
@@ -4768,8 +4970,8 @@ class CCodegen:
 
     def _tail_type(self, expr) -> str:
         """Determine C return type of a tail expression without emitting it."""
-        from src.syntax.ast import CallExpr, Ident
-        from src.semantics.types import TVoid, TString, TFloat, TInt, TBool
+        from src.ast import CallExpr, Ident
+        from src.types import TVoid, TString, TFloat, TInt, TBool
         if isinstance(expr, CallExpr):
             # println / print always return void
             if isinstance(expr.callee, Ident) and expr.callee.name in ('println','print'):
@@ -4779,7 +4981,7 @@ class CCodegen:
             # Check resolved return type via checker annotation
             callee_ty = getattr(expr.callee, '_resolved_type', None)
             if callee_ty is not None:
-                from src.semantics.types import TFun
+                from src.types import TFun
                 if isinstance(callee_ty, TFun):
                     return "void" if isinstance(callee_ty.ret, TVoid) else self._infer_c_type(expr)
         mesa_ty = self._expr_type(expr)

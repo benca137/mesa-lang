@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import os
 from typing import Dict, List, Optional, Union
 
-from src.syntax.ast import (
+from src.ast import (
     ArrayLit,
     Block,
     CallExpr,

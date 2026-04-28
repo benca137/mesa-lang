@@ -22,7 +22,7 @@ import sys
 import tempfile
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.frontend import build_frontend_state_for_path
 from src.analysis import analyse
@@ -626,64 +626,6 @@ def _load_build_plan_from_cwd(cwd: str):
         return None, build_path, 1
 
 
-def _collect_target_dependencies(plan, target):
-    package_indices: list[int] = []
-    foreign_indices: list[int] = []
-    visiting: set[int] = set()
-    visited: set[int] = set()
-
-    def add_package(index: int):
-        if index < 0 or index >= len(plan.packages):
-            raise BuildPlanError(f"build target references missing package handle {index}")
-        if index not in package_indices:
-            package_indices.append(index)
-
-    def add_foreign(index: int):
-        if index < 0 or index >= len(plan.libraries):
-            raise BuildPlanError(f"build target references missing foreign library handle {index}")
-        if index not in foreign_indices:
-            foreign_indices.append(index)
-
-    def add_library_target(index: int):
-        if index < 0 or index >= len(plan.package_libraries):
-            raise BuildPlanError(f"build target references missing library target handle {index}")
-        if index in visiting:
-            raise BuildPlanError("library target imports contain a cycle")
-        if index in visited:
-            return
-        visiting.add(index)
-        lib = plan.package_libraries[index]
-        add_package(lib.package)
-        for pkg_index in lib.imports:
-            add_package(pkg_index)
-        for lib_index in lib.library_targets:
-            add_library_target(lib_index)
-        for foreign_index in lib.library_imports:
-            add_foreign(foreign_index)
-        visiting.remove(index)
-        visited.add(index)
-
-    for pkg_index in target.imports:
-        add_package(pkg_index)
-    for lib_index in target.library_targets:
-        add_library_target(lib_index)
-    for foreign_index in target.library_imports:
-        add_foreign(foreign_index)
-
-    return package_indices, foreign_indices
-
-
-def _package_roots_for_indices(plan, package_indices, cwd: str):
-    package_roots = []
-    for pkg_index in package_indices:
-        pkg = plan.packages[pkg_index]
-        resolved = resolve_package_root_path(pkg.root, cwd=cwd)
-        if not os.path.isdir(resolved):
-            raise BuildPlanError(f"package root not found for '{pkg.name or pkg.root}': {pkg.root}")
-        package_roots.append((resolved, pkg.name))
-    return package_roots
-
-
 def _compile_default_target(cwd: str, output_path, run_binary_flag, verbose, timings) -> int:
     plan, build_path, status = _load_build_plan_from_cwd(cwd)
     if status != 0:
@@ -693,13 +635,11 @@ def _compile_default_target(cwd: str, output_path, run_binary_flag, verbose, tim
     if target is None:
         print(red("error: build.mesa has no default executable target"), file=sys.stderr)
         return 1
-    try:
-        package_indices, foreign_indices = _collect_target_dependencies(plan, target)
-        package_roots = _package_roots_for_indices(plan, package_indices, cwd)
-    except BuildPlanError as exc:
-        print(red(f"error: {exc}"), file=sys.stderr)
-        return 1
-    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in foreign_indices]
+    package_roots = []
+    for pkg_index in target.imports:
+        pkg = plan.packages[pkg_index]
+        package_roots.append((resolve_package_root_path(pkg.root, cwd=cwd), pkg.name))
+    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in target.library_imports]
     entry_path = os.path.join(cwd, target.entry)
     target_output = output_path or os.path.join("targets", target.name)
     return compile_file(
@@ -725,13 +665,11 @@ def _test_default_target(cwd: str, output_path, verbose, timings) -> int:
     if target is None:
         print(red("error: build.mesa has no default executable target"), file=sys.stderr)
         return 1
-    try:
-        package_indices, foreign_indices = _collect_target_dependencies(plan, target)
-        package_roots = _package_roots_for_indices(plan, package_indices, cwd)
-    except BuildPlanError as exc:
-        print(red(f"error: {exc}"), file=sys.stderr)
-        return 1
-    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in foreign_indices]
+    package_roots = []
+    for pkg_index in target.imports:
+        pkg = plan.packages[pkg_index]
+        package_roots.append((resolve_package_root_path(pkg.root, cwd=cwd), pkg.name))
+    foreign_namespaces = [plan.libraries[lib_index].name for lib_index in target.library_imports]
     entry_path = os.path.join(cwd, target.entry)
     target_output = output_path or os.path.join("targets", f"{target.name}-tests")
     return compile_tests(
@@ -768,12 +706,6 @@ def _pkg_add(cwd: str, source: str, name: str | None) -> int:
     else:
         print(green("✓ package root already present"), file=sys.stderr)
     return 0
-
-
-def _lsp_external_notice() -> int:
-    print(red("error: MesaLSP is not shipped from this repository"), file=sys.stderr)
-    print(cyan("hint:") + " use the separate MesaLSP project for editor language-server support", file=sys.stderr)
-    return 1
 
 
 def _legacy_main(argv: list[str]) -> int:
@@ -848,7 +780,7 @@ def _command_main(argv: list[str]) -> int:
     test_ap.add_argument("-v", "--verbose", action="store_true", help="show compilation steps")
     test_ap.add_argument("--timings", action="store_true", help="show timing for each pass")
 
-    sub.add_parser("lsp", help="explain where MesaLSP is tracked")
+    sub.add_parser("lsp", help="run the Mesa stdio language server")
 
     pkg_ap = sub.add_parser("pkg", help="package root management")
     pkg_sub = pkg_ap.add_subparsers(dest="pkg_command", required=True)
@@ -867,8 +799,6 @@ def _command_main(argv: list[str]) -> int:
         return _compile_default_target(cwd, args.output, True, args.verbose, args.timings)
     if args.command == "test":
         return _test_default_target(cwd, args.output, args.verbose, args.timings)
-    if args.command == "lsp":
-        return _lsp_external_notice()
     if args.command == "pkg" and args.pkg_command == "add":
         return _pkg_add(cwd, args.source, args.name)
     ap.error("unknown command")

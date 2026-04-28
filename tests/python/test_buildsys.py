@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 
-from src.editor.meta import build_document_meta
+from src.meta import build_document_meta
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

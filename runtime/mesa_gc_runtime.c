@@ -1,9 +1,27 @@
 #include "mesa_gc_runtime.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* Direct write(2) / WriteFile — no stdio dependency */
+#ifdef _WIN32
+#  include <windows.h>
+static void _gc_write_err(const char* msg, size_t len) {
+    DWORD w;
+    WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, (DWORD)len, &w, NULL);
+}
+#else
+#  include <unistd.h>
+static void _gc_write_err(const char* msg, size_t len) {
+    const char* p = msg;
+    while (len > 0) {
+        ssize_t n = write(2, p, len);
+        if (n > 0) { p += (size_t)n; len -= (size_t)n; }
+        else break;
+    }
+}
+#endif
 
 Mesa_GC_Obj* _mesa_gc_head = NULL;
 size_t _mesa_gc_bytes = 0;
@@ -86,10 +104,18 @@ static void* mesa_runtime_alloc_aligned(size_t size, size_t align) {
     size_t actual_align = align > sizeof(void*) ? align : sizeof(void*);
     void* ptr = NULL;
 
-    if (posix_memalign(&ptr, actual_align, actual_size) != 0) {
-        fprintf(stderr, "posix_memalign failed\n");
+#ifdef _WIN32
+    ptr = _aligned_malloc(actual_size, actual_align);
+    if (!ptr) {
+        _gc_write_err("_aligned_malloc failed\n", 22);
         abort();
     }
+#else
+    if (posix_memalign(&ptr, actual_align, actual_size) != 0) {
+        _gc_write_err("posix_memalign failed\n", 22);
+        abort();
+    }
+#endif
     return ptr;
 }
 
@@ -119,7 +145,7 @@ void* mesa_gc_alloc(size_t size, size_t align, const int* desc) {
 
     raw = (char*)malloc(total);
     if (!raw) {
-        fprintf(stderr, "GC: out of memory\n");
+        _gc_write_err("GC: out of memory\n", 18);
         abort();
     }
 
@@ -139,7 +165,7 @@ void* mesa_gc_alloc(size_t size, size_t align, const int* desc) {
 
 void mesa_allocctx_push(void* self, void* (*alloc)(void* self, size_t size, size_t align)) {
     if (_mesa_alloc_stack_len >= 256) {
-        fprintf(stderr, "allocator context stack overflow\n");
+        _gc_write_err("allocator context stack overflow\n", 33);
         abort();
     }
     _mesa_alloc_stack[_mesa_alloc_stack_len].self = self;

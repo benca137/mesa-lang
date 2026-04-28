@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from src.frontend import build_frontend_state_for_path
-from src.semantics.types import format_type_for_user
+from src.types import format_type_for_user
 
 
 def _write(path: Path, text: str) -> None:
