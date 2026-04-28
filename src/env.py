@@ -11,8 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import difflib
 from typing import Dict, List, Optional, Set, Tuple
-from src.syntax.ast import SourcePos, SourceSpan
-from src.semantics.types import *
+from src.ast import SourcePos, SourceSpan
+from src.types import *
 
 
 # ══════════════════════════════════════════════════════════════
@@ -249,7 +249,7 @@ class Environment:
 
         # unit registry — user-defined units: name → (DimVec, scale)
         # overlaid on top of the built-in _SI_BASE registry in types.py
-        from src.semantics.types import _SI_BASE
+        from src.types import _SI_BASE
         self._unit_registry: dict = dict(_SI_BASE)
 
         # current struct being checked — for self resolution
@@ -493,7 +493,7 @@ class Environment:
 
     def find_variant_type(self, variant_name: str) -> Optional[Type]:
         """Return the TUnion or TErrorSet that owns this variant name, or None."""
-        from src.semantics.types import TErrorSet as _TES
+        from src.types import TErrorSet as _TES
         if self._current_pkg is not None:
             for ty in self._pkg_types.get(self._current_pkg, {}).values():
                 if isinstance(ty, (TUnion, _TES)) and variant_name in ty.variants:
@@ -506,7 +506,7 @@ class Environment:
 
     def find_unit_variant_type(self, variant_name: str) -> Optional[Type]:
         """Return the TUnion or TErrorSet owning this unit (no-payload) variant."""
-        from src.semantics.types import TErrorSet as _TES
+        from src.types import TErrorSet as _TES
         if self._current_pkg is not None:
             for ty in self._pkg_types.get(self._current_pkg, {}).values():
                 if isinstance(ty, (TUnion, _TES)):

@@ -8,7 +8,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from src.syntax.ast import (
+from src.ast import (
     Decl,
     ErrorDecl,
     FromImportDecl,
@@ -27,15 +27,15 @@ from src.syntax.ast import (
     UnionDecl,
     Visibility,
 )
-from src.semantics.checker import type_check
-from src.semantics.env import DiagnosticBag, Environment
-from src.syntax.parser import ParseError, Parser
+from src.checker import type_check
+from src.env import DiagnosticBag, Environment
+from src.parser import ParseError, Parser
 from src.stdlib import (
     augment_package_roots_with_std,
     canonicalize_std_import_path,
     is_reserved_std_bare_name,
 )
-from src.syntax.tokenizer import Token, TokenizeError, Tokenizer
+from src.tokenizer import Token, TokenizeError, Tokenizer
 
 
 @dataclass

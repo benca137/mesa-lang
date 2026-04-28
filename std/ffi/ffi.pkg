@@ -1,3 +1,0 @@
-pkg ffi
-
-from "base" export c_void, c_char, c_int, c_long, size_t, time_t
